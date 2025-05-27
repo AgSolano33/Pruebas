@@ -157,7 +157,7 @@ export default function FormDiagnostico({ onSuccess }) {
           className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
           name="telefono"
           required
-          type="tel"
+          type="number"
           placeholder="Ej: 55 1234 5678"
           value={formData.telefono}
           onChange={handleChange}
