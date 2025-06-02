@@ -47,16 +47,15 @@ const Header = () => {
           <Link
             className="flex items-center gap-2 shrink-0 "
             href="/"
-            title={`${config.appName} hompage`}
+           
           >
             <Image
               src={logo}
               alt={`${config.appName} logo`}
-              className="w-8"
               placeholder="blur"
               priority={true}
-              width={32}
-              height={32}
+              width={300}
+              height={300}
             />
             <span className="font-extrabold text-lg">{config.appName}</span>
           </Link>
@@ -113,17 +112,16 @@ const Header = () => {
           <div className="flex items-center justify-between">
             <Link
               className="flex items-center gap-2 shrink-0 "
-              title={`${config.appName} hompage`}
+        
               href="/"
             >
               <Image
                 src={logo}
                 alt={`${config.appName} logo`}
-                className="w-8"
                 placeholder="blur"
                 priority={true}
-                width={32}
-                height={32}
+                width={200}
+                height={200}
               />
               <span className="font-extrabold text-lg">{config.appName}</span>
             </Link>
