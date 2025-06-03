@@ -1,64 +1,76 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import Carousel from "@/components/Carousel";
-import ButtonSignin from "@/components/ButtonSignin";
+import MarcasCarousel from "@/components/MarcasCarousel";
+import Footer from "@/components/Footer";
 import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
+import Image from "next/image";
 
 export default function LandingPage() {
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showModal]);
-
-  const handleOpenModal = () => {
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      
-      <main className="container mx-auto px-4">
-      
+      <main className="flex-grow">
+        <Carousel onOpenModal={() => setIsModalOpen(true)} />
         <div className="my-8">
-          <Carousel />
+          <MarcasCarousel />
         </div>
 
-       
-        <div className="flex flex-col items-center justify-center py-16 space-y-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-center">
-            Pre-diagnóstico Empresarial
-          </h1>
-          <p className="text-xl text-center max-w-2xl text-base-content/80">
-            Optimiza tu empresa con nuestras herramientas de diagnóstico y consultoría especializada
-          </p>
-          <button
-            onClick={handleOpenModal}
-            className="btn btn-lg text-white"
-            style={{ backgroundColor: '#BFD730' }}
-          >
-            Nuevo Diagnóstico
-          </button>
-        </div>
+        {/* Sección Cómo funciona? */}
+        <section className="py-16 bg-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold text-[#BFD730] mb-8">¿Cómo funciona?</h2>
+            <p className="text-xl text-gray-600 mb-12">
+              Somos la única plataforma en español que conecta, gestiona y capacita equipos freelance para ofrecer soluciones integrales para empresas.
+            </p>
+            {/* Espacio para la imagen */}
+            <div className="mb-12 flex justify-center">
+              <Image
+                src="/funcion.png"
+                alt="Cómo funciona CLA"
+                width={800} 
+                height={400} 
+                layout="responsive"
+                objectFit="contain"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Sección Testimonios */}
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">Testimonios</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-[#1A3D7C]">“Aprendí que no quiero ser programadora toda la vida pero que saber sobre Tecnología me va a ayudar en lo que sea que haga”</p>
+                <p className="mt-4 text-right font-semibold text-[#BFD730]">- Belém, estudiante de preparatoria</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-[#1A3D7C]">“Gracias a su programa de digitalización tenemos mejor control de nuestros procesos y documentos, eso nos va a ayudar a crecer más”.</p>
+                <p className="mt-4 text-right font-semibold text-[#BFD730]">- Ivett, empleada en agencia de viajes</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-[#1A3D7C]">“En este equipo entendí que un científico también puede trabajar fuera del laboratorio y que los ingenieros necesitan aprender más sobre negocios y mercadotecnia”.</p>
+                <p className="mt-4 text-right font-semibold text-[#BFD730]">- Francisco- Freelance</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <p className="text-[#1A3D7C]">“Los productos que adquirimos en el marketplace de Community Lab Alliance son mejores cada día”.</p>
+                <p className="mt-4 text-right font-semibold text-[#BFD730]">- Fabian- Gerente en empresa de electrocomponentes</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
-
-      <Modal isOpen={showModal} onClose={handleCloseModal}>
-        <FormDiagnostico onSuccess={handleCloseModal} />
+      <Footer />
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <FormDiagnostico onClose={() => setIsModalOpen(false)} />
       </Modal>
     </div>
   );

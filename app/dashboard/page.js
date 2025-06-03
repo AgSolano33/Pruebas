@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ButtonAccount from "@/components/ButtonAccount";
-import FormDiagnostico from "@/components/FormDiagnostico";
+import FormDiagnosticoCentral from "@/components/FormDiagnosticoCentral";
 import DiagnosticoList from "@/components/DiagnosticoList";
 import Modal from "@/components/Modal";
 
@@ -19,17 +19,17 @@ export default function Dashboard() {
       <section className="max-w-4xl mx-auto space-y-8">
         <ButtonAccount />
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl md:text-4xl font-extrabold">Diagnóstico Empresarial</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold">Diagnóstico central</h1>
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
-            Nuevo Diagnóstico
+            Nuevo Diagnóstico Central
           </button>
         </div>
 
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-          <FormDiagnostico onSuccess={() => setIsModalOpen(false)} />
+          <FormDiagnosticoCentral onSuccess={() => setIsModalOpen(false)} />
         </Modal>
 
         <div className="bg-white shadow rounded-lg p-6">

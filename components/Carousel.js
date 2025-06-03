@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import ButtonSignin from "./ButtonSignin";
 
 const slides = [
   {
@@ -23,7 +24,7 @@ const slides = [
   }
 ];
 
-export default function Carousel() {
+export default function Carousel({ onOpenModal }) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -46,10 +47,16 @@ export default function Carousel() {
             className="w-full h-full bg-cover bg-center"
             style={{ backgroundImage: `url(${slide.image})` }}
           >
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center">
               <div className="text-center text-white p-8">
                 <h2 className="text-4xl font-bold mb-4">{slide.title}</h2>
-                <p className="text-xl">{slide.description}</p>
+                <p className="text-xl mb-8">{slide.description}</p>
+                <button 
+                  onClick={onOpenModal}
+                  className="btn btn-primary"
+                >
+                  Realizar Prediagnóstico
+                </button>
               </div>
             </div>
           </div>

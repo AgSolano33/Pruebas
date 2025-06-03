@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
-export default function FormDiagnostico({ onSuccess }) {
+export default function FormDiagnostico({ onClose }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // State to track the current step
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -30,110 +31,219 @@ export default function FormDiagnostico({ onSuccess }) {
     disponibleInvertir: "",
   });
 
+  const filterOnlyLetters = (value) => {
+    return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+  };
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
+  const validateStep = () => {
+    const newErrors = {};
+    
+    if (currentStep === 1) {
+      if (!formData.nombre.trim()) {
+        newErrors.nombre = 'El nombre es requerido';
+      } else if (/\d/.test(formData.nombre)) {
+        newErrors.nombre = 'El nombre no puede contener números';
+      } else if (formData.nombre.trim().length < 2) {
+        newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
+      }
+      
+      if (!formData.apellido.trim()) {
+        newErrors.apellido = 'El apellido es requerido';
+      } else if (/\d/.test(formData.apellido)) {
+        newErrors.apellido = 'El apellido no puede contener números';
+      } else if (formData.apellido.trim().length < 2) {
+        newErrors.apellido = 'El apellido debe tener al menos 2 caracteres';
+      }
+      
+      if (!formData.genero) {
+        newErrors.genero = 'Debes seleccionar un género';
+      }
+
+      if (!formData.nivelEstudios) {
+        newErrors.nivelEstudios = 'Debes seleccionar un nivel de estudios';
+      }
+
+      if (!formData.tipoEmpresa) {
+        newErrors.tipoEmpresa = 'Debes seleccionar si eres empresa o emprendedor';
+      }
+
+      if (!formData.nombreEmpresaProyecto.trim()) {
+        newErrors.nombreEmpresaProyecto = 'El nombre de empresa o proyecto es requerido';
+      }
+      
+      if (!formData.email.trim()) {
+        newErrors.email = 'El email es requerido';
+      } else if (!validateEmail(formData.email)) {
+        newErrors.email = 'Por favor, ingrese un email válido';
+      }
+      
+      if (!formData.telefono.trim()) {
+        newErrors.telefono = 'El teléfono es requerido';
+      } else if (!/^[0-9]{10}$/.test(formData.telefono.replace(/\D/g, ''))) {
+        newErrors.telefono = 'El teléfono debe tener 10 dígitos numéricos';
+      }
+
+      if (!formData.giroActividad.trim()) {
+        newErrors.giroActividad = 'El giro de actividad es requerido';
+      }
+
+      if (!formData.descripcionActividad.trim()) {
+        newErrors.descripcionActividad = 'La descripción de actividad es requerida';
+      }
+      
+      if (!formData.tieneEmpleados) {
+        newErrors.tieneEmpleados = 'Este campo es requerido';
+      }
+      
+      if (formData.tieneEmpleados === 'si' && (!formData.numeroEmpleados || formData.numeroEmpleados <= 0)) {
+        newErrors.numeroEmpleados = 'Debes especificar el número de empleados y debe ser mayor a 0';
+      }
+      
+      if (!formData.ventasAnualesEstimadas || formData.ventasAnualesEstimadas < 0) {
+        newErrors.ventasAnualesEstimadas = 'Las ventas anuales estimadas son requeridas y no pueden ser negativas';
+      }
+    }
+    
+    if (currentStep === 2) {
+      if (!formData.mayorObstaculo.trim()) {
+        newErrors.mayorObstaculo = 'Este campo es requerido';
+      }
+      if (!formData.gestionDificultades.trim()) {
+        newErrors.gestionDificultades = 'Este campo es requerido';
+      }
+      if (!formData.buenResultadoMetrica.trim()) {
+        newErrors.buenResultadoMetrica = 'Este campo es requerido';
+      }
+      if (!formData.objetivosAcciones.trim()) {
+        newErrors.objetivosAcciones = 'Este campo es requerido';
+      }
+      if (!formData.tipoAyuda) {
+        newErrors.tipoAyuda = 'Debes seleccionar un tipo de ayuda';
+      }
+      if (!formData.disponibleInvertir) {
+        newErrors.disponibleInvertir = 'Debes seleccionar tu disposición a invertir';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validate the current step before submitting
+    if (!validateStep()) {
+      toast.error("Por favor, completa todos los campos requeridos antes de enviar.");
+      return;
+    }
+
     setIsLoading(true);
+    try {
+      const response = await fetch("/api/prediagnostico", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    // Handle form submission for the final step
-    if (currentStep === 2) {
-      try {
-        const response = await fetch("/api/prediagnostico", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
-
-        if (!response.ok) {
-          throw new Error("Error al enviar el formulario");
-        }
-
-        toast.success("Formulario enviado correctamente");
-        setFormData({
-          nombre: "",
-          apellido: "",
-          genero: "",
-          nivelEstudios: "",
-          tipoEmpresa: "",
-          nombreEmpresaProyecto: "",
-          email: "",
-          telefono: "",
-          giroActividad: "",
-          descripcionActividad: "",
-          tieneEmpleados: "",
-          numeroEmpleados: "",
-          ventasAnualesEstimadas: "",
-          mayorObstaculo: "",
-          gestionDificultades: "",
-          buenResultadoMetrica: "",
-          objetivosAcciones: "",
-          tipoAyuda: "",
-          disponibleInvertir: "",
-        });
-        router.refresh();
-        if (onSuccess) {
-          onSuccess();
-        }
-      } catch (error) {
-        toast.error("Error al enviar el formulario");
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error("Error al enviar el formulario");
       }
+
+      toast.success("Formulario enviado correctamente");
+      // Reset form after successful submission
+      setFormData({
+        nombre: "",
+        apellido: "",
+        genero: "",
+        nivelEstudios: "",
+        tipoEmpresa: "",
+        nombreEmpresaProyecto: "",
+        email: "",
+        telefono: "",
+        giroActividad: "",
+        descripcionActividad: "",
+        tieneEmpleados: "",
+        numeroEmpleados: "",
+        ventasAnualesEstimadas: "",
+        mayorObstaculo: "",
+        gestionDificultades: "",
+        buenResultadoMetrica: "",
+        objetivosAcciones: "",
+        tipoAyuda: "",
+        disponibleInvertir: "",
+      });
+      setErrors({}); // Clear errors on successful submission
+      setCurrentStep(1); // Go back to the first step
+      router.refresh();
+      onClose(); // Close modal
+    } catch (error) {
+      toast.error("Error al enviar el formulario.");
+      console.error("Submission error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    setFormData(prev => {
+      // Handle specific filtering if needed, like filterOnlyLetters for name/apellido
+      if (name === 'nombre' || name === 'apellido') {
+        return {
+          ...prev,
+          [name]: filterOnlyLetters(value)
+        };
+      } else if (name === 'numeroEmpleados' || name === 'ventasAnualesEstimadas') {
+         // Ensure number fields are treated as numbers
+        return {
+           ...prev,
+           [name]: value === '' ? '' : Number(value) // Store empty string or number
+         };
+      }
+      
+      return {
+        ...prev,
+        [name]: value
+      };
+    });
+    
+    // Clear the error for the field being changed
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
   };
 
   const handleNextStep = () => {
-    // Validate first step fields
-    const firstStepFields = [
-      'nombre', 'apellido', 'genero', 'nivelEstudios', 'tipoEmpresa',
-      'nombreEmpresaProyecto', 'email', 'telefono', 'giroActividad',
-      'descripcionActividad', 'tieneEmpleados', 'ventasAnualesEstimadas'
-    ];
-
-    for (const field of firstStepFields) {
-      if (!formData[field]) {
-        toast.error(`Por favor, completa el campo ${field}`); // Show error for empty required field
-        return; // Prevent moving to the next step
-      }
+    if (validateStep()) {
+      setCurrentStep((prev) => prev + 1);
+    } else {
+       // Optional: show a toast notification if validation fails on next
+       toast.error("Por favor, completa los campos requeridos antes de continuar.");
     }
-
-    // Validate email format
-    if (!validateEmail(formData.email)) {
-      toast.error('Por favor, ingresa un correo electrónico válido');
-      return;
-    }
-
-    // If tieneEmpleados is 'si', also validate numeroEmpleados
-    if (formData.tieneEmpleados === 'si' && !formData.numeroEmpleados) {
-      toast.error('Por favor, indica el número de empleados.');
-      return; 
-    }
-
-    // If all required fields are filled, move to the next step
-    setCurrentStep((prev) => prev + 1);
   };
 
   const handlePreviousStep = () => {
     setCurrentStep((prev) => prev - 1);
+    setErrors({}); // Clear errors when going back a step
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-     
+      <h2 className="text-2xl font-bold text-left mb-6" style={{ color: '#00AEEF' }}>
+     Pre-diagnóstico
+      </h2>
+
       <div className="text-sm text-gray-600 mb-6 space-y-2">
         <p>1. Es importante que tus respuestas sean lo mas claras y precisas posibles, entre mas información tengamos, mejor ayuda seremos capaces de brindarte.</p>
         <p>2. Recuerda que nuestros eventos y programas se fondean en parte con fondos públicos que nos ayudan a hacerlos tan accesibles, tus datos no tienen ningún uso comercial mas allá de ofrecerte programas, talleres y experiencias que puedan ser de tu interés en nuestro ecosistema, así como con fines estadísticos para el estado.</p>
@@ -152,7 +262,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="nombre"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.nombre ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="nombre"
               required
               type="text"
@@ -160,6 +270,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.nombre}
               onChange={handleChange}
             />
+             {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
           </div>
 
           <div>
@@ -171,7 +282,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="apellido"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.apellido ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="apellido"
               required
               type="text"
@@ -179,6 +290,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.apellido}
               onChange={handleChange}
             />
+            {errors.apellido && <p className="text-red-500 text-sm mt-1">{errors.apellido}</p>}
           </div>
 
           <div>
@@ -190,7 +302,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <select
               id="genero"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.genero ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="genero"
               required
               value={formData.genero}
@@ -201,6 +313,7 @@ export default function FormDiagnostico({ onSuccess }) {
               <option value="mujer">Mujer</option>
               <option value="prefiero no decir">Prefiero no decir</option>
             </select>
+             {errors.genero && <p className="text-red-500 text-sm mt-1">{errors.genero}</p>}
           </div>
 
           <div>
@@ -212,7 +325,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <select
               id="nivelEstudios"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.nivelEstudios ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="nivelEstudios"
               required
               value={formData.nivelEstudios}
@@ -226,6 +339,7 @@ export default function FormDiagnostico({ onSuccess }) {
               <option value="maestria o superior">Maestría o superior</option>
               <option value="la escuela de la vida">La escuela de la vida</option>
             </select>
+             {errors.nivelEstudios && <p className="text-red-500 text-sm mt-1">{errors.nivelEstudios}</p>}
           </div>
 
           <div>
@@ -237,7 +351,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <select
               id="tipoEmpresa"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.tipoEmpresa ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="tipoEmpresa"
               required
               value={formData.tipoEmpresa}
@@ -247,6 +361,7 @@ export default function FormDiagnostico({ onSuccess }) {
               <option value="empresa">Empresa</option>
               <option value="emprendedor">Emprendedor independiente</option>
             </select>
+             {errors.tipoEmpresa && <p className="text-red-500 text-sm mt-1">{errors.tipoEmpresa}</p>}
           </div>
 
           <div>
@@ -258,7 +373,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="nombreEmpresaProyecto"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.nombreEmpresaProyecto ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="nombreEmpresaProyecto"
               required
               type="text"
@@ -266,6 +381,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.nombreEmpresaProyecto}
               onChange={handleChange}
             />
+             {errors.nombreEmpresaProyecto && <p className="text-red-500 text-sm mt-1">{errors.nombreEmpresaProyecto}</p>}
           </div>
 
           <div>
@@ -277,7 +393,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="email"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.email ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="email"
               required
               type="email"
@@ -285,6 +401,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.email}
               onChange={handleChange}
             />
+             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>
 
           <div>
@@ -296,7 +413,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="telefono"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.telefono ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="telefono"
               required
               type="Number"
@@ -304,6 +421,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.telefono}
               onChange={handleChange}
             />
+             {errors.telefono && <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>}
           </div>
 
           <div>
@@ -315,7 +433,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="giroActividad"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.giroActividad ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="giroActividad"
               required
               type="text"
@@ -323,6 +441,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.giroActividad}
               onChange={handleChange}
             />
+             {errors.giroActividad && <p className="text-red-500 text-sm mt-1">{errors.giroActividad}</p>}
           </div>
 
           <div>
@@ -334,7 +453,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <textarea
               id="descripcionActividad"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.descripcionActividad ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="descripcionActividad"
               required
               rows="4"
@@ -342,6 +461,7 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.descripcionActividad}
               onChange={handleChange}
             />
+             {errors.descripcionActividad && <p className="text-red-500 text-sm mt-1">{errors.descripcionActividad}</p>}
           </div>
 
           <div>
@@ -353,7 +473,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <select
               id="tieneEmpleados"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.tieneEmpleados ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="tieneEmpleados"
               required
               value={formData.tieneEmpleados}
@@ -363,6 +483,7 @@ export default function FormDiagnostico({ onSuccess }) {
               <option value="si">Sí</option>
               <option value="no">No</option>
             </select>
+             {errors.tieneEmpleados && <p className="text-red-500 text-sm mt-1">{errors.tieneEmpleados}</p>}
           </div>
 
           {formData.tieneEmpleados === "si" && (
@@ -375,7 +496,7 @@ export default function FormDiagnostico({ onSuccess }) {
               </label>
               <input
                 id="numeroEmpleados"
-                className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+                className={`mt-1 block w-full rounded-md border-2 ${errors.numeroEmpleados ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
                 name="numeroEmpleados"
                 required
                 type="number"
@@ -383,6 +504,7 @@ export default function FormDiagnostico({ onSuccess }) {
                 value={formData.numeroEmpleados}
                 onChange={handleChange}
               />
+               {errors.numeroEmpleados && <p className="text-red-500 text-sm mt-1">{errors.numeroEmpleados}</p>}
             </div>
           )}
 
@@ -395,7 +517,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <input
               id="ventasAnualesEstimadas"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.ventasAnualesEstimadas ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="ventasAnualesEstimadas"
               required
               type="number"
@@ -403,13 +525,15 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.ventasAnualesEstimadas}
               onChange={handleChange}
             />
+             {errors.ventasAnualesEstimadas && <p className="text-red-500 text-sm mt-1">{errors.ventasAnualesEstimadas}</p>}
           </div>
 
-          <div className="flex justify-end">
+          {/* Navigation button for the first section */}
+          <div className="flex justify-end mt-6">
             <button
               type="button"
               onClick={handleNextStep}
-              className="mt-4 px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Siguiente
             </button>
@@ -417,10 +541,10 @@ export default function FormDiagnostico({ onSuccess }) {
         </div>
       )}
 
-      {/* Segunda sección: Diagnóstico */}
+      {/* Segunda sección: Preguntas del Prediagnóstico */}
       {currentStep === 2 && (
         <div className="space-y-4 pt-6">
-          <div>
+           <div>
             <label
               htmlFor="mayorObstaculo"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -429,7 +553,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <textarea
               id="mayorObstaculo"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.mayorObstaculo ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="mayorObstaculo"
               required
               rows="4"
@@ -437,9 +561,10 @@ export default function FormDiagnostico({ onSuccess }) {
               value={formData.mayorObstaculo}
               onChange={handleChange}
             />
-          </div>
+            {errors.mayorObstaculo && <p className="text-red-500 text-sm mt-1">{errors.mayorObstaculo}</p>}
+           </div>
 
-          <div>
+           <div>
             <label
               htmlFor="gestionDificultades"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -448,16 +573,17 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <textarea
               id="gestionDificultades"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.gestionDificultades ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="gestionDificultades"
               required
               rows="4"
               value={formData.gestionDificultades}
               onChange={handleChange}
             />
-          </div>
+            {errors.gestionDificultades && <p className="text-red-500 text-sm mt-1">{errors.gestionDificultades}</p>}
+           </div>
 
-          <div>
+           <div>
             <label
               htmlFor="buenResultadoMetrica"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -466,16 +592,17 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <textarea
               id="buenResultadoMetrica"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.buenResultadoMetrica ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="buenResultadoMetrica"
               required
               rows="4"
               value={formData.buenResultadoMetrica}
               onChange={handleChange}
             />
-          </div>
+            {errors.buenResultadoMetrica && <p className="text-red-500 text-sm mt-1">{errors.buenResultadoMetrica}</p>}
+           </div>
 
-          <div>
+           <div>
             <label
               htmlFor="objetivosAcciones"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -484,16 +611,17 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <textarea
               id="objetivosAcciones"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.objetivosAcciones ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="objetivosAcciones"
               required
               rows="4"
               value={formData.objetivosAcciones}
               onChange={handleChange}
             />
-          </div>
+            {errors.objetivosAcciones && <p className="text-red-500 text-sm mt-1">{errors.objetivosAcciones}</p>}
+           </div>
 
-          <div>
+           <div>
             <label
               htmlFor="tipoAyuda"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -502,7 +630,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <select
               id="tipoAyuda"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.tipoAyuda ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="tipoAyuda"
               required
               value={formData.tipoAyuda}
@@ -513,9 +641,10 @@ export default function FormDiagnostico({ onSuccess }) {
               <option value="mentoria/consulturia">Mentoria/Consultoría</option>
               <option value="implementacion/automatizacion">Implementación/Automatización</option>
             </select>
-          </div>
+            {errors.tipoAyuda && <p className="text-red-500 text-sm mt-1">{errors.tipoAyuda}</p>}
+           </div>
 
-          <div>
+           <div>
             <label
               htmlFor="disponibleInvertir"
               className="block text-sm font-medium text-gray-700 mb-1"
@@ -524,7 +653,7 @@ export default function FormDiagnostico({ onSuccess }) {
             </label>
             <select
               id="disponibleInvertir"
-              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
+              className={`mt-1 block w-full rounded-md border-2 ${errors.disponibleInvertir ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="disponibleInvertir"
               required
               value={formData.disponibleInvertir}
@@ -537,27 +666,28 @@ export default function FormDiagnostico({ onSuccess }) {
               <option value="2-4%">Si, entre el 2% y 4% de mis utilidades</option>
               <option value="mas del 5%">Si, mas del 5% de mis utilidades</option>
             </select>
-          </div>
+            {errors.disponibleInvertir && <p className="text-red-500 text-sm mt-1">{errors.disponibleInvertir}</p>}
+           </div>
 
-          {/* Navigation buttons for the second section */}
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={handlePreviousStep}
-              className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Anterior
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors duration-200"
-            >
-              {isLoading ? "Enviando..." : "Enviar formulario"}
-            </button>
-          </div>
-        </div>
-      )}
-    </form>
-  );
-} 
+           {/* Navigation buttons for the second section (Submit) */}
+           <div className="flex justify-between mt-6">
+             <button
+               type="button"
+               onClick={handlePreviousStep}
+               className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+             >
+               Anterior
+             </button>
+             <button
+               type="submit"
+               disabled={isLoading}
+               className="px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors duration-200"
+             >
+               {isLoading ? "Enviando..." : "Enviar formulario"}
+             </button>
+           </div>
+         </div>
+       )}
+     </form>
+   );
+ }; 

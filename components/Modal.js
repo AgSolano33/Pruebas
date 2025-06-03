@@ -1,6 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
+
 export default function Modal({ isOpen, onClose, children }) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -8,7 +22,7 @@ export default function Modal({ isOpen, onClose, children }) {
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-left mb-4" style={{ color: '#00AEEF' }}>Prediagnóstico</h2>
+          <h2 className="text-2xl font-bold text-left mb-4" style={{ color: '#ffffff' }}></h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import config from "@/config";
@@ -8,79 +10,68 @@ import logo from "@/app/icon.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-base-200 border-t border-base-content/10">
-      <div className="max-w-7xl mx-auto px-8 py-24">
-        <div className=" flex lg:items-start md:flex-row md:flex-nowrap flex-wrap flex-col">
-          <div className="w-64 flex-shrink-0 md:mx-0 mx-auto text-center md:text-left">
-            <Link
-              href="/#"
-              aria-current="page"
-              className="flex gap-2 justify-center md:justify-start items-center"
-            >
+    <footer className="bg-[#1A3D7C] text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Logo y descripción */}
+          <div className="col-span-1 md:col-span-1">
+            <div className="mb-4">
               <Image
                 src={logo}
                 alt={`${config.appName} logo`}
+                placeholder="blur"
                 priority={true}
-                className="w-6 h-6"
-                width={24}
-                height={24}
+                width={150}
+                height={150}
+                style={{ objectFit: 'contain' }}
               />
-              <strong className="font-extrabold tracking-tight text-base md:text-lg">
-                {config.appName}
-              </strong>
-            </Link>
-
-            <p className="mt-3 text-sm text-base-content/80">
-              {config.appDescription}
-            </p>
-            <p className="mt-3 text-sm text-base-content/60">
-              Copyright © {new Date().getFullYear()} - All rights reserved
+            </div>
+            <p className="text-sm text-gray-300 mt-4">
+              Transformando empresas a través de la innovación y el desarrollo sostenible.
             </p>
           </div>
-          <div className="flex-grow flex flex-wrap justify-center -mb-10 md:mt-0 mt-10 text-center">
-            <div className="lg:w-1/3 md:w-1/2 w-full px-4">
-              <div className="footer-title font-semibold text-base-content tracking-widest text-sm md:text-left mb-3">
-                LINKS
-              </div>
 
-              <div className="flex flex-col justify-center items-center md:items-start gap-2 mb-10 text-sm">
-                {config.mailgun.supportEmail && (
-                  <a
-                    href={`mailto:${config.mailgun.supportEmail}`}
-                    target="_blank"
-                    className="link link-hover"
-                    aria-label="Contact Support"
-                  >
-                    Support
-                  </a>
-                )}
-                <Link href="/#pricing" className="link link-hover">
-                  Pricing
-                </Link>
-                <Link href="/blog" className="link link-hover">
-                  Blog
-                </Link>
-                <a href="/#" target="_blank" className="link link-hover">
-                  Affiliates
+          {/* Redes sociales */}
+          <div className="col-span-1">
+            <h3 className="text-lg font-semibold mb-4">Síguenos</h3>
+            <div className="flex space-x-4">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                </svg>
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />
+                </svg>
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z" />
+                  <circle cx="4" cy="4" r="2" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Políticas */}
+          <div className="col-span-1">
+            <h3 className="text-lg font-semibold mb-4">Políticas</h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="https://drive.google.com/file/d/11_DZ7m2lQnkoFVbLEGhag4W_XRqcM-on/view" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                  Políticas de Privacidad
                 </a>
-              </div>
-            </div>
-
-            <div className="lg:w-1/3 md:w-1/2 w-full px-4">
-              <div className="footer-title font-semibold text-base-content tracking-widest text-sm md:text-left mb-3">
-                LEGAL
-              </div>
-
-              <div className="flex flex-col justify-center items-center md:items-start gap-2 mb-10 text-sm">
-                <Link href="/tos" className="link link-hover">
-                  Terms of services
-                </Link>
-                <Link href="/privacy-policy" className="link link-hover">
-                  Privacy policy
-                </Link>
-              </div>
-            </div>
+              </li>
+            </ul>
           </div>
+        </div>
+
+        {/* Línea divisoria */}
+        <div className="border-t border-gray-700 mt-8 pt-8">
+          <p className="text-center text-gray-300 text-sm">
+            © {new Date().getFullYear()} Community Lab Alliance. Todos los derechos reservados.
+          </p>
         </div>
       </div>
     </footer>
