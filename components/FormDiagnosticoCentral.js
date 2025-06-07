@@ -103,10 +103,6 @@ export default function FormDiagnosticoCentral() {
     }
   });
 
-  const filterOnlyLetters = (value) => {
-    return value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-  };
-
   const validateStep = (step) => {
     const newErrors = {};
     
