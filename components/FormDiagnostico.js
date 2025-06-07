@@ -42,7 +42,7 @@ export default function FormDiagnostico({ onClose }) {
   }, [session, router]);
 
   const filterOnlyLetters = (value) => {
-    return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+    return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
   };
 
   const validateEmail = (email) => {
@@ -71,19 +71,19 @@ export default function FormDiagnostico({ onClose }) {
       }
       
       if (!formData.genero) {
-        newErrors.genero = 'Debes seleccionar un género';
+        newErrors.genero = "Debes seleccionar un género";
       }
 
       if (!formData.nivelEstudios) {
-        newErrors.nivelEstudios = 'Debes seleccionar un nivel de estudios';
+        newErrors.nivelEstudios = "Debes seleccionar un nivel de estudios";
       }
 
       if (!formData.tipoEmpresa) {
-        newErrors.tipoEmpresa = 'Debes seleccionar si eres empresa o emprendedor';
+        newErrors.tipoEmpresa = "Debes seleccionar si eres empresa o emprendedor";
       }
 
       if (!formData.nombreEmpresaProyecto.trim()) {
-        newErrors.nombreEmpresaProyecto = 'El nombre de empresa o proyecto es requerido';
+        newErrors.nombreEmpresaProyecto = "El nombre de empresa o proyecto es requerido";
       }
       
       if (!formData.email.trim()) {
@@ -94,7 +94,7 @@ export default function FormDiagnostico({ onClose }) {
       
       if (!formData.telefono.trim()) {
         newErrors.telefono = "El teléfono es requerido";
-      } else if (!/^[0-9]{10}$/.test(formData.telefono.replace(/\D/g, ''))) {
+      } else if (!/^[0-9]{10}$/.test(formData.telefono.replace(/\D/g, ""))) {
         newErrors.telefono = "El teléfono debe tener 10 dígitos numéricos";
       }
 
