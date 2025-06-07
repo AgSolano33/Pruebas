@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 
 const marcas = [
@@ -60,7 +60,7 @@ export default function MarcasCarousel() {
   const requestRef = useRef();
   const previousTimeRef = useRef();
 
-  const animate = (time) => {
+  const animate = useCallback((time) => {
     if (previousTimeRef.current !== undefined) {
       const deltaTime = time - previousTimeRef.current;
       setPosition(prev => {
@@ -70,12 +70,12 @@ export default function MarcasCarousel() {
     }
     previousTimeRef.current = time;
     requestRef.current = requestAnimationFrame(animate);
-  };
+  }, []);
 
   useEffect(() => {
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current);
-  }, []);
+  }, [animate]);
 
   return (
     <div className="w-full bg-white py-12 overflow-hidden">

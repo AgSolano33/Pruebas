@@ -55,19 +55,19 @@ export default function FormDiagnostico({ onClose }) {
     
     if (currentStep === 1) {
       if (!formData.nombre.trim()) {
-        newErrors.nombre = 'El nombre es requerido';
+        newErrors.nombre = "El nombre es requerido";
       } else if (/\d/.test(formData.nombre)) {
-        newErrors.nombre = 'El nombre no puede contener números';
+        newErrors.nombre = "El nombre no puede contener números";
       } else if (formData.nombre.trim().length < 2) {
-        newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
+        newErrors.nombre = "El nombre debe tener al menos 2 caracteres";
       }
       
       if (!formData.apellido.trim()) {
-        newErrors.apellido = 'El apellido es requerido';
+        newErrors.apellido = "El apellido es requerido";
       } else if (/\d/.test(formData.apellido)) {
-        newErrors.apellido = 'El apellido no puede contener números';
+        newErrors.apellido = "El apellido no puede contener números";
       } else if (formData.apellido.trim().length < 2) {
-        newErrors.apellido = 'El apellido debe tener al menos 2 caracteres';
+        newErrors.apellido = "El apellido debe tener al menos 2 caracteres";
       }
       
       if (!formData.genero) {
@@ -87,56 +87,56 @@ export default function FormDiagnostico({ onClose }) {
       }
       
       if (!formData.email.trim()) {
-        newErrors.email = 'El email es requerido';
+        newErrors.email = "El email es requerido";
       } else if (!validateEmail(formData.email)) {
-        newErrors.email = 'Por favor, ingrese un email válido';
+        newErrors.email = "Por favor, ingrese un email válido";
       }
       
       if (!formData.telefono.trim()) {
-        newErrors.telefono = 'El teléfono es requerido';
+        newErrors.telefono = "El teléfono es requerido";
       } else if (!/^[0-9]{10}$/.test(formData.telefono.replace(/\D/g, ''))) {
-        newErrors.telefono = 'El teléfono debe tener 10 dígitos numéricos';
+        newErrors.telefono = "El teléfono debe tener 10 dígitos numéricos";
       }
 
       if (!formData.giroActividad.trim()) {
-        newErrors.giroActividad = 'El giro de actividad es requerido';
+        newErrors.giroActividad = "El giro de actividad es requerido";
       }
 
       if (!formData.descripcionActividad.trim()) {
-        newErrors.descripcionActividad = 'La descripción de actividad es requerida';
+        newErrors.descripcionActividad = "La descripción de actividad es requerida";
       }
       
       if (!formData.tieneEmpleados) {
-        newErrors.tieneEmpleados = 'Este campo es requerido';
+        newErrors.tieneEmpleados = "Este campo es requerido";
       }
       
-      if (formData.tieneEmpleados === 'si' && (!formData.numeroEmpleados || formData.numeroEmpleados <= 0)) {
-        newErrors.numeroEmpleados = 'Debes especificar el número de empleados y debe ser mayor a 0';
+      if (formData.tieneEmpleados === "si" && (!formData.numeroEmpleados || formData.numeroEmpleados <= 0)) {
+        newErrors.numeroEmpleados = "Debes especificar el número de empleados y debe ser mayor a 0";
       }
       
       if (!formData.ventasAnualesEstimadas || formData.ventasAnualesEstimadas < 0) {
-        newErrors.ventasAnualesEstimadas = 'Las ventas anuales estimadas son requeridas y no pueden ser negativas';
+        newErrors.ventasAnualesEstimadas = "Las ventas anuales estimadas son requeridas y no pueden ser negativas";
       }
     }
     
     if (currentStep === 2) {
       if (!formData.mayorObstaculo.trim()) {
-        newErrors.mayorObstaculo = 'Este campo es requerido';
+        newErrors.mayorObstaculo = "Este campo es requerido";
       }
       if (!formData.gestionDificultades.trim()) {
-        newErrors.gestionDificultades = 'Este campo es requerido';
+        newErrors.gestionDificultades = "Este campo es requerido";
       }
       if (!formData.buenResultadoMetrica.trim()) {
-        newErrors.buenResultadoMetrica = 'Este campo es requerido';
+        newErrors.buenResultadoMetrica = "Este campo es requerido";
       }
       if (!formData.objetivosAcciones.trim()) {
-        newErrors.objetivosAcciones = 'Este campo es requerido';
+        newErrors.objetivosAcciones = "Este campo es requerido";
       }
       if (!formData.tipoAyuda) {
-        newErrors.tipoAyuda = 'Debes seleccionar un tipo de ayuda';
+        newErrors.tipoAyuda = "Debes seleccionar un tipo de ayuda";
       }
       if (!formData.disponibleInvertir) {
-        newErrors.disponibleInvertir = 'Debes seleccionar tu disposición a invertir';
+        newErrors.disponibleInvertir = "Debes seleccionar tu disposición a invertir";
       }
     }
     
