@@ -6,7 +6,7 @@
     "es6": true
   },
   "rules": {
-    // Your specific rules.
-    "no-unused-vars": "warn"
+   
+    "react/no-unescaped-entities": "off"
   }
 }
