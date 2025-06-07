@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ButtonAccount from "@/components/ButtonAccount";
 import FormDiagnosticoCentral from "@/components/FormDiagnosticoCentral";
-import DiagnosticoList from "@/components/DiagnosticoList";
+import PrediagnosticoList from "@/components/PrediagnosticoList";
 import Modal from "@/components/Modal";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +18,14 @@ export default function Dashboard() {
     <main className="min-h-screen p-8 pb-24">
       <section className="max-w-4xl mx-auto space-y-8">
         <ButtonAccount />
+        
+        {/* Sección de Prediagnósticos */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">Prediagnósticos Registrados</h2>
+          <PrediagnosticoList />
+        </div>
+
+        {/* Sección de Diagnósticos Centrales */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl md:text-4xl font-extrabold">Diagnóstico central</h1>
           <button
@@ -31,11 +39,6 @@ export default function Dashboard() {
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
           <FormDiagnosticoCentral onSuccess={() => setIsModalOpen(false)} />
         </Modal>
-
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-4">Diagnósticos Registrados</h2>
-          <DiagnosticoList />
-        </div>
       </section>
     </main>
   );

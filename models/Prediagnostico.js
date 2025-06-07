@@ -31,7 +31,7 @@ const prediagnosticoSchema = new mongoose.Schema(
       required: true,
     },
     telefono: {
-      type: Number, 
+      type: Number,
       required: true,
     },
     giroActividad: {
@@ -45,12 +45,16 @@ const prediagnosticoSchema = new mongoose.Schema(
     tieneEmpleados: {
       type: String,
       required: true,
+      enum: ["si", "no"],
     },
     numeroEmpleados: {
       type: Number,
+      required: function () {
+        return this.tieneEmpleados === "si";
+      },
     },
     ventasAnualesEstimadas: {
-      type: Number, 
+      type: Number,
       required: true,
     },
     mayorObstaculo: {
@@ -83,8 +87,6 @@ const prediagnosticoSchema = new mongoose.Schema(
   }
 );
 
-const Prediagnostico =
-  mongoose.models.Prediagnostico ||
-  mongoose.model("Prediagnostico", prediagnosticoSchema);
+const Prediagnostico = mongoose.models.Prediagnostico || mongoose.model("Prediagnostico", prediagnosticoSchema);
 
 export default Prediagnostico; 

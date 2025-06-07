@@ -57,7 +57,7 @@ export default function MarcasCarousel() {
     if (previousTimeRef.current !== undefined) {
       const deltaTime = time - previousTimeRef.current;
       setPosition(prev => {
-        const newPosition = prev - (deltaTime * 0.015); // time
+        const newPosition = prev - (deltaTime * 0.010); // time
         return newPosition <= -100 ? 0 : newPosition;
       });
     }

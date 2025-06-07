@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/libs/mongodb"; 
-import Prediagnostico from "@/models/Prediagnostico"; 
+import connectDB from "@/libs/mongodb";
+import Prediagnostico from "@/models/Prediagnostico";
 
 export async function POST(request) {
   try {
     await connectDB(); 
     const data = await request.json(); 
+        const prediagnostico = await Prediagnostico.create(data);
     
-   
-    const prediagnostico = await Prediagnostico.create(data);
-    
-
     return NextResponse.json(prediagnostico, { status: 201 });
 
   } catch (error) {
@@ -18,7 +15,6 @@ export async function POST(request) {
     
     let errorMessage = "Error al guardar los datos del prediagnóstico";
     
-  
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
       errorMessage = `Error de validación: ${validationErrors.join(', ')}`;
@@ -28,7 +24,6 @@ export async function POST(request) {
       errorMessage = `Error de formato de datos: ${error.message}`;
     }
 
-  
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -36,3 +31,64 @@ export async function POST(request) {
   }
 }
 
+export async function GET() {
+  try {
+    const db = await connectDB();
+    if (!db) {
+      throw new Error("No se pudo establecer conexión con la base de datos");
+    }
+    
+    // Obtener los prediagnósticos
+    const prediagnosticos = await Prediagnostico.find()
+      .sort({ createdAt: -1 });
+    
+    return NextResponse.json(prediagnosticos);
+  } catch (error) {
+    return NextResponse.json(
+      { 
+        error: 'Error al obtener los prediagnósticos',
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID no proporcionado' },
+        { status: 400 }
+      );
+    }
+    const db = await connectDB();
+    if (!db) {
+      throw new Error("No se pudo establecer conexión con la base de datos");
+    }
+    const prediagnostico = await Prediagnostico.findByIdAndDelete(id);
+    
+    if (!prediagnostico) {
+      return NextResponse.json(
+        { error: 'Prediagnóstico no encontrado' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({ 
+      message: 'Prediagnóstico eliminado exitosamente',
+      id: id 
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { 
+        error: 'Error al eliminar el prediagnóstico',
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
+}

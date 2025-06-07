@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import config from "@/config";
 
 export default function FormDiagnostico({ onClose }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // State to track the current step
   const [errors, setErrors] = useState({});
@@ -16,7 +19,7 @@ export default function FormDiagnostico({ onClose }) {
     nivelEstudios: "",
     tipoEmpresa: "",
     nombreEmpresaProyecto: "",
-    email: "",
+    email: session?.user?.email || "",
     telefono: "",
     giroActividad: "",
     descripcionActividad: "",
@@ -30,6 +33,13 @@ export default function FormDiagnostico({ onClose }) {
     tipoAyuda: "",
     disponibleInvertir: "",
   });
+
+  useEffect(() => {
+    if (!session) {
+      router.push(config.auth.callbackUrl);
+      return;
+    }
+  }, [session, router]);
 
   const filterOnlyLetters = (value) => {
     return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
@@ -136,7 +146,12 @@ export default function FormDiagnostico({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validate the current step before submitting
+
+    if (!session) {
+      router.push(config.auth.callbackUrl);
+      return;
+    }
+
     if (!validateStep()) {
       toast.error("Por favor, completa todos los campos requeridos antes de enviar.");
       return;
@@ -148,8 +163,12 @@ export default function FormDiagnostico({ onClose }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.accessToken}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          userId: session.user.id,
+        }),
       });
 
       if (!response.ok) {
@@ -157,7 +176,6 @@ export default function FormDiagnostico({ onClose }) {
       }
 
       toast.success("Formulario enviado correctamente");
-      // Reset form after successful submission
       setFormData({
         nombre: "",
         apellido: "",
@@ -179,10 +197,10 @@ export default function FormDiagnostico({ onClose }) {
         tipoAyuda: "",
         disponibleInvertir: "",
       });
-      setErrors({}); // Clear errors on successful submission
-      setCurrentStep(1); // Go back to the first step
+      setErrors({});
+      setCurrentStep(1);
       router.refresh();
-      onClose(); // Close modal
+      onClose();
     } catch (error) {
       toast.error("Error al enviar el formulario.");
       console.error("Submission error:", error);

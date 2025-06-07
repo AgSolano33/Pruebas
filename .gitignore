@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+.jest-cache
+*.test.js.snap
+__snapshots__/
 
 # next.js
 /.next/
@@ -14,18 +17,23 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
 *.pem
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
+.pnpm-debug.log*
 
 # vercel
 .vercel
@@ -34,6 +42,32 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/
+
+# logs
+logs
+*.log
+
+# testing
+/coverage
+/.nyc_output
+
+# temp files
+*.tmp
+*.temp
+.temp/
+.tmp/
+
+# cache
+.cache/
+.eslintcache
+.stylelintcache
+
 # public
 public/robots.txt
 public/sitemap.xml
@@ -41,3 +75,12 @@ public/sitemap-0.xml
 
 # md files
 *.mdc
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
