@@ -131,7 +131,7 @@ export default function FormDiagnosticoCentral() {
         
         if (!formData.informacionPersonal.email) {
           newErrors.email = "El email es requerido";
-        } else if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(formData.informacionPersonal.email)) {
+        } else if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.informacionPersonal.email)) {
           newErrors.email = "El formato del email no es válido. Debe incluir @ y un dominio válido";
         }
         
@@ -208,100 +208,66 @@ export default function FormDiagnosticoCentral() {
         if (!formData.proyectoObjetivos.objetivoConsultoria) {
           newErrors.objetivoConsultoria = "El objetivo de la consultoría es requerido";
         } else if (formData.proyectoObjetivos.objetivoConsultoria.length < 20) {
-          newErrors.objetivoConsultoria = "El objetivo de la consultoría debe tener al menos 20 caracteres";
+          newErrors.objetivoConsultoria = "El objetivo debe tener al menos 20 caracteres";
         }
-        
-        // Validar que todas las áreas de importancia tengan un valor
-        Object.keys(formData.proyectoObjetivos.importanciaAreas).forEach(key => {
-          if (formData.proyectoObjetivos.importanciaAreas[key] === undefined || 
-              formData.proyectoObjetivos.importanciaAreas[key] === null || 
-              formData.proyectoObjetivos.importanciaAreas[key] < 1) {
-            newErrors[`importancia_${key}`] = "Debe seleccionar un valor mínimo de 1 para esta área";
-          }
-        });
-        break;
-
-      case 4:
-        // Validar evaluación de áreas
-        Object.keys(formData.evaluacionAreas).forEach(area => {
-          Object.keys(formData.evaluacionAreas[area]).forEach(criterio => {
-            if (formData.evaluacionAreas[area][criterio] === undefined || 
-                formData.evaluacionAreas[area][criterio] === null || 
-                formData.evaluacionAreas[area][criterio] < 1) {
-              newErrors[`${area}_${criterio}`] = "Debe seleccionar un valor mínimo de 1 para este criterio";
-            }
-          });
-        });
         break;
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      toast.error("Por favor, completa todos los campos requeridos");
+      setCurrentStep(currentStep + 1);
     }
   };
 
   const handlePreviousStep = () => {
-    setCurrentStep(prev => prev - 1);
+    setCurrentStep(currentStep - 1);
   };
 
   const handleChange = (e, section, subsection = null) => {
     const { name, value, type, checked } = e.target;
     
     setFormData(prev => {
+      const newData = { ...prev };
       if (subsection) {
-        return {
-          ...prev,
-          [section]: {
-            ...prev[section],
-            [subsection]: {
-              ...prev[section][subsection],
-              [name]: type === 'checkbox' ? checked : value
-            }
-          }
-        };
+        newData[section][subsection][name] = type === 'checkbox' ? checked : value;
+      } else {
+        newData[section][name] = type === 'checkbox' ? checked : value;
       }
-      return {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [name]: type === 'checkbox' ? checked : value
-        }
-      };
+      return newData;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!validateStep(currentStep)) {
-      toast.error("Por favor, completa todos los campos requeridos");
       return;
     }
-
+    
     setIsLoading(true);
+    
     try {
-      const response = await fetch("/api/diagnostico-central", {
-        method: "POST",
+      const response = await fetch('/api/diagnostico-central', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       });
-
+      
       if (!response.ok) {
-        throw new Error("Error al enviar el formulario");
+        throw new Error('Error al guardar el diagnóstico');
       }
-
-      toast.success("Formulario enviado correctamente");
-      router.refresh();
+      
+      toast.success('Diagnóstico guardado exitosamente');
+      router.push('/dashboard');
     } catch (error) {
-      toast.error("Error al enviar el formulario");
+      console.error('Error:', error);
+      toast.error('Error al guardar el diagnóstico');
     } finally {
       setIsLoading(false);
     }
@@ -311,458 +277,350 @@ export default function FormDiagnosticoCentral() {
     switch(currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold mb-4">Información Personal</h2>
+          <div className="space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Información Personal</h2>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Nombre *</label>
-              <input
-                type="text"
-                name="nombre"
-                value={formData.informacionPersonal.nombre}
-                onChange={(e) => {
-                  const filteredValue = filterOnlyLetters(e.target.value);
-                  handleChange({
-                    target: {
-                      name: 'nombre',
-                      value: filteredValue
-                    }
-                  }, 'informacionPersonal');
-                }}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.nombre ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Solo letras"
-              />
-              {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Apellido *</label>
-              <input
-                type="text"
-                name="apellido"
-                value={formData.informacionPersonal.apellido}
-                onChange={(e) => {
-                  const filteredValue = filterOnlyLetters(e.target.value);
-                  handleChange({
-                    target: {
-                      name: 'apellido',
-                      value: filteredValue
-                    }
-                  }, 'informacionPersonal');
-                }}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.apellido ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Solo letras"
-              />
-              {errors.apellido && <p className="text-red-500 text-sm mt-1">{errors.apellido}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email *</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.informacionPersonal.email}
-                onChange={(e) => handleChange(e, 'informacionPersonal')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Teléfono *</label>
-              <input
-                type="tel"
-                name="telefono"
-                value={formData.informacionPersonal.telefono}
-                onChange={(e) => handleChange(e, 'informacionPersonal')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.telefono ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.telefono && <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Puesto *</label>
-              <select
-                name="puesto"
-                value={formData.informacionPersonal.puesto}
-                onChange={(e) => handleChange(e, 'informacionPersonal')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.puesto ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">Seleccione un puesto</option>
-                <option value="COO">COO</option>
-                <option value="CEO">CEO</option>
-                <option value="CTO">CTO</option>
-                <option value="Otro">Otro</option>
-              </select>
-              {errors.puesto && <p className="text-red-500 text-sm mt-1">{errors.puesto}</p>}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formData.informacionPersonal.nombre}
+                  onChange={(e) => handleChange(e, 'informacionPersonal')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese su nombre"
+                />
+                {errors.nombre && <p className="mt-1 text-sm text-red-600">{errors.nombre}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Apellido</label>
+                <input
+                  type="text"
+                  name="apellido"
+                  value={formData.informacionPersonal.apellido}
+                  onChange={(e) => handleChange(e, 'informacionPersonal')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese su apellido"
+                />
+                {errors.apellido && <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.informacionPersonal.email}
+                  onChange={(e) => handleChange(e, 'informacionPersonal')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="ejemplo@correo.com"
+                />
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                <input
+                  type="tel"
+                  name="telefono"
+                  value={formData.informacionPersonal.telefono}
+                  onChange={(e) => handleChange(e, 'informacionPersonal')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="1234567890"
+                />
+                {errors.telefono && <p className="mt-1 text-sm text-red-600">{errors.telefono}</p>}
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Puesto</label>
+                <select
+                  name="puesto"
+                  value={formData.informacionPersonal.puesto}
+                  onChange={(e) => handleChange(e, 'informacionPersonal')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">Seleccione un puesto</option>
+                  <option value="director">Director</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="supervisor">Supervisor</option>
+                  <option value="otro">Otro</option>
+                </select>
+                {errors.puesto && <p className="mt-1 text-sm text-red-600">{errors.puesto}</p>}
+              </div>
             </div>
           </div>
         );
-
+        
       case 2:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold mb-4">Información de la Empresa</h2>
+          <div className="space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Información de la Empresa</h2>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Sector o Industria *</label>
-              <select
-                name="sector"
-                value={formData.informacionEmpresa.sector}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.sector ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="">Seleccione un sector</option>
-                <option value="Aeroespacial">Aeroespacial</option>
-                <option value="Automotriz">Automotriz</option>
-                <option value="Bancario y Financiero">Bancario y Financiero</option>
-                <option value="Construcción">Construcción</option>
-                <option value="Educación">Educación</option>
-                <option value="Energía">Energía</option>
-                <option value="Entretenimiento">Entretenimiento</option>
-                <option value="Farmacéutico">Farmacéutico</option>
-                <option value="Hospitalidad y Turismo">Hospitalidad y Turismo</option>
-                <option value="Inmobiliario">Inmobiliario</option>
-                <option value="Legal">Legal</option>
-                <option value="Manufactura">Manufactura</option>
-                <option value="Medios de Comunicación">Medios de Comunicación</option>
-                <option value="Minería">Minería</option>
-                <option value="Petróleo y Gas">Petróleo y Gas</option>
-                <option value="Retail">Retail</option>
-                <option value="Salud">Salud</option>
-                <option value="Servicios Profesionales">Servicios Profesionales</option>
-                <option value="Tecnología">Tecnología</option>
-                <option value="Telecomunicaciones">Telecomunicaciones</option>
-                <option value="Transporte y Logística">Transporte y Logística</option>
-                <option value="Otro">Otro</option>
-              </select>
-              {errors.sector && <p className="text-red-500 text-sm mt-1">{errors.sector}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Nombre de la Empresa *</label>
-              <input
-                type="text"
-                name="nombreEmpresa"
-                value={formData.informacionEmpresa.nombreEmpresa}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.nombreEmpresa ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.nombreEmpresa && <p className="text-red-500 text-sm mt-1">{errors.nombreEmpresa}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Ubicación *</label>
-              <input
-                type="text"
-                name="ubicacion"
-                value={formData.informacionEmpresa.ubicacion}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.ubicacion ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Dirección completa"
-              />
-              {errors.ubicacion && <p className="text-red-500 text-sm mt-1">{errors.ubicacion}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Código Postal *</label>
-              <input
-                type="text"
-                name="codigoPostal"
-                value={formData.informacionEmpresa.codigoPostal}
-                onChange={(e) => {
-                  handleChange(e, 'informacionEmpresa');
-                  // Aquí podríamos agregar la lógica para autocompletar la ciudad
-                  // basado en el código postal
-                }}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.codigoPostal ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="00000"
-                maxLength="5"
-              />
-              {errors.codigoPostal && <p className="text-red-500 text-sm mt-1">{errors.codigoPostal}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Ciudad *</label>
-              <input
-                type="text"
-                name="ciudad"
-                value={formData.informacionEmpresa.ciudad}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.ciudad ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Ciudad"
-              />
-              {errors.ciudad && <p className="text-red-500 text-sm mt-1">{errors.ciudad}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Descripción de la Actividad *</label>
-              <textarea
-                name="descripcionActividad"
-                value={formData.informacionEmpresa.descripcionActividad}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                rows="4"
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.descripcionActividad ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.descripcionActividad && <p className="text-red-500 text-sm mt-1">{errors.descripcionActividad}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">¿Tiene empleados? *</label>
-              <div className="mt-2">
-                <label className="inline-flex items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Sector</label>
+                <select
+                  name="sector"
+                  value={formData.informacionEmpresa.sector}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="">Seleccione un sector</option>
+                  <option value="servicios">Servicios</option>
+                  <option value="comercio">Comercio</option>
+                  <option value="manufactura">Manufactura</option>
+                  <option value="tecnologia">Tecnología</option>
+                  <option value="otro">Otro</option>
+                </select>
+                {errors.sector && <p className="mt-1 text-sm text-red-600">{errors.sector}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de la Empresa</label>
+                <input
+                  type="text"
+                  name="nombreEmpresa"
+                  value={formData.informacionEmpresa.nombreEmpresa}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese el nombre de la empresa"
+                />
+                {errors.nombreEmpresa && <p className="mt-1 text-sm text-red-600">{errors.nombreEmpresa}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ubicación</label>
+                <input
+                  type="text"
+                  name="ubicacion"
+                  value={formData.informacionEmpresa.ubicacion}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese la ubicación"
+                />
+                {errors.ubicacion && <p className="mt-1 text-sm text-red-600">{errors.ubicacion}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Código Postal</label>
+                <input
+                  type="text"
+                  name="codigoPostal"
+                  value={formData.informacionEmpresa.codigoPostal}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="12345"
+                />
+                {errors.codigoPostal && <p className="mt-1 text-sm text-red-600">{errors.codigoPostal}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
+                <input
+                  type="text"
+                  name="ciudad"
+                  value={formData.informacionEmpresa.ciudad}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese la ciudad"
+                />
+                {errors.ciudad && <p className="mt-1 text-sm text-red-600">{errors.ciudad}</p>}
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Descripción de la Actividad</label>
+                <textarea
+                  name="descripcionActividad"
+                  value={formData.informacionEmpresa.descripcionActividad}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Describa la actividad principal de la empresa"
+                />
+                {errors.descripcionActividad && <p className="mt-1 text-sm text-red-600">{errors.descripcionActividad}</p>}
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     name="tieneEmpleados"
                     checked={formData.informacionEmpresa.tieneEmpleados}
                     onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                    className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                   />
-                  <span className="ml-2">Sí</span>
+                  <span className="text-sm text-gray-700">La empresa tiene empleados</span>
                 </label>
               </div>
-            </div>
-
-            {formData.informacionEmpresa.tieneEmpleados && (
+              
+              {formData.informacionEmpresa.tieneEmpleados && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Número de Empleados</label>
+                  <input
+                    type="number"
+                    name="numeroEmpleados"
+                    value={formData.informacionEmpresa.numeroEmpleados}
+                    onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                    min="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Ingrese el número de empleados"
+                  />
+                  {errors.numeroEmpleados && <p className="mt-1 text-sm text-red-600">{errors.numeroEmpleados}</p>}
+                </div>
+              )}
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700">Número de Empleados *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ventas Anuales</label>
                 <input
                   type="number"
-                  name="numeroEmpleados"
-                  value={formData.informacionEmpresa.numeroEmpleados}
+                  name="ventasAnuales"
+                  value={formData.informacionEmpresa.ventasAnuales}
                   onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                  className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                    errors.numeroEmpleados ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese las ventas anuales"
                 />
-                {errors.numeroEmpleados && <p className="text-red-500 text-sm mt-1">{errors.numeroEmpleados}</p>}
+                {errors.ventasAnuales && <p className="mt-1 text-sm text-red-600">{errors.ventasAnuales}</p>}
               </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Ventas Anuales *</label>
-              <input
-                type="number"
-                name="ventasAnuales"
-                value={formData.informacionEmpresa.ventasAnuales}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.ventasAnuales ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.ventasAnuales && <p className="text-red-500 text-sm mt-1">{errors.ventasAnuales}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Antigüedad (años) *</label>
-              <input
-                type="number"
-                name="antiguedad"
-                value={formData.informacionEmpresa.antiguedad}
-                onChange={(e) => handleChange(e, 'informacionEmpresa')}
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.antiguedad ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.antiguedad && <p className="text-red-500 text-sm mt-1">{errors.antiguedad}</p>}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Antigüedad (años)</label>
+                <input
+                  type="number"
+                  name="antiguedad"
+                  value={formData.informacionEmpresa.antiguedad}
+                  onChange={(e) => handleChange(e, 'informacionEmpresa')}
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Ingrese los años de antigüedad"
+                />
+                {errors.antiguedad && <p className="mt-1 text-sm text-red-600">{errors.antiguedad}</p>}
+              </div>
             </div>
           </div>
         );
-
+        
       case 3:
         return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold mb-4">Proyecto y Objetivos</h2>
+          <div className="space-y-6 bg-white p-6 rounded-lg shadow">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Proyecto y Objetivos</h2>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Descripción del Proyecto *</label>
-              <textarea
-                name="descripcionProyecto"
-                value={formData.proyectoObjetivos.descripcionProyecto}
-                onChange={(e) => handleChange(e, 'proyectoObjetivos')}
-                rows="4"
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.descripcionProyecto ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.descripcionProyecto && <p className="text-red-500 text-sm mt-1">{errors.descripcionProyecto}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Objetivo de la Consultoría *</label>
-              <textarea
-                name="objetivoConsultoria"
-                value={formData.proyectoObjetivos.objetivoConsultoria}
-                onChange={(e) => handleChange(e, 'proyectoObjetivos')}
-                rows="4"
-                className={`mt-1 block w-full rounded-md shadow-sm p-2 border ${
-                  errors.objetivoConsultoria ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.objetivoConsultoria && <p className="text-red-500 text-sm mt-1">{errors.objetivoConsultoria}</p>}
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Indique el nivel de importancia que tiene cada una de las siguientes áreas para su empresa en los próximos 12 meses, donde 1 es "Nada importante" y 5 es "Muy importante. </h3>
-              
-              {Object.entries(formData.proyectoObjetivos.importanciaAreas).map(([key, value]) => (
-                <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700">
-                    {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')} *
-                  </label>
-                  <input
-                    type="range"
-                    name={key}
-                    min="1"
-                    max="5"
-                    value={value}
-                    onChange={(e) => handleChange(e, 'proyectoObjetivos', 'importanciaAreas')}
-                    className={`mt-1 block w-full ${
-                      errors[`importancia_${key}`] ? 'border-red-500' : ''
-                    }`}
-                    style={{
-                      accentColor: '#BFD730'
-                    }}
-                  />
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>5</span>
-                  </div>
-                  {errors[`importancia_${key}`] && (
-                    <p className="text-red-500 text-sm mt-1">{errors[`importancia_${key}`]}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold mb-4">Evaluación de Áreas</h2>
-            
-            {Object.entries(formData.evaluacionAreas).map(([area, criterios]) => (
-              <div key={area} className="border-b pb-4">
-                <h3 className="text-lg font-medium mb-2">
-                  {area.charAt(0).toUpperCase() + area.slice(1).replace(/([A-Z])/g, ' $1')}
-                </h3>
-                
-                {Object.entries(criterios).map(([criterio, value]) => (
-                  <div key={criterio} className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {criterio.charAt(0).toUpperCase() + criterio.slice(1).replace(/([A-Z])/g, ' $1')} *
-                    </label>
-                    <input
-                      type="range"
-                      name={criterio}
-                      min="1"
-                      max="5"
-                      value={value}
-                      onChange={(e) => handleChange(e, 'evaluacionAreas', area)}
-                      className={`mt-1 block w-full ${
-                        errors[`${area}_${criterio}`] ? 'border-red-500' : ''
-                      }`}
-                      style={{
-                        accentColor: '#BFD730'
-                      }}
-                    />
-                    <div className="flex justify-between text-sm text-gray-500">
-                      <span>1</span>
-                      <span>2</span>
-                      <span>3</span>
-                      <span>4</span>
-                      <span>5</span>
-                    </div>
-                    {errors[`${area}_${criterio}`] && (
-                      <p className="text-red-500 text-sm mt-1">{errors[`${area}_${criterio}`]}</p>
-                    )}
-                  </div>
-                ))}
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Descripción del Proyecto</label>
+                <textarea
+                  name="descripcionProyecto"
+                  value={formData.proyectoObjetivos.descripcionProyecto}
+                  onChange={(e) => handleChange(e, 'proyectoObjetivos')}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Describa el proyecto en detalle"
+                />
+                {errors.descripcionProyecto && <p className="mt-1 text-sm text-red-600">{errors.descripcionProyecto}</p>}
               </div>
-            ))}
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Objetivo de la Consultoría</label>
+                <textarea
+                  name="objetivoConsultoria"
+                  value={formData.proyectoObjetivos.objetivoConsultoria}
+                  onChange={(e) => handleChange(e, 'proyectoObjetivos')}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Describa los objetivos de la consultoría"
+                />
+                {errors.objetivoConsultoria && <p className="mt-1 text-sm text-red-600">{errors.objetivoConsultoria}</p>}
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Importancia de las Áreas</h3>
+                <p className="text-sm text-gray-600 mb-6">Califique la importancia de cada área para su empresa (1-5)</p>
+                
+                <div className="space-y-6">
+                  {Object.entries(formData.proyectoObjetivos.importanciaAreas).map(([key, value]) => (
+                    <div key={key} className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                      </label>
+                      <input
+                        type="range"
+                        name={key}
+                        value={value}
+                        onChange={(e) => handleChange(e, 'proyectoObjetivos', 'importanciaAreas')}
+                        min="1"
+                        max="5"
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>1 - Poco importante</span>
+                        <span>5 - Muy importante</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         );
-
+        
       default:
         return null;
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold">Diagnóstico Central</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Diagnóstico Central</h1>
           <div className="text-sm text-gray-500">
-            Paso {currentStep} de 4
+            Paso {currentStep} de 3
           </div>
         </div>
         
         <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div
-            className="h-2.5 rounded-full"
-            style={{ width: `${(currentStep / 4) * 100}%`, backgroundColor: '#BFD730' }}
+            className="h-2.5 rounded-full bg-indigo-600"
+            style={{ width: `${(currentStep / 3) * 100}%` }}
           ></div>
         </div>
       </div>
 
-      {renderStep()}
-
-      <div className="mt-8 flex justify-between">
-        {currentStep > 1 && (
-          <button
-            type="button"
-            onClick={handlePreviousStep}
-            className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Anterior
-          </button>
-        )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {renderStep()}
         
-        {currentStep < 4 ? (
-          <button
-            type="button"
-            onClick={handleNextStep}
-            className="ml-auto px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Siguiente
-          </button>
-        ) : (
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="ml-auto px-6 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            {isLoading ? "Enviando..." : "Enviar formulario"}
-          </button>
-        )}
-      </div>
-    </form>
+        <div className="flex justify-between pt-4">
+          {currentStep > 1 && (
+            <button
+              type="button"
+              onClick={handlePreviousStep}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Anterior
+            </button>
+          )}
+          
+          {currentStep < 3 ? (
+            <button
+              type="button"
+              onClick={handleNextStep}
+              className="ml-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Siguiente
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="ml-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              {isLoading ? 'Guardando...' : 'Guardar Diagnóstico'}
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
   );
 } 
