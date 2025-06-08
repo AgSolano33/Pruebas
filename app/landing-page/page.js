@@ -15,7 +15,6 @@ import Image from "next/image";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 export default function LandingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
