@@ -13,18 +13,27 @@ import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
 import Image from "next/image";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function LandingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const handleOpenModal = () => {
-    if (!session) {
+    if (status === 'unauthenticated') {
       router.push(config.auth.callbackUrl);
       return;
     }
     setIsModalOpen(true);
   };
+
+  // Add loading state handling
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -49,8 +58,8 @@ export default function LandingPage() {
                 alt="Cómo funciona CLA"
                 width={800} 
                 height={400} 
-                layout="responsive"
-                objectFit="contain"
+                priority
+                style={{ objectFit: 'contain' }}
               />
             </div>
           </div>
