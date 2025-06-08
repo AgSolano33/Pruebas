@@ -708,4 +708,4 @@ export default function FormDiagnostico({ onClose }) {
        )}
      </form>
    );
- }; 
+ } 
