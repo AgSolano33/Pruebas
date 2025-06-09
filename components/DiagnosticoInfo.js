@@ -26,7 +26,7 @@ export default function DiagnosticoInfo() {
         const response = await fetch("/api/Contact");
         if (response.ok) {
           const data = await response.json();
-          console.log("Datos recibidos:", data);
+         
           if (data && data.length > 0) {
             setDiagnosticoData(data[0]);
           }

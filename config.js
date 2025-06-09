@@ -10,8 +10,8 @@ const config = {
   domainName: "shipfa.st",
   crisp: {
     // Crisp website ID. IF YOU DON'T USE CRISP: just remove this => Then add a support email in this config file (mailgun.supportEmail) otherwise customer support won't work.
-    id: "",
-    // Hide Crisp by default, except on route "/". Crisp is toggled with <ButtonSupport/>. If you want to show Crisp on every routes, just remove this below
+    id: process.env.NEXT_PUBLIC_CRISP_ID,
+    // Hide Crisp by default, except on route "/". If you want to show Crisp on every routes, just remove this below
     onlyShowOnRoutes: ["/"],
   },
   stripe: {
