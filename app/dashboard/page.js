@@ -6,7 +6,6 @@ import FormDiagnosticoCentral from "@/components/FormDiagnosticoCentral";
 import PrediagnosticoList from "@/components/PrediagnosticoList";
 import Modal from "@/components/Modal";
 import DiagnosticoInfo from "@/components/DiagnosticoInfo";
-import FinancialMetrics from "@/components/FinancialMetrics";
 import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import { useRouter } from "next/navigation";
