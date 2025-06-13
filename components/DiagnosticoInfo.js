@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export default function DiagnosticoInfo() {
+  const { data: session } = useSession();
   const [diagnosticoData, setDiagnosticoData] = useState({
     informacionpersonal: {
       nombre: "",
@@ -22,11 +24,12 @@ export default function DiagnosticoInfo() {
 
   useEffect(() => {
     const fetchDiagnosticoData = async () => {
+      if (!session?.user?.id) return;
+
       try {
-        const response = await fetch("/api/Contact");
+        const response = await fetch(`/api/Contact?userId=${session.user.id}`);
         if (response.ok) {
           const data = await response.json();
-         
           if (data && data.length > 0) {
             setDiagnosticoData(data[0]);
           }
@@ -37,7 +40,15 @@ export default function DiagnosticoInfo() {
     };
 
     fetchDiagnosticoData();
-  }, []);
+  }, [session]);
+
+  if (!session) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-gray-600">Por favor inicia sesión para ver tu diagnóstico</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">

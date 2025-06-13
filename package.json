@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.1",
@@ -31,7 +32,11 @@
     "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "eslint": "^8",
-    "eslint-config-next": "14.1.0"
+    "eslint-config-next": "14.1.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
   }
 }

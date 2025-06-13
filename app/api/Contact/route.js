@@ -2,12 +2,23 @@ import { NextResponse } from 'next/server'
 import connectDB from '@/libs/mongodb';
 import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    // Obtener el userId de la URL
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Se requiere el userId' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
     
-    // Buscamos todos los documentos de la colección diagnosticocentrals
-    const diagnoses = await DiagnosticoCentral.find()
+    // Buscar diagnósticos que coincidan con el userId
+    const diagnoses = await DiagnosticoCentral.find({ userId: userId })
       .lean()
       .exec();
     
@@ -15,7 +26,7 @@ export async function GET() {
       return NextResponse.json([], { status: 200 });
     }
 
-    // Transformamos los datos para asegurar que tengan la estructura correcta
+    // Transformar los datos para asegurar que tengan la estructura correcta
     const formattedDiagnoses = diagnoses.map(diagnosis => ({
       informacionpersonal: {
         nombre: diagnosis.informacionPersonal?.nombre || '',
@@ -39,6 +50,7 @@ export async function GET() {
 
     return NextResponse.json(formattedDiagnoses, { status: 200 });
   } catch (error) {
+    console.error('Error al obtener los diagnósticos:', error);
     return NextResponse.json(
       { error: 'Error al obtener los diagnósticos' },
       { status: 500 }

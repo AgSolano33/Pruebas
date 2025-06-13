@@ -2,20 +2,25 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 export default function PrediagnosticoList() {
+  const { data: session } = useSession();
   const [prediagnosticos, setPrediagnosticos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCard, setExpandedCard] = useState(null);
 
   const fetchPrediagnosticos = async () => {
+    if (!session?.user?.id) return;
+    
     try {
-      const response = await fetch("/api/prediagnostico");
+      const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
       if (!response.ok) throw new Error("Error al cargar los prediagnósticos");
       const data = await response.json();
       setPrediagnosticos(data);
     } catch (error) {
       console.error("Error:", error);
+      toast.error("Error al cargar los prediagnósticos");
     } finally {
       setIsLoading(false);
     }
@@ -47,8 +52,10 @@ export default function PrediagnosticoList() {
   };
 
   useEffect(() => {
+    if (session?.user?.id) {
     fetchPrediagnosticos();
-  }, []);
+    }
+  }, [session]);
 
   if (isLoading) {
     return <div className="text-center py-4">Cargando...</div>;

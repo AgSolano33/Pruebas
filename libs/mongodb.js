@@ -3,9 +3,7 @@ import mongoose from "mongoose";
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local"
-  );
+  throw new Error("Por favor define MONGODB_URI en el archivo .env");
 }
 
 let cached = global.mongoose;
@@ -38,5 +36,21 @@ async function connectDB() {
 
   return cached.conn;
 }
+
+// Manejar eventos de conexión
+mongoose.connection.on('error', (err) => {
+  console.error('Error en la conexión de MongoDB:', err);
+});
+
+// Manejar el cierre de la aplicación
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.connection.close();
+    process.exit(0);
+  } catch (err) {
+    console.error('Error al cerrar la conexión de MongoDB:', err);
+    process.exit(1);
+  }
+});
 
 export default connectDB;

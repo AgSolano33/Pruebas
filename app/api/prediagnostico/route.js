@@ -4,9 +4,22 @@ import Prediagnostico from "@/models/Prediagnostico";
 
 export async function POST(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'ID de usuario no proporcionado' },
+        { status: 400 }
+      );
+    }
+
     await connectDB(); 
     const data = await request.json(); 
-        const prediagnostico = await Prediagnostico.create(data);
+    const prediagnostico = await Prediagnostico.create({
+      ...data,
+      userId
+    });
     
     return NextResponse.json(prediagnostico, { status: 201 });
 
@@ -31,15 +44,25 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'ID de usuario no proporcionado' },
+        { status: 400 }
+      );
+    }
+
     const db = await connectDB();
     if (!db) {
       throw new Error("No se pudo establecer conexión con la base de datos");
     }
     
-    // Obtener los prediagnósticos
-    const prediagnosticos = await Prediagnostico.find()
+    // Obtener los prediagnósticos del usuario específico
+    const prediagnosticos = await Prediagnostico.find({ userId })
       .sort({ createdAt: -1 });
     
     return NextResponse.json(prediagnosticos);

@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ButtonAccount from "@/components/ButtonAccount";
-import FormDiagnosticoCentral from "@/components/FormDiagnosticoCentral";
 import PrediagnosticoList from "@/components/PrediagnosticoList";
-import Modal from "@/components/Modal";
 import DiagnosticoInfo from "@/components/DiagnosticoInfo";
+import DiagnosticoCentral from "@/components/DiagnosticoCentral";
 import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import { useRouter } from "next/navigation";
@@ -19,41 +17,40 @@ export const dynamic = "force-dynamic";
 export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [companyName, setCompanyName] = useState("Nombre de la Empresa");
   const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
   const [diagnosisData, setDiagnosisData] = useState(null);
   const [metrics, setMetrics] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isExisting, setIsExisting] = useState(false);
+  const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
 
   useEffect(() => {
-    // Reset state when session changes
-    if (status === "unauthenticated") {
-      router.push("/");
-      return;
-    }
-
     const checkDiagnosticoCentral = async () => {
+      if (!session?.user?.id) return;
+    
       try {
-        const response = await fetch("/api/Contact");
+        const response = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
         if (response.ok) {
           const data = await response.json();
-          setHasDiagnosticoCentral(data && data.length > 0);
-          if (data && data.length > 0) {
-            setDiagnosisData(data[0]);
-            setCompanyName(data[0].nombreEmpresa || "Nombre de la Empresa");
+          const hasDiagnostico = !!data;
+          setHasDiagnosticoCentral(hasDiagnostico);
+          if (data) {
+            setDiagnosisData(data);
+            setCompanyName(data.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
           }
         }
       } catch (error) {
         // Error handling without console.log
+      } finally {
+        setIsLoading(false);
       }
     };
 
     if (status === "authenticated") {
       checkDiagnosticoCentral();
     }
-  }, [status, session, router]);
+  }, [status, session]);
 
   if (status === "loading") {
     return (
@@ -61,6 +58,10 @@ export default function Dashboard() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
+  }
+
+  if (showDiagnosticoCentral) {
+    return <DiagnosticoCentral />;
   }
 
   const handleLogout = async () => {
@@ -73,7 +74,7 @@ export default function Dashboard() {
         router.push("/");
       }
     } catch (error) {
-      
+      // Error handling without console.log
     }
   };
 
@@ -135,13 +136,12 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             {!hasDiagnosticoCentral && (
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setShowDiagnosticoCentral(true)}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
                 Diagnóstico Central
               </button>
             )}
-            <ButtonAccount />
           </div>
         </div>
 
@@ -212,10 +212,6 @@ export default function Dashboard() {
             <Conclusions />
           </div>
         </section>
-
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-          <FormDiagnosticoCentral onSuccess={() => setIsModalOpen(false)} />
-        </Modal>
       </div>
     </main>
   );

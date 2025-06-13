@@ -159,16 +159,13 @@ export default function FormDiagnostico({ onClose }) {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/prediagnostico", {
+      const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${session.accessToken}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          userId: session.user.id,
-        }),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {

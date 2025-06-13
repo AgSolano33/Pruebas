@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const prediagnosticoSchema = new mongoose.Schema(
   {
+    userId: {
+      type: String,
+      required: true,
+      index: true
+    },
     nombre: {
       type: String,
       required: true,
