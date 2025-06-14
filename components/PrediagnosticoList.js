@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import Modal from "@/components/Modal";
+import FormDiagnostico from "@/components/FormDiagnostico";
 
 export default function PrediagnosticoList() {
   const { data: session } = useSession();
   const [prediagnosticos, setPrediagnosticos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedCard, setExpandedCard] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchPrediagnosticos = async () => {
     if (!session?.user?.id) return;
@@ -69,7 +72,10 @@ export default function PrediagnosticoList() {
           className="w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] h-[350px] bg-white shadow-md rounded-lg p-4 transition-all hover:shadow-xl"
         >
           {item.esAgregar ? (
-            <div className="flex flex-col items-center justify-center h-full cursor-pointer">
+            <div 
+              className="flex flex-col items-center justify-center h-full cursor-pointer"
+              onClick={() => setIsModalOpen(true)}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-20 w-20 text-indigo-600 mb-4"
@@ -167,6 +173,13 @@ export default function PrediagnosticoList() {
           </div>
         </div>
       )}
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <FormDiagnostico onClose={() => {
+          setIsModalOpen(false);
+          fetchPrediagnosticos();
+        }} />
+      </Modal>
     </div>
   )
 }

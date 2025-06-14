@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import config from "@/config";
 import Header from "@/components/Header";
@@ -9,8 +9,6 @@ import Carousel from "@/components/Carousel";
 import MarcasCarousel from "@/components/MarcasCarousel";
 import CarouselAliados from "@/components/CarouselAliados";
 import Footer from "@/components/Footer";
-import Modal from "@/components/Modal";
-import FormDiagnostico from "@/components/FormDiagnostico";
 import Image from "next/image";
 
 // Force dynamic rendering
@@ -23,10 +21,10 @@ export default function LandingPage() {
 
   const handleOpenModal = () => {
     if (status === 'unauthenticated') {
-      router.push(config.auth.callbackUrl);
+      signIn(undefined, { callbackUrl: "/dashboard" });
       return;
     }
-    setIsModalOpen(true);
+    router.push("/dashboard");
   };
 
   // Add loading state handling
@@ -95,9 +93,6 @@ export default function LandingPage() {
         </section>
       </main>
       <Footer />
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <FormDiagnostico onClose={() => setIsModalOpen(false)} />
-      </Modal>
     </div>
   );
 }

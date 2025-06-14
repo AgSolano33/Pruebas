@@ -8,6 +8,8 @@ import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Modal from "@/components/Modal";
+import FormDiagnostico from "@/components/FormDiagnostico";
 
 export const dynamic = "force-dynamic";
 
@@ -19,36 +21,58 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const [companyName, setCompanyName] = useState("Nombre de la Empresa");
   const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
+  const [hasPrediagnosticos, setHasPrediagnosticos] = useState(false);
   const [diagnosisData, setDiagnosisData] = useState(null);
   const [metrics, setMetrics] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isExisting, setIsExisting] = useState(false);
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const checkDiagnosticoCentral = async () => {
+    const checkData = async () => {
       if (!session?.user?.id) return;
-    
+
+      let userHasDiagnosticoCentral = false;
+      let userHasPrediagnosticos = false;
+
       try {
-        const response = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          const hasDiagnostico = !!data;
-          setHasDiagnosticoCentral(hasDiagnostico);
-          if (data) {
-            setDiagnosisData(data);
-            setCompanyName(data.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
+        // Verificar Diagnóstico Central
+        const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
+        if (responseCentral.ok) {
+          const dataCentral = await responseCentral.json();
+          userHasDiagnosticoCentral = !!dataCentral;
+          if (dataCentral) {
+            setDiagnosisData(dataCentral);
+            setCompanyName(dataCentral.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
           }
         }
+
+        // Verificar Prediagnósticos
+        const responsePrediagnosticos = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+        if (responsePrediagnosticos.ok) {
+          const dataPrediagnosticos = await responsePrediagnosticos.json();
+          userHasPrediagnosticos = dataPrediagnosticos && dataPrediagnosticos.length > 0;
+          console.log("API Prediagnosticos Response Data:", dataPrediagnosticos);
+          console.log("User has Prediagnosticos (boolean):", userHasPrediagnosticos);
+        }
+
       } catch (error) {
-        // Error handling without console.log
+        console.error("Error checking user data:", error);
       } finally {
+        setHasDiagnosticoCentral(userHasDiagnosticoCentral);
+        setHasPrediagnosticos(userHasPrediagnosticos);
         setIsLoading(false);
+
+        // Abrir modal de pre-diagnóstico si no tiene Prediagnósticos
+        if (!userHasPrediagnosticos) {
+          setIsModalOpen(true);
+        }
       }
     };
 
     if (status === "authenticated") {
-      checkDiagnosticoCentral();
+      checkData();
     }
   }, [status, session]);
 
@@ -213,6 +237,14 @@ export default function Dashboard() {
           </div>
         </section>
       </div>
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <FormDiagnostico onClose={() => {
+          setIsModalOpen(false);
+          router.refresh();
+        }} />
+      </Modal>
     </main>
   );
 }
+
+

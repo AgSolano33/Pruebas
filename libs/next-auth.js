@@ -12,9 +12,13 @@ export const authOptions = {
       clientId: process.env.GOOGLE_ID,
       clientSecret: process.env.GOOGLE_SECRET,
       async profile(profile) {
+       
+        const firstName = profile.given_name || (profile.name ? profile.name.split(' ')[0] : '');
+
         return {
           id: profile.sub,
-          name: profile.given_name ? profile.given_name : profile.name,
+          name: profile.name, 
+          nombre: firstName, 
           email: profile.email,
           image: profile.picture,
           createdAt: new Date(),
@@ -22,18 +26,22 @@ export const authOptions = {
       },
     }),
   ],
-  // Agregamos el adaptador de MongoDB para almacenar los usuarios
+ 
   adapter: MongoDBAdapter(clientPromise),
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.nombre = user.nombre || (user.name ? user.name.split(' ')[0] : ''); 
+      } else if (token.name) { 
+        token.nombre = token.name.split(' ')[0]; 
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.id || token.sub;
+        session.user.nombre = token.nombre; 
       }
       return session;
     },

@@ -10,12 +10,11 @@ export default function FormDiagnostico({ onClose }) {
   const router = useRouter();
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1); // State to track the current step
+  const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
-    nombre: "",
-    apellido: "",
-    genero: "",
+    nombre: session?.user?.nombre || "",
+    apellido: session?.user?.apellido || "",
     nivelEstudios: "",
     tipoEmpresa: "",
     nombreEmpresaProyecto: "",
@@ -70,10 +69,6 @@ export default function FormDiagnostico({ onClose }) {
         newErrors.apellido = "El apellido debe tener al menos 2 caracteres";
       }
       
-      if (!formData.genero) {
-        newErrors.genero = "Debes seleccionar un género";
-      }
-
       if (!formData.nivelEstudios) {
         newErrors.nivelEstudios = "Debes seleccionar un nivel de estudios";
       }
@@ -176,7 +171,6 @@ export default function FormDiagnostico({ onClose }) {
       setFormData({
         nombre: "",
         apellido: "",
-        genero: "",
         nivelEstudios: "",
         tipoEmpresa: "",
         nombreEmpresaProyecto: "",
@@ -306,29 +300,6 @@ export default function FormDiagnostico({ onClose }) {
               onChange={handleChange}
             />
             {errors.apellido && <p className="text-red-500 text-sm mt-1">{errors.apellido}</p>}
-          </div>
-
-          <div>
-            <label
-              htmlFor="genero"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Genero <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="genero"
-              className={`mt-1 block w-full rounded-md border-2 ${errors.genero ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
-              name="genero"
-              required
-              value={formData.genero}
-              onChange={handleChange}
-            >
-              <option value="">-Select-</option>
-              <option value="hombre">Hombre</option>
-              <option value="mujer">Mujer</option>
-              <option value="prefiero no decir">Prefiero no decir</option>
-            </select>
-             {errors.genero && <p className="text-red-500 text-sm mt-1">{errors.genero}</p>}
           </div>
 
           <div>
