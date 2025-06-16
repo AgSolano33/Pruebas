@@ -31,6 +31,7 @@ export default function FormDiagnostico({ onClose }) {
     objetivosAcciones: "",
     tipoAyuda: "",
     disponibleInvertir: "",
+    genero: "",
   });
 
   useEffect(() => {
@@ -147,54 +148,54 @@ export default function FormDiagnostico({ onClose }) {
       return;
     }
 
-    if (!validateStep()) {
-      toast.error("Por favor, completa todos los campos requeridos antes de enviar.");
-      return;
-    }
-
     setIsLoading(true);
     try {
+      console.log('1. Enviando pre-diagnóstico a la API...');
+      // 1. Guardar el pre-diagnóstico
       const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.accessToken}`,
         },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        throw new Error("Error al enviar el formulario");
+        const errorData = await response.json();
+        console.error('Error al guardar pre-diagnóstico:', errorData);
+        throw new Error(errorData.error || "Error al guardar el pre-diagnóstico");
       }
 
-      toast.success("Formulario enviado correctamente");
-      setFormData({
-        nombre: "",
-        apellido: "",
-        nivelEstudios: "",
-        tipoEmpresa: "",
-        nombreEmpresaProyecto: "",
-        email: "",
-        telefono: "",
-        giroActividad: "",
-        descripcionActividad: "",
-        tieneEmpleados: "",
-        numeroEmpleados: "",
-        ventasAnualesEstimadas: "",
-        mayorObstaculo: "",
-        gestionDificultades: "",
-        buenResultadoMetrica: "",
-        objetivosAcciones: "",
-        tipoAyuda: "",
-        disponibleInvertir: "",
+      const savedPrediagnostico = await response.json();
+      console.log('2. Pre-diagnóstico guardado:', savedPrediagnostico);
+
+      // 2. Enviar a ChatGPT para análisis
+      console.log('3. Enviando pre-diagnóstico a ChatGPT para análisis...');
+      const chatGPTResponse = await fetch('/api/chatgp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...savedPrediagnostico,
+          userId: session.user.id
+        }),
       });
-      setErrors({});
-      setCurrentStep(1);
-      router.refresh();
+
+      if (!chatGPTResponse.ok) {
+        const errorData = await chatGPTResponse.json();
+        console.error('Error en análisis de ChatGPT:', errorData);
+        throw new Error(errorData.error || "Error al procesar el análisis con ChatGPT");
+      }
+
+      const analysisResult = await chatGPTResponse.json();
+      console.log('4. Análisis de ChatGPT completado:', analysisResult);
+
+      toast.success("Pre-diagnóstico creado y analizado exitosamente");
       onClose();
     } catch (error) {
-      toast.error("Error al enviar el formulario.");
-      console.error("Submission error:", error);
+      console.error("Error:", error);
+      toast.error(error.message || "Error al procesar el pre-diagnóstico");
     } finally {
       setIsLoading(false);
     }
@@ -388,6 +389,25 @@ export default function FormDiagnostico({ onClose }) {
               onChange={handleChange}
             />
              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="genero">
+              Género
+            </label>
+            <select
+              id="genero"
+              name="genero"
+              value={formData.genero}
+              onChange={handleChange}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            >
+              <option value="">Seleccione una opción</option>
+              <option value="hombre">Hombre</option>
+              <option value="mujer">Mujer</option>
+              <option value="prefiero no decir">Prefiero no decir</option>
+            </select>
           </div>
 
           <div>

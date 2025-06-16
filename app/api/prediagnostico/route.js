@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/libs/mongodb";
+import { connectToDatabase } from "@/libs/mongodb";
 import Prediagnostico from "@/models/Prediagnostico";
 
 export async function POST(request) {
@@ -14,12 +14,13 @@ export async function POST(request) {
       );
     }
 
-    await connectDB(); 
+    await connectToDatabase(); 
     const data = await request.json(); 
     const prediagnostico = await Prediagnostico.create({
       ...data,
       userId
     });
+    console.log('Pre-diagnóstico creado exitosamente en la base de datos de prediagnosticos.');
     
     return NextResponse.json(prediagnostico, { status: 201 });
 
@@ -56,7 +57,7 @@ export async function GET(request) {
       );
     }
 
-    const db = await connectDB();
+    const db = await connectToDatabase();
     if (!db) {
       throw new Error("No se pudo establecer conexión con la base de datos");
     }
@@ -88,7 +89,7 @@ export async function DELETE(request) {
         { status: 400 }
       );
     }
-    const db = await connectDB();
+    const db = await connectToDatabase();
     if (!db) {
       throw new Error("No se pudo establecer conexión con la base de datos");
     }

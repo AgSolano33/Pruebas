@@ -1,49 +1,48 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export default function MetricsCards() {
-  const [metrics, setMetrics] = useState({
-    madurezDigital: 0,
-    saludFinanciera: 0,
-    eficienciaOperativa: 0,
-    recursosHumanos: 0,
-    marketingVentas: 0,
-    innovacionDesarrollo: 0,
-    experienciaCliente: 0,
-    gestionRiesgos: 0
-  });
-  const [analysis, setAnalysis] = useState(null);
+  const { data: session } = useSession();
+  const [diagnosis, setDiagnosis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchMetrics = async () => {
+    const fetchDiagnosis = async () => {
+      if (!session?.user?.id) {
+        setLoading(false);
+        setError("No se encontró el ID de usuario para cargar las métricas.");
+        return;
+      }
+
       try {
-       
-        const response = await fetch("/api/analysis-results");
-       
+        const response = await fetch(`/api/analysis-results?userId=${session.user.id}`);
         
         if (response.ok) {
           const result = await response.json();
-         
           
           if (result.success && result.data) {
-            const data = result.data;
-            setMetrics(data.metricasPorcentuales);
-            setAnalysis(data.analisisMetricas);
+            setDiagnosis(result.data);
+          } else {
+            setError(result.error || "Error al cargar las métricas");
           }
+        } else {
+          const errorResult = await response.json();
+          setError(errorResult.error || "Error al cargar las métricas");
         }
       } catch (error) {
-        console.error("Error fetching metrics:", error);
-        setError("Error al cargar las métricas");
+        setError("Error al cargar las métricas: " + error.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMetrics();
-  }, []);
+    if (session) {
+      fetchDiagnosis();
+    }
+  }, [session]);
 
   const MetricCard = ({ title, value, analysis }) => (
     <div className="bg-white rounded-lg shadow-lg p-6">
@@ -65,11 +64,19 @@ export default function MetricsCards() {
   );
 
   if (loading) {
-    return <div className="text-center p-4">Cargando métricas...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A3D7C]"></div>
+      </div>
+    );
   }
 
   if (error) {
     return <div className="text-red-500 text-center p-4">{error}</div>;
+  }
+
+  if (!diagnosis) {
+    return <div className="text-center text-gray-500 p-4">No hay métricas disponibles</div>;
   }
 
   return (
@@ -77,43 +84,43 @@ export default function MetricsCards() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard 
           title="Madurez Digital" 
-          value={metrics.madurezDigital}
-          analysis={analysis?.madurezDigital}
+          value={diagnosis.porcentajes?.madurezDigital || 0}
+          analysis={diagnosis.analisisMetricas?.madurezDigital}
         />
         <MetricCard 
           title="Salud Financiera" 
-          value={metrics.saludFinanciera}
-          analysis={analysis?.saludFinanciera}
+          value={diagnosis.porcentajes?.saludFinanciera || 0}
+          analysis={diagnosis.analisisMetricas?.saludFinanciera}
         />
         <MetricCard 
           title="Eficiencia Operativa" 
-          value={metrics.eficienciaOperativa}
-          analysis={analysis?.eficienciaOperativa}
+          value={diagnosis.porcentajes?.eficienciaOperativa || 0}
+          analysis={diagnosis.analisisMetricas?.eficienciaOperativa}
         />
         <MetricCard 
           title="Recursos Humanos" 
-          value={metrics.recursosHumanos}
-          analysis={analysis?.recursosHumanos}
+          value={diagnosis.porcentajes?.recursosHumanos || 0}
+          analysis={diagnosis.analisisMetricas?.recursosHumanos}
         />
         <MetricCard 
           title="Marketing y Ventas" 
-          value={metrics.marketingVentas}
-          analysis={analysis?.marketingVentas}
+          value={diagnosis.porcentajes?.marketingVentas || 0}
+          analysis={diagnosis.analisisMetricas?.marketingVentas}
         />
         <MetricCard 
           title="Innovación y Desarrollo" 
-          value={metrics.innovacionDesarrollo}
-          analysis={analysis?.innovacionDesarrollo}
+          value={diagnosis.porcentajes?.innovacionDesarrollo || 0}
+          analysis={diagnosis.analisisMetricas?.innovacionDesarrollo}
         />
         <MetricCard 
           title="Experiencia del Cliente" 
-          value={metrics.experienciaCliente}
-          analysis={analysis?.experienciaCliente}
+          value={diagnosis.porcentajes?.experienciaCliente || 0}
+          analysis={diagnosis.analisisMetricas?.experienciaCliente}
         />
         <MetricCard 
           title="Gestión de Riesgos" 
-          value={metrics.gestionRiesgos}
-          analysis={analysis?.gestionRiesgos}
+          value={diagnosis.porcentajes?.gestionRiesgos || 0}
+          analysis={diagnosis.analisisMetricas?.gestionRiesgos}
         />
       </div>
     </div>

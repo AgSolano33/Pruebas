@@ -1,170 +1,233 @@
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+import OpenAI from "openai";
+import { connectToDatabase } from "@/libs/mongodb";
 
-export async function analyzeDiagnosticWithGPT(diagnostic) {
+// Verificar ASSISTANT_ID
+const ASSISTANT_ID = process.env.ASSISTANT_ID;
+if (!ASSISTANT_ID) {
+  throw new Error("ASSISTANT_ID no está configurado en las variables de entorno");
+}
+
+if (!ASSISTANT_ID.startsWith('asst_')) {
+  throw new Error("ASSISTANT_ID tiene un formato inválido. Debe comenzar con 'asst_'");
+}
+
+// Verificar API key
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+if (!OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY no está configurada en las variables de entorno");
+}
+
+if (!OPENAI_API_KEY.startsWith('sk-')) {
+  throw new Error("OPENAI_API_KEY tiene un formato inválido. Debe comenzar con 'sk-'");
+}
+
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+});
+
+// Verificar que el asistente existe usando fetch directamente
+async function verifyAssistantDirectly() {
   try {
-    const { informacionEmpresa, proyectoObjetivos, evaluacionAreas } = diagnostic;
-
-    // Calcular porcentajes manualmente para asegurar precisión
-    const calcularPorcentaje = (area) => {
-      const valores = Object.values(area);
-      const suma = valores.reduce((acc, val) => acc + val, 0);
-      const maximo = valores.length * 5; // 5 es la puntuación máxima
-      return Math.round((suma / maximo) * 100);
-    };
-
-    const porcentajes = {
-      madurezDigital: calcularPorcentaje(evaluacionAreas.madurezDigital),
-      saludFinanciera: calcularPorcentaje(evaluacionAreas.saludFinanciera),
-      eficienciaOperativa: calcularPorcentaje(evaluacionAreas.eficienciaOperativa),
-      recursosHumanos: calcularPorcentaje(evaluacionAreas.recursosHumanos),
-      marketingVentas: calcularPorcentaje(evaluacionAreas.marketingVentas),
-      innovacionDesarrollo: calcularPorcentaje(evaluacionAreas.innovacionDesarrollo),
-      experienciaCliente: calcularPorcentaje(evaluacionAreas.experienciaCliente),
-      gestionRiesgos: calcularPorcentaje(evaluacionAreas.gestionRiesgos)
-    };
-
-    const prompt = `Analiza la siguiente información empresarial y proporciona un diagnóstico detallado en formato JSON:
-
-    INFORMACIÓN DE LA EMPRESA:
-    - Sector: ${informacionEmpresa.sector}
-    - Nombre: ${informacionEmpresa.nombreEmpresa}
-    - Ubicación: ${informacionEmpresa.ubicacion}
-    - Descripción de Actividad: ${informacionEmpresa.descripcionActividad}
-    - Número de Empleados: ${informacionEmpresa.numeroEmpleados}
-    - Ventas Anuales: ${informacionEmpresa.ventasAnuales}
-    - Antigüedad: ${informacionEmpresa.antiguedad} años
-
-    PROYECTO Y OBJETIVOS:
-    - Descripción del Proyecto: ${proyectoObjetivos.descripcionProyecto}
-    - Objetivo de Consultoría: ${proyectoObjetivos.objetivoConsultoria}
-    
-    EVALUACIÓN DE ÁREAS (Porcentajes calculados):
-    - Madurez Digital: ${porcentajes.madurezDigital}%
-    - Salud Financiera: ${porcentajes.saludFinanciera}%
-    - Eficiencia Operativa: ${porcentajes.eficienciaOperativa}%
-    - Recursos Humanos: ${porcentajes.recursosHumanos}%
-    - Marketing y Ventas: ${porcentajes.marketingVentas}%
-    - Innovación y Desarrollo: ${porcentajes.innovacionDesarrollo}%
-    - Experiencia del Cliente: ${porcentajes.experienciaCliente}%
-    - Gestión de Riesgos: ${porcentajes.gestionRiesgos}%
-
-    Por favor, proporciona la respuesta en el siguiente formato JSON:
-    {
-      "resumenEmpresa": {
-        "descripcion": "Breve descripción de la empresa y su situación actual",
-        "fortalezas": ["lista de fortalezas principales"],
-        "debilidades": ["lista de debilidades principales"],
-        "oportunidades": ["lista de oportunidades identificadas"]
-      },
-      "analisisObjetivos": {
-        "situacionActual": "Análisis de la situación actual respecto a los objetivos",
-        "viabilidad": "Evaluación de la viabilidad de los objetivos",
-        "recomendaciones": ["recomendaciones específicas para alcanzar los objetivos"]
-      },
-      "metricasPorcentuales": {
-        "madurezDigital": ${porcentajes.madurezDigital},
-        "saludFinanciera": ${porcentajes.saludFinanciera},
-        "eficienciaOperativa": ${porcentajes.eficienciaOperativa},
-        "recursosHumanos": ${porcentajes.recursosHumanos},
-        "marketingVentas": ${porcentajes.marketingVentas},
-        "innovacionDesarrollo": ${porcentajes.innovacionDesarrollo},
-        "experienciaCliente": ${porcentajes.experienciaCliente},
-        "gestionRiesgos": ${porcentajes.gestionRiesgos}
-      },
-      "analisisMetricas": {
-        "madurezDigital": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "saludFinanciera": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "eficienciaOperativa": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "recursosHumanos": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "marketingVentas": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "innovacionDesarrollo": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "experienciaCliente": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        },
-        "gestionRiesgos": {
-          "interpretacion": "Interpretación del porcentaje obtenido",
-          "recomendaciones": ["recomendaciones específicas para mejorar"]
-        }
-      },
-      "proximosPasos": {
-        "inmediatos": ["acciones a tomar en los próximos 30 días"],
-        "cortoPlazo": ["acciones para los próximos 3 meses"],
-        "medianoPlazo": ["acciones para los próximos 6 meses"]
-      }
-    }`;
-
-    console.log('Enviando petición a OpenAI...');
-    const response = await fetch(OPENAI_API_URL, {
-      method: 'POST',
+    console.log('Verificando asistente directamente...');
+    const response = await fetch(`https://api.openai.com/v1/assistants/${ASSISTANT_ID}`, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
-          {
-            role: "system",
-            content: "Eres un consultor empresarial experto en análisis de métricas, mejora continua y transformación digital. Tu análisis debe ser detallado, práctico y orientado a resultados. DEBES responder SIEMPRE en formato JSON válido. Los porcentajes ya están calculados, úsalos directamente en tu respuesta."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'OpenAI-Beta': 'assistants=v2',
+        'Content-Type': 'application/json'
+      }
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Error detallado de OpenAI:', errorData);
-      throw new Error(`Error en la API de OpenAI: ${response.statusText} - ${JSON.stringify(errorData)}`);
+      const error = await response.json();
+      console.error('Error en la respuesta:', error);
+      throw new Error(`Error al verificar el asistente: ${error.error?.message || 'Error desconocido'}`);
     }
 
-    const data = await response.json();
-    console.log('Respuesta de ChatGPT:', data);
+    const assistant = await response.json();
+    console.log('Asistente verificado:', {
+      id: assistant.id,
+      name: assistant.name,
+      model: assistant.model,
+      instructions: assistant.instructions
+    });
+    return true;
+  } catch (error) {
+    console.error('Error al verificar el asistente:', error);
+    throw new Error(`El asistente con ID ${ASSISTANT_ID} no existe o no tienes acceso a él. Asegúrate de que la API key y el ID del asistente pertenezcan a la misma cuenta.`);
+  }
+}
+
+export async function analyzeDiagnosticWithGPT(diagnosticData, userId) {
+  console.log('1. Iniciando análisis con ChatGPT...');
+  console.log('Datos del diagnóstico:', diagnosticData);
+
+  // Inicializar variables fuera del try para poder acceder en el finally
+  let threadId = null;
+  let runId = null;
+  let mongoose = null;
+
+  try {
+    // Conectar a MongoDB
+    mongoose = await connectToDatabase();
+    console.log('2. Conexión a MongoDB establecida');
+
+    // Crear un thread para el análisis
+    console.log('3. Creando thread en OpenAI...');
+    try {
+      const threadResponse = await openai.beta.threads.create();
+      console.log('Respuesta completa al crear thread:', JSON.stringify(threadResponse, null, 2));
+      
+      if (!threadResponse) {
+        throw new Error('La respuesta al crear el thread está vacía');
+      }
+      
+      if (!threadResponse.id) {
+        throw new Error(`El thread no tiene ID. Respuesta completa: ${JSON.stringify(threadResponse)}`);
+      }
+      
+      if (!threadResponse.id.startsWith('thread_')) {
+        throw new Error(`ID de thread inválido: ${threadResponse.id}`);
+      }
+      
+      threadId = threadResponse.id;
+      console.log('Thread creado exitosamente:', threadId);
+    } catch (error) {
+      console.error('Error al crear el thread:', error);
+      throw new Error(`Error al crear el thread: ${error.message}`);
+    }
+
+    // Agregar el mensaje con los datos del diagnóstico
+    console.log('4. Agregando mensaje al thread...');
+    console.log('Usando threadId:', threadId);
+    const messageResponse = await openai.beta.threads.messages.create(threadId, {
+      role: "user",
+      content: JSON.stringify(diagnosticData),
+    });
     
-    // Parsear la respuesta JSON
-    const analysis = JSON.parse(data.choices[0].message.content);
+    if (!messageResponse || !messageResponse.id) {
+      throw new Error('No se pudo agregar el mensaje al thread');
+    }
     
-    // Asegurarse de que los porcentajes sean números
-    if (analysis.metricasPorcentuales) {
-      Object.keys(analysis.metricasPorcentuales).forEach(key => {
-        const value = analysis.metricasPorcentuales[key];
-        if (typeof value === 'string') {
-          // Eliminar el símbolo % y convertir a número
-          analysis.metricasPorcentuales[key] = parseFloat(value.replace('%', ''));
+    console.log('Mensaje agregado:', messageResponse.id);
+
+    // Ejecutar el asistente y esperar la respuesta
+    console.log('5. Ejecutando asistente y esperando respuesta...');
+    console.log('Usando threadId antes de createAndPoll:', threadId);
+    
+    try {
+      // Usar createAndPoll para manejar la ejecución y espera automáticamente
+      const run = await openai.beta.threads.runs.createAndPoll(threadId, {
+        assistant_id: ASSISTANT_ID,
+      });
+      
+      console.log('Run object after createAndPoll:', run);
+      console.log('ThreadId after createAndPoll:', threadId);
+      
+      if (!run || !run.id) {
+        throw new Error('No se pudo iniciar o completar el run en OpenAI');
+      }
+      
+      runId = run.id;
+      console.log('Run completado exitosamente:', runId);
+      
+      if (run.status === "failed") {
+        throw new Error(`Error en la ejecución del asistente: ${run.last_error?.message}`);
+      } else if (run.status === "cancelled") {
+        throw new Error('La ejecución del asistente fue cancelada');
+      } else if (run.status === "expired") {
+        throw new Error('La ejecución del asistente expiró');
+      }
+    } catch (error) {
+      console.error('Error durante la ejecución del asistente:', error);
+      throw new Error(`Error al ejecutar el asistente: ${error.message}`);
+    }
+
+    // Obtener los mensajes del thread
+    console.log('6. Obteniendo respuesta del asistente...');
+    console.log('Usando threadId antes de messages.list:', threadId);
+    
+    if (!threadId || !threadId.startsWith('thread_')) {
+      throw new Error(`Thread ID inválido al obtener mensajes: ${threadId}`);
+    }
+    
+    const messages = await openai.beta.threads.messages.list(threadId);
+    const lastMessage = messages.data[0];
+    
+    if (!lastMessage || !lastMessage.content || !lastMessage.content[0] || !lastMessage.content[0].text) {
+      throw new Error('No se pudo obtener la respuesta del asistente');
+    }
+    
+    const rawResponse = lastMessage.content[0].text.value;
+    console.log('Respuesta recibida:', rawResponse);
+
+    // Limpiar la respuesta antes de parsearla como JSON
+    let cleanedResponse = rawResponse;
+    
+    // Eliminar bloques de código markdown si existen
+    if (rawResponse.includes('```json')) {
+      cleanedResponse = rawResponse.replace(/```json\n|\n```/g, '');
+    } else if (rawResponse.includes('```')) {
+      cleanedResponse = rawResponse.replace(/```\n|\n```/g, '');
+    }
+    
+    // Eliminar espacios en blanco al inicio y final
+    cleanedResponse = cleanedResponse.trim();
+    
+    console.log('Respuesta limpia:', cleanedResponse);
+
+    // Procesar la respuesta
+    let analysis;
+    try {
+      analysis = JSON.parse(cleanedResponse);
+    } catch (error) {
+      console.error('Error al parsear la respuesta como JSON:', error);
+      console.error('Respuesta que causó el error:', cleanedResponse);
+      throw new Error(`Error al parsear la respuesta del asistente como JSON: ${error.message}`);
+    }
+
+    // Convertir porcentajes a números
+    if (analysis.porcentajes) {
+      Object.keys(analysis.porcentajes).forEach(key => {
+        if (typeof analysis.porcentajes[key] === 'string') {
+          analysis.porcentajes[key] = parseFloat(analysis.porcentajes[key].replace('%', ''));
         }
       });
     }
-    
+
+    console.log('7. Análisis completado exitosamente');
+
+    // Guardar el resultado en la base de datos
+    const result = await mongoose.connection.db.collection('diagnoses').insertOne({
+      ...analysis,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Asegurarnos de que no se guarde un email nulo
+      email: analysis.email || undefined
+    });
+
+    console.log('8. Resultado guardado en la base de datos');
+
     return {
-      analysis,
-      usage: data.usage
+      ...analysis,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
   } catch (error) {
-    console.error('Error al analizar diagnóstico con ChatGPT:', error);
-    throw error;
+    console.error('Error en el análisis:', error);
+    throw new Error(`Error al analizar el diagnóstico: ${error.message}`);
+  } finally {
+    // Limpiar recursos si es necesario
+    if (threadId) {
+      try {
+        console.log('Limpiando thread:', threadId);
+        await openai.beta.threads.delete(threadId);
+        console.log('Thread eliminado:', threadId);
+      } catch (error) {
+        console.error('Error al eliminar thread:', error);
+      }
+    }
   }
 } 

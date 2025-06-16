@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/libs/mongodb';
+import { connectToDatabase } from '@/libs/mongodb';
 import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 import mongoose from 'mongoose';
 
@@ -16,7 +16,7 @@ export async function GET(request) {
       );
     }
 
-    await connectDB();
+    await connectToDatabase();
     
     // Buscar el diagnóstico específico del usuario
     const diagnosis = await DiagnosticoCentral.findOne({ userId: userId })
@@ -39,7 +39,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     // Conectar a la base de datos
-    await connectDB();
+    await connectToDatabase();
 
     // Obtener los datos del diagnóstico
     const data = await request.json();

@@ -1,9 +1,9 @@
 import DiagnosticoCentral from "@/models/DiagnosticoCentral";
-import connectDB from "@/libs/mongodb";
+import { connectToDatabase } from "@/libs/mongodb";
 
 export async function getMetrics() {
   try {
-    await connectDB();
+    await connectToDatabase();
     const diagnosticos = await DiagnosticoCentral.find()
       .select('evaluacionAreas')
       .sort({ createdAt: -1 });

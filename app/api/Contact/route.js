@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/libs/mongodb';
+import { connectToDatabase } from '@/libs/mongodb';
 import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 
 export async function GET(request) {
@@ -15,7 +15,7 @@ export async function GET(request) {
       );
     }
 
-    await connectDB();
+    await connectToDatabase();
     
     // Buscar diagnósticos que coincidan con el userId
     const diagnoses = await DiagnosticoCentral.find({ userId: userId })
