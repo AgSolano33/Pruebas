@@ -100,9 +100,49 @@ export async function analyzeDiagnosticWithGPT(diagnosticData, userId) {
     // Agregar el mensaje con los datos del diagnóstico
     console.log('4. Agregando mensaje al thread...');
     console.log('Usando threadId:', threadId);
+    
+    const prompt = `
+Analiza el siguiente diagnóstico y proporciona la respuesta en el siguiente formato JSON estricto:
+
+{
+  "1. Situacion actual de la empresa y objetivos": {
+    "Diagnostico general": "La empresa 'nombreEmpresa' ",
+    "Retos principales": "string",
+    "Objetivos": "string"
+  },
+  "2. Posibles soluciones": [
+    {
+      "Solucion": "string",
+      "Herramientas": ["string"]
+    }
+  ],
+  "3. Categorias de proyecto": {
+    "Industry": ["string"],
+    "Categorias de servicio buscado": ["string"],
+    "Objetivos de la empresa": ["string"]
+  },
+  "4. Posibles matches": [
+    {
+      "Titulo solucion propuesta": "string",
+      "Descripcion": "string"
+    }
+  ]
+}
+
+Asegúrate de que:
+1. Todos los campos estén presentes
+2. Los arrays contengan al menos un elemento
+3. Los strings no estén vacíos
+4. Mantén el formato exacto de los nombres de los campos
+5. Reemplaza [nombreEmpresa] con el nombre real de la empresa del diagnóstico
+
+Datos del diagnóstico a analizar:
+${JSON.stringify(diagnosticData, null, 2)}
+`;
+
     const messageResponse = await openai.beta.threads.messages.create(threadId, {
       role: "user",
-      content: JSON.stringify(diagnosticData),
+      content: prompt
     });
     
     if (!messageResponse || !messageResponse.id) {
@@ -180,22 +220,46 @@ export async function analyzeDiagnosticWithGPT(diagnosticData, userId) {
     let analysis;
     try {
       analysis = JSON.parse(cleanedResponse);
-    } catch (error) {
-      console.error('Error al parsear la respuesta como JSON:', error);
-      console.error('Respuesta que causó el error:', cleanedResponse);
-      throw new Error(`Error al parsear la respuesta del asistente como JSON: ${error.message}`);
-    }
+      
+      // Validar la estructura de la respuesta
+      const requiredStructure = {
+        "1. Situacion actual de la empresa y objetivos": {
+          "Diagnostico general": "string",
+          "Retos principales": "string",
+          "Objetivos": "string"
+        },
+        "2. Posibles soluciones": "array",
+        "3. Categorias de proyecto": {
+          "Industry": "array",
+          "Categorias de servicio buscado": "array",
+          "Objetivos de la empresa": "array"
+        },
+        "4. Posibles matches": "array"
+      };
 
-    // Convertir porcentajes a números
-    if (analysis.porcentajes) {
-      Object.keys(analysis.porcentajes).forEach(key => {
-        if (typeof analysis.porcentajes[key] === 'string') {
-          analysis.porcentajes[key] = parseFloat(analysis.porcentajes[key].replace('%', ''));
+      // Validar que todos los campos requeridos existan
+      for (const [key, value] of Object.entries(requiredStructure)) {
+        if (!analysis[key]) {
+          throw new Error(`Falta el campo requerido: ${key}`);
         }
-      });
-    }
+      }
 
-    console.log('7. Análisis completado exitosamente');
+      // Validar la estructura de las soluciones
+      if (!Array.isArray(analysis["2. Posibles soluciones"]) || 
+          analysis["2. Posibles soluciones"].length === 0) {
+        throw new Error("El campo '2. Posibles soluciones' debe ser un array no vacío");
+      }
+
+      // Validar la estructura de los matches
+      if (!Array.isArray(analysis["4. Posibles matches"]) || 
+          analysis["4. Posibles matches"].length === 0) {
+        throw new Error("El campo '4. Posibles matches' debe ser un array no vacío");
+      }
+
+    } catch (error) {
+      console.error('Error al validar la respuesta:', error);
+      throw new Error(`Error en el formato de la respuesta: ${error.message}`);
+    }
 
     // Guardar el resultado en la base de datos
     const result = await mongoose.connection.db.collection('diagnoses').insertOne({
@@ -203,7 +267,6 @@ export async function analyzeDiagnosticWithGPT(diagnosticData, userId) {
       userId,
       createdAt: new Date(),
       updatedAt: new Date(),
-      // Asegurarnos de que no se guarde un email nulo
       email: analysis.email || undefined
     });
 
@@ -230,4 +293,20 @@ export async function analyzeDiagnosticWithGPT(diagnosticData, userId) {
       }
     }
   }
-} 
+}
+
+// Función de prueba para el nuevo formato
+async function testNewDiagnosisFormat(testData) {
+  try {
+    console.log('Iniciando prueba de diagnóstico...');
+    const result = await analyzeDiagnosticWithGPT(testData, 'test_user_id');
+    console.log('Diagnóstico de prueba completado exitosamente');
+    return result;
+  } catch (error) {
+    console.error('Error en la prueba de diagnóstico:', error);
+    throw error;
+  }
+}
+
+// Exportar solo la función de prueba
+export { testNewDiagnosisFormat }; 
