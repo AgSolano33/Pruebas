@@ -72,8 +72,8 @@ export default function PrediagnosticoList() {
     }
   };
 
-  const handleViewDetails = (diagnosisId, solutionIndex) => {
-    router.push(`/dashboard/diagnosis/${diagnosisId}?solution=${solutionIndex}`);
+  const handleViewDetails = (diagnosisId) => {
+    router.push(`/diagnosis/${diagnosisId}`);
   };
 
   const toggleCard = (diagnosisId) => {
@@ -136,15 +136,35 @@ export default function PrediagnosticoList() {
           return (
             <div key={diagnosis._id} className="bg-white rounded-lg shadow-md p-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-[#1A3D7C]">
-                  {nombreEmpresa}
-                </h3>
-                <button
-                  onClick={() => handleDelete(diagnosis._id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  <FaTrash />
-                </button>
+                <div>
+                  <h3 className="text-lg font-semibold text-[#1A3D7C]">
+                    {nombreEmpresa}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {new Date(diagnosis.createdAt).toLocaleString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleViewDetails(diagnosis._id)}
+                    className="px-4 py-2 bg-[#1A3D7C] text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Ver más detalles
+                  </button>
+                  <button
+                    onClick={() => handleDelete(diagnosis._id)}
+                    className="p-2 text-red-600 hover:text-red-800 transition-colors"
+                    title="Eliminar diagnóstico"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
               </div>
             </div>
           );

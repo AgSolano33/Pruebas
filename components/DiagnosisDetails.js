@@ -1,113 +1,240 @@
-  <>
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Métricas Principales</h2>
-      {diagnosis.porcentajes ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Object.entries(diagnosis.porcentajes).map(([key, value]) => (
-            <div key={key} className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-sm font-medium text-gray-600 mb-1">
-                {key.replace(/([A-Z])/g, ' $1').trim()}
-              </h3>
-              <p className="text-2xl font-bold text-blue-600">{value}%</p>
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { FaArrowLeft, FaBuilding, FaLightbulb, FaProjectDiagram, FaHandshake } from "react-icons/fa";
+import Image from "next/image";
+import Link from "next/link";
+import logo from "@/app/icon.png";
+
+export default function DiagnosisDetails({ params }) {
+  const router = useRouter();
+  const [diagnosis, setDiagnosis] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDiagnosis = async () => {
+      try {
+        const diagnosisId = params.id;
+
+        if (!diagnosisId) {
+          setError('Se requiere el ID del diagnóstico');
+          setLoading(false);
+          return;
+        }
+
+        const response = await fetch(`/api/diagnoses/${diagnosisId}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setDiagnosis(result.data);
+        } else {
+          setError(result.error || 'Error al cargar el diagnóstico');
+        }
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiagnosis();
+  }, [params.id]);
+
+  const formatValue = (value) => {
+    if (Array.isArray(value)) {
+      return value.map(item => {
+        let formatted = item.replace(/^["']|["']$/g, '');
+        // Elimina líneas que contienen solo números
+        formatted = formatted.replace(/^\d+\s*$/, '');
+        // Elimina números al inicio de líneas
+        formatted = formatted.replace(/^\d+\s*/, '');
+        return formatted;
+      }).filter(item => item.trim() !== '').join(', ');
+    }
+    if (typeof value === 'string') {
+      let formatted = value.replace(/^["']|["']$/g, '');
+      // Elimina líneas que contienen solo números
+      formatted = formatted.replace(/^\d+\s*$/, '');
+      // Elimina números al inicio de líneas
+      formatted = formatted.replace(/^\d+\s*/, '');
+      return formatted;
+    }
+    return value;
+  };
+
+  const renderValue = (value) => {
+    if (typeof value === 'object' && value !== null) {
+      return (
+        <div className="space-y-2">
+          {Object.entries(value).map(([key, val]) => {
+            const formattedKey = key
+              .replace(/^["']|["']$/g, '')
+              .replace(/^\d+:\s*/, '')
+              .replace(/^\d+\s*$/, ''); // Elimina líneas que contienen solo números
+            const formattedVal = formatValue(val);
+            // Solo renderiza si hay contenido después de formatear
+            if (formattedVal.trim() === '') return null;
+            return (
+              <div key={key} className="pl-4 border-l-2 border-blue-200">
+                <p className="font-medium text-gray-700">{formattedKey}</p>
+                <p className="text-gray-600">{formattedVal}</p>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    const formattedValue = formatValue(value);
+    // Solo renderiza si hay contenido después de formatear
+    if (formattedValue.trim() === '') return null;
+    return <p className="text-gray-600">{formattedValue}</p>;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-32 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 shadow-sm">
+            <h2 className="text-red-800 font-semibold text-xl mb-2">Error</h2>
+            <p className="text-red-600 mb-4">{error}</p>
+            <Link href="/dashboard" className="inline-flex items-center text-red-800 hover:text-red-900 transition-colors">
+              <FaArrowLeft className="mr-2" />
+              Volver al dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!diagnosis) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 shadow-sm">
+            <h2 className="text-yellow-800 font-semibold text-xl mb-2">No se encontró el diagnóstico</h2>
+            <Link href="/dashboard" className="inline-flex items-center text-yellow-800 hover:text-yellow-900 transition-colors">
+              <FaArrowLeft className="mr-2" />
+              Volver al dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-8 flex justify-between items-center">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <FaArrowLeft className="mr-2" />
+            Volver al dashboard
+          </Link>
+          <div className="flex items-center">
+            <Image
+              src={logo}
+              alt="Logo"
+              width={300}
+              height={300}
+              className="w-[200px] md:w-[300px]"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-lg p-8 space-y-8">
+          <h1 className="text-3xl font-bold text-gray-900 border-b pb-4">Detalles del Diagnóstico</h1>
+
+          {/* Situación Actual y Objetivos */}
+          <section className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <FaBuilding className="text-blue-500 text-2xl" />
+              <h2 className="text-2xl font-semibold text-gray-800">Situación Actual y Objetivos</h2>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <div className="mb-6">
-            <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Diagnóstico Central Pendiente
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Para visualizar las métricas principales de tu negocio, necesitas completar el diagnóstico central.
-          </p>
-          <p className="text-gray-500 mb-6">
-            El diagnóstico central te proporcionará un análisis detallado y métricas específicas para mejorar tu negocio.
-          </p>
-          <Link 
-            href="/diagnostico-central" 
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <span>Crear Diagnóstico Central</span>
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-      )}
-    </div>
+            <div className="grid grid-cols-1 gap-4">
+              {diagnosis['1. Situacion actual de la empresa y objetivos'] && 
+                Object.entries(diagnosis['1. Situacion actual de la empresa y objetivos']).map(([key, value]) => (
+                  <div key={key} className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <h3 className="font-medium text-gray-800 mb-3 text-lg">
+                      {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                    </h3>
+                    {renderValue(value)}
+                  </div>
+                ))}
+            </div>
+          </section>
 
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Diagnóstico General</h2>
-      {diagnosis.analysis?.resumenGeneral ? (
-        <div className="prose max-w-none">
-          <p>{diagnosis.analysis.resumenGeneral}</p>
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <div className="mb-6">
-            <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Diagnóstico General Pendiente
-          </h3>
-          <p className="text-gray-600 mb-4">
-            El diagnóstico general te ayudará a entender mejor el estado actual de tu negocio.
-          </p>
-          <p className="text-gray-500 mb-6">
-            Completa el diagnóstico central para obtener un análisis detallado y recomendaciones específicas.
-          </p>
-          <Link 
-            href="/diagnostico-central" 
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <span>Crear Diagnóstico Central</span>
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-      )}
-    </div>
+          {/* Posibles Soluciones */}
+          <section className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <FaLightbulb className="text-yellow-500 text-2xl" />
+              <h2 className="text-2xl font-semibold text-gray-800">Posibles Soluciones</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {diagnosis['2. Posibles soluciones']?.map((solucion, index) => (
+                <div key={index} className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <h3 className="font-medium text-gray-800 mb-3 text-lg">Solución {index + 1}</h3>
+                  {renderValue(solucion)}
+                </div>
+              ))}
+            </div>
+          </section>
 
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold mb-4">Conclusiones</h2>
-      {diagnosis.conclusion ? (
-        <div className="prose max-w-none">
-          <p>{diagnosis.conclusion}</p>
+          {/* Categorías de Proyecto */}
+          <section className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <FaProjectDiagram className="text-green-500 text-2xl" />
+              <h2 className="text-2xl font-semibold text-gray-800">Categorías de Proyecto</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {diagnosis['3. Categorias de proyecto'] && 
+                Object.entries(diagnosis['3. Categorias de proyecto']).map(([key, value]) => (
+                  <div key={key} className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <h3 className="font-medium text-gray-800 mb-3 text-lg">
+                      {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                    </h3>
+                    {renderValue(value)}
+                  </div>
+                ))}
+            </div>
+          </section>
+
+          {/* Posibles Matches */}
+          <section className="space-y-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <FaHandshake className="text-purple-500 text-2xl" />
+              <h2 className="text-2xl font-semibold text-gray-800">Posibles Matches</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {diagnosis['4. Posibles matches']?.map((match, index) => (
+                <div key={index} className="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <h3 className="font-medium text-gray-800 mb-3 text-lg">Match {index + 1}</h3>
+                  {renderValue(match)}
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-      ) : (
-        <div className="text-center py-8">
-          <div className="mb-6">
-            <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Conclusiones Pendientes
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Las conclusiones te proporcionarán un resumen de los hallazgos y recomendaciones clave.
-          </p>
-          <p className="text-gray-500 mb-6">
-            Completa el diagnóstico central para obtener conclusiones detalladas y un plan de acción.
-          </p>
-          <Link 
-            href="/diagnostico-central" 
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            <span>Crear Diagnóstico Central</span>
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-      )}
+      </div>
     </div>
-  </> 
+  );
+} 

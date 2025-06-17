@@ -135,6 +135,7 @@ Asegúrate de que:
 3. Los strings no estén vacíos
 4. Mantén el formato exacto de los nombres de los campos
 5. Reemplaza [nombreEmpresa] con el nombre real de la empresa del diagnóstico
+6. Que toda la informacion este en español.
 
 Datos del diagnóstico a analizar:
 ${JSON.stringify(diagnosticData, null, 2)}
@@ -230,7 +231,7 @@ ${JSON.stringify(diagnosticData, null, 2)}
         },
         "2. Posibles soluciones": "array",
         "3. Categorias de proyecto": {
-          "Industry": "array",
+          "Industria": "array",
           "Categorias de servicio buscado": "array",
           "Objetivos de la empresa": "array"
         },

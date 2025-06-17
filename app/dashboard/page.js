@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [diagnosisData, setDiagnosisData] = useState(null);
   const [metrics, setMetrics] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDiagnostico, setIsLoadingDiagnostico] = useState(true);
   const [isExisting, setIsExisting] = useState(false);
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,12 +38,13 @@ export default function Dashboard() {
       let userHasPrediagnosticos = false;
 
       try {
+        setIsLoadingDiagnostico(true);
         // Verificar Diagnóstico Central
         const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
         if (responseCentral.ok) {
           const dataCentral = await responseCentral.json();
-          userHasDiagnosticoCentral = !!dataCentral;
-          if (dataCentral) {
+          userHasDiagnosticoCentral = dataCentral && Object.keys(dataCentral).length > 0;
+          if (dataCentral && Object.keys(dataCentral).length > 0) {
             setDiagnosisData(dataCentral);
             setCompanyName(dataCentral.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
           }
@@ -53,16 +55,15 @@ export default function Dashboard() {
         if (responsePrediagnosticos.ok) {
           const dataPrediagnosticos = await responsePrediagnosticos.json();
           userHasPrediagnosticos = dataPrediagnosticos && dataPrediagnosticos.length > 0;
-          console.log("API Prediagnosticos Response Data:", dataPrediagnosticos);
-          console.log("User has Prediagnosticos (boolean):", userHasPrediagnosticos);
         }
 
       } catch (error) {
-        console.error("Error checking user data:", error);
+        // Error handling
       } finally {
         setHasDiagnosticoCentral(userHasDiagnosticoCentral);
         setHasPrediagnosticos(userHasPrediagnosticos);
         setIsLoading(false);
+        setIsLoadingDiagnostico(false);
 
         // Abrir modal de pre-diagnóstico si no tiene Prediagnósticos
         if (!userHasPrediagnosticos) {
@@ -158,7 +159,9 @@ export default function Dashboard() {
             <h2 className="text-xl text-gray-600">{companyName}</h2>
           </div>
           <div className="flex items-center gap-4">
-            {!hasDiagnosticoCentral && (
+            {isLoadingDiagnostico ? (
+              <div className="animate-pulse bg-gray-200 h-10 w-40 rounded-md"></div>
+            ) : !hasDiagnosticoCentral && (
               <button
                 onClick={() => setShowDiagnosticoCentral(true)}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
