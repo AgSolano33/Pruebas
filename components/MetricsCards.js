@@ -95,8 +95,8 @@ const MetricsCards = () => {
 
   if (error) {
     return (
-      <div className="text-red-500 text-center p-4">
-        {error}
+      <div className="text-center text-gray-500 p-4">
+        <span className="text-[#1A3D7C] font-semibold">Te invitamos a completar tu información haciendo el diagnóstico central.</span>
       </div>
     );
   }
@@ -104,7 +104,7 @@ const MetricsCards = () => {
   if (!analysis) {
     return (
       <div className="text-center text-gray-500 p-4">
-        No hay métricas disponibles. Por favor, complete el diagnóstico central para ver las métricas.
+        <span className="text-[#1A3D7C] font-semibold">Te invitamos a completar tu información haciendo el diagnóstico central.</span>
       </div>
     );
   }

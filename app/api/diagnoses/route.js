@@ -8,7 +8,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    console.log("GET request params:", { userId });
+  
 
     if (!userId) {
       return NextResponse.json(
@@ -22,11 +22,11 @@ export async function GET(request) {
 
     // Verificar la colección y contar documentos
     const collections = await db.listCollections().toArray();
-    console.log("Available collections:", collections.map(c => c.name));
+    
 
     const diagnosesCollection = db.collection("diagnoses");
     const totalDocuments = await diagnosesCollection.countDocuments();
-    console.log("Total documents in diagnoses collection:", totalDocuments);
+    
 
     // Buscar todos los diagnósticos del usuario usando $or para manejar diferentes formatos de userId
     const diagnoses = await diagnosesCollection
@@ -38,14 +38,13 @@ export async function GET(request) {
       })
       .toArray();
 
-    console.log("Found diagnoses count:", diagnoses.length);
-    console.log("All diagnoses:", JSON.stringify(diagnoses, null, 2));
+
 
     if (!diagnoses || diagnoses.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No se encontraron diagnósticos" },
-        { status: 404 }
-      );
+      return NextResponse.json({
+        success: true,
+        data: []
+      });
     }
 
     // Convertir ObjectId a string y fechas a ISO
@@ -62,7 +61,7 @@ export async function GET(request) {
       data: formattedDiagnoses
     });
   } catch (error) {
-    console.error("Error in GET /api/diagnoses:", error);
+    
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

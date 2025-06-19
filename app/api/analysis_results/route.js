@@ -27,10 +27,10 @@ export async function GET(request) {
       });
       
       if (!analysisResult) {
-        return NextResponse.json({ 
-          success: false, 
-          error: 'Análisis no encontrado por ID' 
-        }, { status: 404 });
+        return NextResponse.json({
+          success: true,
+          data: null
+        });
       }
     } else {
       // Si se proporciona un userId, buscar el análisis más reciente de ese usuario
@@ -38,10 +38,10 @@ export async function GET(request) {
         .findOne({ userId }, { sort: { createdAt: -1 } });
       
       if (!analysisResult) {
-        return NextResponse.json({ 
-          success: false, 
-          error: `No se encontró un análisis para el usuario con ID: ${userId}` 
-        }, { status: 404 });
+        return NextResponse.json({
+          success: true,
+          data: null
+        });
       }
     }
 

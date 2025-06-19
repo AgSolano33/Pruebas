@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 export async function GET(request, { params }) {
   try {
     const { id } = params;
-    console.log("GET request for diagnosis ID:", id);
+    
 
     if (!id) {
       return NextResponse.json(
