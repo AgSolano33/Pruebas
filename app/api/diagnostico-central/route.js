@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/libs/mongodb';
 import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 import mongoose from 'mongoose';
+import { analyzeCentralDiagnostic } from '@/services/centralDiagnosticService';
 
 export async function GET(request) {
   try {
@@ -90,6 +91,15 @@ export async function POST(request) {
     // Crear el nuevo diagnóstico
     const diagnostico = new DiagnosticoCentral(diagnosticoData);
     await diagnostico.save();
+
+    // Realizar el análisis automáticamente
+    try {
+      const analysis = await analyzeCentralDiagnostic(diagnosticoData, data.userId);
+      console.log('Análisis completado exitosamente');
+    } catch (analysisError) {
+      console.error('Error al realizar el análisis:', analysisError);
+      // No lanzamos el error para no interrumpir el flujo principal
+    }
 
     return NextResponse.json({
       success: true,

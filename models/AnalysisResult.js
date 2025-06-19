@@ -33,34 +33,170 @@ const analysisResultSchema = new mongoose.Schema({
   },
   analisisMetricas: {
     madurezDigital: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     saludFinanciera: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     eficienciaOperativa: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     recursosHumanos: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     marketingVentas: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     innovacionDesarrollo: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     experienciaCliente: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     },
     gestionRiesgos: {
+      descripcionModulo: {
+        objetivo: String,
+        alcance: String,
+        componentes: [String]
+      },
+      conclusionBasadaPuntuacion: {
+        nivel: String,
+        fortalezas: [String],
+        areasMejora: [String],
+        impactoGeneral: String
+      },
+      interpretacionCompleta: {
+        analisisDetallado: String,
+        tendencias: [String],
+        factoresClave: [String],
+        impactoEstrategico: String
+      },
       interpretacion: String,
       recomendaciones: [String]
     }

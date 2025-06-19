@@ -127,7 +127,7 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error('Error en GET /api/analysis-results:', error);
+    console.error('Error en GET /api/analysis_results:', error);
     return NextResponse.json({ 
       success: false, 
       error: error.message || 'Error al obtener resultados de análisis' 
@@ -172,5 +172,4 @@ export async function DELETE(request) {
       error: error.message || 'Error al eliminar análisis' 
     }, { status: 500 });
   }
-}
-
+} 

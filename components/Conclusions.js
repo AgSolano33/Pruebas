@@ -1,57 +1,11 @@
 "use client";
 
+import React from 'react';
 import { useState, useEffect } from "react";
 import { FaBuilding, FaChartLine, FaClipboardList, FaLightbulb } from "react-icons/fa";
 
-export default function Conclusions() {
-  const [conclusions, setConclusions] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchConclusions = async () => {
-      try {
-        const response = await fetch('/api/analysis-results');
-        const result = await response.json();
-
-        if (result.success && result.data) {
-          setConclusions(result.data);
-        } else {
-          setError(result.error || 'Error al cargar las conclusiones');
-        }
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConclusions();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A3D7C]"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-red-500 text-center p-4">
-        {error}
-      </div>
-    );
-  }
-
-  if (!conclusions) {
-    return (
-      <div className="text-center text-gray-500 p-4">
-        No hay conclusiones disponibles
-      </div>
-    );
-  }
+const Conclusions = ({ conclusions }) => {
+  if (!conclusions) return null;
 
   return (
     <div className="space-y-6">
@@ -61,16 +15,32 @@ export default function Conclusions() {
           <FaBuilding className="text-[#1A3D7C] text-xl" />
           <h2 className="text-xl font-semibold text-[#1A3D7C]">Resumen de la Empresa</h2>
         </div>
-        <p className="text-gray-600 mb-4">{conclusions.resumenEmpresa.descripcion}</p>
+        <p className="text-gray-600 mb-4">{conclusions.resumenEmpresa}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-medium text-[#1A3D7C] mb-2">Fortalezas</h3>
-            <ul className="list-disc list-inside space-y-1">
-              {conclusions.resumenEmpresa.fortalezas.map((fortaleza, index) => (
-                <li key={index} className="text-gray-600">{fortaleza}</li>
+            <ul className="list-disc list-inside text-gray-600">
+              {conclusions.fortalezas.map((fortaleza, index) => (
+                <li key={index}>{fortaleza}</li>
               ))}
             </ul>
           </div>
+          <div className="bg-red-50 p-4 rounded-lg">
+            <h3 className="font-medium text-[#1A3D7C] mb-2">Debilidades</h3>
+            <ul className="list-disc list-inside text-gray-600">
+              {conclusions.debilidades.map((debilidad, index) => (
+                <li key={index}>{debilidad}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="mt-6">
+          <h3 className="font-medium text-[#1A3D7C] mb-2">Oportunidades</h3>
+          <ul className="list-disc list-inside text-gray-600">
+            {conclusions.oportunidades.map((oportunidad, index) => (
+              <li key={index}>{oportunidad}</li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -135,4 +105,6 @@ export default function Conclusions() {
       </section>
     </div>
   );
-} 
+};
+
+export default Conclusions; 
