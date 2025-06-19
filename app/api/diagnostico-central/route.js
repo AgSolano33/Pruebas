@@ -17,12 +17,16 @@ export async function GET(request) {
       );
     }
 
+    console.log('Conectando a la base de datos...');
     await connectToDatabase();
+    console.log('Conexión exitosa, buscando diagnóstico para userId:', userId);
     
     // Buscar el diagnóstico específico del usuario
     const diagnosis = await DiagnosticoCentral.findOne({ userId: userId })
       .lean()
       .exec();
+
+    console.log('Resultado de la búsqueda:', diagnosis ? 'Encontrado' : 'No encontrado');
 
     if (!diagnosis) {
       return NextResponse.json(null, { status: 200 });
@@ -30,8 +34,9 @@ export async function GET(request) {
 
     return NextResponse.json(diagnosis, { status: 200 });
   } catch (error) {
+    console.error('Error en GET /api/diagnostico-central:', error);
     return NextResponse.json(
-      { error: 'Error al obtener el diagnóstico' },
+      { error: 'Error al obtener el diagnóstico', details: error.message },
       { status: 500 }
     );
   }
@@ -92,24 +97,21 @@ export async function POST(request) {
     const diagnostico = new DiagnosticoCentral(diagnosticoData);
     await diagnostico.save();
 
-    // Realizar el análisis automáticamente
-    try {
-      const analysis = await analyzeCentralDiagnostic(diagnosticoData, data.userId);
-      console.log('Análisis completado exitosamente');
-    } catch (analysisError) {
-      console.error('Error al realizar el análisis:', analysisError);
-      // No lanzamos el error para no interrumpir el flujo principal
-    }
+    // Lanzar el análisis en background (no bloquea la respuesta)
+    analyzeCentralDiagnostic(diagnosticoData, data.userId)
+      .then(() => console.log('Análisis completado exitosamente'))
+      .catch((analysisError) => console.error('Error al realizar el análisis:', analysisError));
 
     return NextResponse.json({
       success: true,
-      message: 'Diagnóstico guardado exitosamente',
+      message: 'Diagnóstico guardado exitosamente. El análisis estará disponible en unos minutos.',
       diagnostico
     });
 
   } catch (error) {
+    console.error('Error en POST /api/diagnostico-central:', error);
     return NextResponse.json(
-      { error: error.message || 'Error al guardar el diagnóstico' },
+      { error: error.message || 'Error al guardar el diagnóstico', details: error.stack },
       { status: 500 }
     );
   }

@@ -49,6 +49,8 @@ const MetricsCards = () => {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -59,6 +61,29 @@ const MetricsCards = () => {
       }
 
       try {
+        // Primero verificar si tiene diagnóstico central
+        const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
+        if (responseCentral.ok) {
+          const dataCentral = await responseCentral.json();
+          const hasCentral = dataCentral && Object.keys(dataCentral).length > 0;
+          setHasDiagnosticoCentral(hasCentral);
+          
+          
+          // Si tiene diagnóstico central, verificar si fue creado recientemente
+          if (hasCentral && dataCentral.createdAt) {
+            const createdAt = new Date(dataCentral.createdAt);
+            const now = new Date();
+            const timeDiff = now - createdAt;
+            const minutesDiff = timeDiff / (1000 * 60);
+            
+            // Si el diagnóstico fue creado en los últimos 10 minutos, mostrar análisis en progreso
+            if (minutesDiff < 10) {
+              setIsAnalyzing(true);
+            }
+          }
+        }
+
+        // Luego buscar el análisis
         const response = await fetch(`/api/analysis_results?userId=${session.user.id}`);
         console.log('Response URL:', `/api/analysis_results?userId=${session.user.id}`);
         const result = await response.json();
@@ -67,6 +92,15 @@ const MetricsCards = () => {
         if (result.success && result.data) {
           console.log('metricasPorcentuales:', JSON.stringify(result.data.metricasPorcentuales, null, 2));
           setAnalysis(result.data);
+          setIsAnalyzing(false); // Si hay análisis, no está analizando
+        } else if (result.success && !result.data) {
+          // No hay análisis disponible aún
+          
+          setAnalysis(null);
+          // Si tiene diagnóstico central pero no análisis, está analizando
+          if (hasDiagnosticoCentral) {
+            setIsAnalyzing(true);
+          }
         } else {
           setError(result.error || 'Error al cargar el análisis');
         }
@@ -85,6 +119,8 @@ const MetricsCards = () => {
     router.push(`/metric-details/${metricKey}?userId=${session.user.id}`);
   };
 
+  
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[200px]">
@@ -97,6 +133,41 @@ const MetricsCards = () => {
     return (
       <div className="text-center text-gray-500 p-4">
         <span className="text-[#1A3D7C] font-semibold">Te invitamos a completar tu información haciendo el diagnóstico central.</span>
+      </div>
+    );
+  }
+
+  if (isAnalyzing) {
+    console.log('Mostrando mensaje de análisis en progreso');
+    return (
+      <div className="text-center p-8 bg-white rounded-lg shadow-md">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A3D7C] mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold text-[#1A3D7C] mb-2">Análisis en Progreso</h3>
+        <p className="text-gray-600">Estamos haciendo el análisis de su empresa. Esto puede tomar unos minutos.</p>
+        <p className="text-sm text-gray-500 mt-2 mb-4">Por favor, recargue la página en unos momentos para ver los resultados.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-[#1A3D7C] text-white rounded-md hover:bg-[#00AEEF] transition-colors"
+        >
+          Recargar Página
+        </button>
+      </div>
+    );
+  }
+
+  if (!analysis && hasDiagnosticoCentral) {
+    return (
+      <div className="text-center p-8 bg-white rounded-lg shadow-md">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A3D7C] mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold text-[#1A3D7C] mb-2">Análisis en Progreso</h3>
+        <p className="text-gray-600">Estamos haciendo el análisis de su empresa. Esto puede tomar unos minutos.</p>
+        <p className="text-sm text-gray-500 mt-2 mb-4">Por favor, recargue la página en unos momentos para ver los resultados.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-[#1A3D7C] text-white rounded-md hover:bg-[#00AEEF] transition-colors"
+        >
+          Recargar Página
+        </button>
       </div>
     );
   }

@@ -25,6 +25,35 @@ const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
+// Función para calcular métricas porcentuales
+function calcularMetricasPorcentuales(evaluacionAreas) {
+  const metricas = {};
+  
+  // Función auxiliar para calcular el porcentaje de una sección
+  const calcularPorcentajeSeccion = (seccion) => {
+    if (!seccion || typeof seccion !== 'object') return 0;
+    
+    const valores = Object.values(seccion).filter(val => typeof val === 'number');
+    if (valores.length === 0) return 0;
+    
+    const suma = valores.reduce((acc, val) => acc + val, 0);
+    const maximo = valores.length * 5;
+    return Math.round((suma / maximo) * 100);
+  };
+  
+  // Calcular cada métrica
+  metricas.madurezDigital = calcularPorcentajeSeccion(evaluacionAreas?.madurezDigital);
+  metricas.saludFinanciera = calcularPorcentajeSeccion(evaluacionAreas?.saludFinanciera);
+  metricas.eficienciaOperativa = calcularPorcentajeSeccion(evaluacionAreas?.eficienciaOperativa);
+  metricas.recursosHumanos = calcularPorcentajeSeccion(evaluacionAreas?.recursosHumanos);
+  metricas.marketingVentas = calcularPorcentajeSeccion(evaluacionAreas?.marketingVentas);
+  metricas.innovacionDesarrollo = calcularPorcentajeSeccion(evaluacionAreas?.innovacionDesarrollo);
+  metricas.experienciaCliente = calcularPorcentajeSeccion(evaluacionAreas?.experienciaCliente);
+  metricas.gestionRiesgos = calcularPorcentajeSeccion(evaluacionAreas?.gestionRiesgos);
+  
+  return metricas;
+}
+
 export async function analyzeCentralDiagnostic(diagnosticData, userId) {
   console.log('1. Iniciando análisis del diagnóstico central...');
   console.log('Datos del diagnóstico:', diagnosticData);
@@ -66,17 +95,12 @@ export async function analyzeCentralDiagnostic(diagnosticData, userId) {
         viabilidad: diagnosticData.proyectoObjetivos?.objetivoConsultoria || '',
         recomendaciones: diagnosticData.proyectoObjetivos?.recomendaciones || []
       },
-      metricasPorcentuales: {
-        madurezDigital: diagnosticData.evaluacionAreas?.madurezDigital || 0,
-        saludFinanciera: diagnosticData.evaluacionAreas?.saludFinanciera || 0,
-        eficienciaOperativa: diagnosticData.evaluacionAreas?.eficienciaOperativa || 0,
-        recursosHumanos: diagnosticData.evaluacionAreas?.talentoHumano || 0,
-        marketingVentas: diagnosticData.evaluacionAreas?.ventasMarketing || 0,
-        innovacionDesarrollo: diagnosticData.evaluacionAreas?.innovacion || 0,
-        experienciaCliente: diagnosticData.evaluacionAreas?.experienciaCliente || 0,
-        gestionRiesgos: diagnosticData.evaluacionAreas?.gestionRiesgos || 0
-      }
+      evaluacionAreas: diagnosticData.evaluacionAreas || {},
+      metricasPorcentuales: calcularMetricasPorcentuales(diagnosticData.evaluacionAreas)
     };
+
+    console.log('Métricas calculadas:', dataForAnalysis.metricasPorcentuales);
+    console.log('Datos de evaluación:', diagnosticData.evaluacionAreas);
 
     // Agregar el mensaje con los datos del diagnóstico
     console.log('4. Agregando mensaje al thread...');
@@ -305,6 +329,8 @@ Asegúrate de que:
     - Calcula el porcentaje usando la fórmula: (suma_total / (número_de_evaluaciones * 5)) * 100
     - Redondea al número entero más cercano
     - El resultado será un porcentaje entre 0 y 100
+
+IMPORTANTE: Usa los datos de evaluacionAreas proporcionados para calcular las métricas porcentuales. No inventes valores.
 
 Por ejemplo, para Gestión de Riesgos:
 - Si tienes 5 evaluaciones con valores 3, 3, 3, 2, 3

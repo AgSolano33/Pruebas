@@ -35,7 +35,9 @@ export default function DiagnosticoCentral() {
       apellido: "",
       email: "",
       telefono: "",
-      puesto: ""
+      puesto: "",
+      nivelEstudios: "",
+      genero: ""
     },
     informacionEmpresa: {
       sector: "",
@@ -48,7 +50,10 @@ export default function DiagnosticoCentral() {
       numeroEmpleados: "",
       ventasAnuales: "",
       antiguedad: "",
-      estado: ""
+      estado: "",
+      tipoEmpresa: "",
+      nombreEmpresaProyecto: "",
+      giroActividad: ""
     },
     proyectoObjetivos: {
       descripcionProyecto: "",
@@ -393,7 +398,7 @@ export default function DiagnosticoCentral() {
         throw new Error(data.message || 'Error al guardar el diagnóstico');
       }
 
-      toast.success('Diagnóstico guardado exitosamente');
+      toast.success('Diagnóstico guardado exitosamente. El análisis de su empresa está en progreso.');
       router.push('/dashboard');
       
     } catch (error) {
@@ -422,7 +427,9 @@ export default function DiagnosticoCentral() {
         if (formData.informacionEmpresa.tieneEmpleados) {
           if (!formData.informacionEmpresa.numeroEmpleados) newErrors.numeroEmpleados = "El número de empleados es requerido";
         }
-        if (!formData.informacionEmpresa.ventasAnuales) newErrors.ventasAnuales = "Las ventas anuales son requeridas";
+        if (!formData.informacionEmpresa.ventasAnuales) {
+          newErrors.ventasAnuales = "Las ventas anuales son requeridas";
+        }
         if (!formData.informacionEmpresa.antiguedad) newErrors.antiguedad = "La antigüedad es requerida";
         break;
       case 3:
@@ -583,43 +590,51 @@ export default function DiagnosticoCentral() {
             <h3 className="text-lg font-medium">
               {categoria.charAt(0).toUpperCase() + categoria.slice(1).replace(/([A-Z])/g, ' $1')}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
               {subareas.map(subarea => (
                 <div key={subarea} className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
                     {subarea.charAt(0).toUpperCase() + subarea.slice(1).replace(/([A-Z])/g, ' $1')}
                   </label>
-                  <div className={barStyles.container}>
-                    <div 
-                      className={`${barStyles.bar} ${
-                        formData.evaluacionAreas[categoria][subarea] === 0 ? 'bg-gray-300' : 
-                        formData.evaluacionAreas[categoria][subarea] === 1 ? 'bg-red-500' :
-                        formData.evaluacionAreas[categoria][subarea] === 2 ? 'bg-orange-500' :
-                        formData.evaluacionAreas[categoria][subarea] === 3 ? 'bg-yellow-500' :
-                        formData.evaluacionAreas[categoria][subarea] === 4 ? 'bg-blue-500' : 'bg-green-500'
-                      }`}
-                      style={{ width: `${(formData.evaluacionAreas[categoria][subarea] / 5) * 100}%` }}
+                  <div className={barStyles.container} style={{ position: 'relative', height: '44px' }}>
+                    <div
+                      className={
+                        `${barStyles.bar} pointer-events-none ` +
+                        (formData.evaluacionAreas[categoria][subarea] === 0 ? 'bg-gray-300' :
+                          formData.evaluacionAreas[categoria][subarea] === 1 ? 'bg-red-500' :
+                          formData.evaluacionAreas[categoria][subarea] === 2 ? 'bg-orange-500' :
+                          formData.evaluacionAreas[categoria][subarea] === 3 ? 'bg-yellow-500' :
+                          formData.evaluacionAreas[categoria][subarea] === 4 ? 'bg-blue-500' : 'bg-green-500')
+                      }
+                      style={{
+                        width: `${(formData.evaluacionAreas[categoria][subarea] / 5) * 100}%`,
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        height: '100%',
+                        zIndex: 1,
+                        transition: 'width 0.3s',
+                      }}
                     />
+                    <div className="flex h-full w-full items-center justify-between px-2" style={{ position: 'relative', zIndex: 2 }}>
+                      {[1, 2, 3, 4, 5].map(num => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => handleAreaChange(categoria, subarea, num)}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                            ${formData.evaluacionAreas[categoria][subarea] === num ? 'bg-indigo-600 text-white border-indigo-600 scale-110' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                          title={`Nivel ${num}`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className={barStyles.labels}>
                     <span>Baja</span>
                     <span>Media</span>
                     <span>Alta</span>
-                  </div>
-                  <div className={barStyles.buttonContainer}>
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <button
-                        key={num}
-                        type="button"
-                        onClick={() => handleAreaChange(categoria, subarea, num)}
-                        className={`${barStyles.button} ${
-                          formData.evaluacionAreas[categoria][subarea] === num ? barStyles.buttonActive : ''
-                        }`}
-                        title={`Nivel ${num}`}
-                      >
-                        {num}
-                      </button>
-                    ))}
                   </div>
                 </div>
               ))}
@@ -663,7 +678,7 @@ export default function DiagnosticoCentral() {
           {currentStep === 1 && (
             <div className="space-y-6 bg-white rounded-lg p-8 shadow-lg">
               <h2 className="text-2xl font-semibold mb-8 text-gray-800 border-b pb-4">Información Personal</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
@@ -690,6 +705,26 @@ export default function DiagnosticoCentral() {
                   />
                   {errors.apellido && (
                     <p className="mt-1 text-sm text-red-600">{errors.apellido}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Nivel de Estudios</label>
+                  <select
+                    value={formData.informacionPersonal.nivelEstudios || ''}
+                    onChange={(e) => handleNestedInputChange('informacionPersonal', 'nivelEstudios', e.target.value)}
+                    className={`${inputStyles} ${errors.nivelEstudios ? errorInputStyles : normalInputStyles}`}
+                    required
+                  >
+                    <option value="">Seleccione un nivel</option>
+                    <option value="primaria">Primaria</option>
+                    <option value="secundaria">Secundaria</option>
+                    <option value="preparatoria">Preparatoria</option>
+                    <option value="licenciatura">Licenciatura</option>
+                    <option value="maestria">Maestría</option>
+                    <option value="doctorado">Doctorado</option>
+                  </select>
+                  {errors.nivelEstudios && (
+                    <p className="mt-1 text-sm text-red-600">{errors.nivelEstudios}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -722,6 +757,23 @@ export default function DiagnosticoCentral() {
                   )}
                 </div>
                 <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Género</label>
+                  <select
+                    value={formData.informacionPersonal.genero || ''}
+                    onChange={(e) => handleNestedInputChange('informacionPersonal', 'genero', e.target.value)}
+                    className={`${inputStyles} ${errors.genero ? errorInputStyles : normalInputStyles}`}
+                    required
+                  >
+                    <option value="">Seleccione un género</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="femenino">Femenino</option>
+                    <option value="prefiero no decir">Prefiero no decir</option>
+                  </select>
+                  {errors.genero && (
+                    <p className="mt-1 text-sm text-red-600">{errors.genero}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Puesto</label>
                   <select
                     value={formData.informacionPersonal.puesto}
@@ -748,7 +800,110 @@ export default function DiagnosticoCentral() {
           {currentStep === 2 && (
             <div className="space-y-6 bg-white rounded-lg p-6 shadow-sm">
               <h2 className="text-2xl font-semibold mb-6 text-gray-800">Información de la Empresa</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Tipo de Empresa</label>
+                  <select
+                    value={formData.informacionEmpresa.tipoEmpresa || ''}
+                    onChange={(e) => handleInputChange('informacionEmpresa', 'tipoEmpresa', e.target.value)}
+                    className={`${inputStyles} ${errors.tipoEmpresa ? errorInputStyles : normalInputStyles}`}
+                    required
+                  >
+                    <option value="">Seleccione una opción</option>
+                    <option value="empresa">Empresa</option>
+                    <option value="emprendedor">Emprendedor</option>
+                  </select>
+                  {errors.tipoEmpresa && (
+                    <p className="mt-1 text-sm text-red-600">{errors.tipoEmpresa}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Nombre Empresa/Proyecto</label>
+                  <input
+                    type="text"
+                    value={formData.informacionEmpresa.nombreEmpresaProyecto || ''}
+                    onChange={(e) => handleInputChange('informacionEmpresa', 'nombreEmpresaProyecto', e.target.value)}
+                    className={`${inputStyles} ${errors.nombreEmpresaProyecto ? errorInputStyles : normalInputStyles}`}
+                    required
+                  />
+                  {errors.nombreEmpresaProyecto && (
+                    <p className="mt-1 text-sm text-red-600">{errors.nombreEmpresaProyecto}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Giro de Actividad</label>
+                  <input
+                    type="text"
+                    value={formData.informacionEmpresa.giroActividad || ''}
+                    onChange={(e) => handleInputChange('informacionEmpresa', 'giroActividad', e.target.value)}
+                    className={`${inputStyles} ${errors.giroActividad ? errorInputStyles : normalInputStyles}`}
+                    required
+                  />
+                  {errors.giroActividad && (
+                    <p className="mt-1 text-sm text-red-600">{errors.giroActividad}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Descripción de la Actividad</label>
+                  <textarea
+                    value={formData.informacionEmpresa.descripcionActividad}
+                    onChange={(e) => handleInputChange('informacionEmpresa', 'descripcionActividad', e.target.value)}
+                    className={`${inputStyles} ${errors.descripcionActividad ? errorInputStyles : normalInputStyles}`}
+                    rows={3}
+                    required
+                  />
+                  {errors.descripcionActividad && (
+                    <p className="mt-1 text-sm text-red-600">{errors.descripcionActividad}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">¿Tiene empleados?</label>
+                  <select
+                    value={formData.informacionEmpresa.tieneEmpleados ? 'true' : 'false'}
+                    onChange={(e) => handleInputChange('informacionEmpresa', 'tieneEmpleados', e.target.value === 'true')}
+                    className={`${inputStyles} ${errors.tieneEmpleados ? errorInputStyles : normalInputStyles}`}
+                  >
+                    <option value="false">No</option>
+                    <option value="true">Sí</option>
+                  </select>
+                </div>
+
+                {formData.informacionEmpresa.tieneEmpleados && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Número de Empleados</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.informacionEmpresa.numeroEmpleados}
+                      onChange={(e) => handleInputChange('informacionEmpresa', 'numeroEmpleados', parseInt(e.target.value))}
+                      className={`${inputStyles} ${errors.numeroEmpleados ? errorInputStyles : normalInputStyles}`}
+                      required
+                    />
+                    {errors.numeroEmpleados && (
+                      <p className="mt-1 text-sm text-red-600">{errors.numeroEmpleados}</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Ventas Anuales (MXN)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={formData.informacionEmpresa.ventasAnuales || ''}
+                    onChange={(e) => handleInputChange('informacionEmpresa', 'ventasAnuales', parseFloat(e.target.value))}
+                    className={`${inputStyles} ${errors.ventasAnuales ? errorInputStyles : normalInputStyles}`}
+                    required
+                  />
+                  {errors.ventasAnuales && (
+                    <p className="mt-1 text-sm text-red-600">{errors.ventasAnuales}</p>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Sector</label>
                   <select
@@ -762,6 +917,8 @@ export default function DiagnosticoCentral() {
                     <option value="servicios">Servicios</option>
                     <option value="comercio">Comercio</option>
                     <option value="manufactura">Manufactura</option>
+                    <option value="salud">Salud</option>
+                    <option value="agricultura">Agricultura</option>
                     <option value="otro">Otro</option>
                   </select>
                   {errors.sector && (
@@ -831,64 +988,6 @@ export default function DiagnosticoCentral() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Descripción de la Actividad</label>
-                  <textarea
-                    value={formData.informacionEmpresa.descripcionActividad}
-                    onChange={(e) => handleInputChange('informacionEmpresa', 'descripcionActividad', e.target.value)}
-                    className={`${inputStyles} ${errors.descripcionActividad ? errorInputStyles : normalInputStyles}`}
-                    rows={3}
-                    required
-                  />
-                  {errors.descripcionActividad && (
-                    <p className="mt-1 text-sm text-red-600">{errors.descripcionActividad}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">¿Tiene empleados?</label>
-                  <select
-                    value={formData.informacionEmpresa.tieneEmpleados ? 'true' : 'false'}
-                    onChange={(e) => handleInputChange('informacionEmpresa', 'tieneEmpleados', e.target.value === 'true')}
-                    className={`${inputStyles} ${errors.tieneEmpleados ? errorInputStyles : normalInputStyles}`}
-                  >
-                    <option value="false">No</option>
-                    <option value="true">Sí</option>
-                  </select>
-                </div>
-
-                {formData.informacionEmpresa.tieneEmpleados && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Número de Empleados</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={formData.informacionEmpresa.numeroEmpleados}
-                      onChange={(e) => handleInputChange('informacionEmpresa', 'numeroEmpleados', parseInt(e.target.value))}
-                      className={`${inputStyles} ${errors.numeroEmpleados ? errorInputStyles : normalInputStyles}`}
-                      required
-                    />
-                    {errors.numeroEmpleados && (
-                      <p className="mt-1 text-sm text-red-600">{errors.numeroEmpleados}</p>
-                    )}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Ventas Anuales (MXN)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.informacionEmpresa.ventasAnuales}
-                    onChange={(e) => handleInputChange('informacionEmpresa', 'ventasAnuales', parseFloat(e.target.value))}
-                    className={`${inputStyles} ${errors.ventasAnuales ? errorInputStyles : normalInputStyles}`}
-                    required
-                  />
-                  {errors.ventasAnuales && (
-                    <p className="mt-1 text-sm text-red-600">{errors.ventasAnuales}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Antigüedad (años)</label>
                   <input
                     type="number"
@@ -941,39 +1040,51 @@ export default function DiagnosticoCentral() {
 
                 <div>
                   <h3 className="text-lg font-medium mb-4">Importancia de Áreas</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
                     {Object.entries(formData.proyectoObjetivos.importanciaAreas).map(([area, value]) => (
                       <div key={area} className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
                           {area.charAt(0).toUpperCase() + area.slice(1).replace(/([A-Z])/g, ' $1')}
                         </label>
-                        <div className={barStyles.container}>
-                          <div 
-                            className={`${barStyles.bar} ${value === 0 ? 'bg-gray-300' : 
-                                        value === 1 ? 'bg-red-500' :
-                                        value === 2 ? 'bg-orange-500' :
-                                        value === 3 ? 'bg-yellow-500' :
-                                        value === 4 ? 'bg-blue-500' : 'bg-green-500'}`}
-                            style={{ width: `${(value / 5) * 100}%` }}
+                        <div className={barStyles.container} style={{ position: 'relative', height: '44px' }}>
+                          <div
+                            className={
+                              `${barStyles.bar} pointer-events-none ` +
+                              (value === 0 ? 'bg-gray-300' :
+                               value === 1 ? 'bg-red-500' :
+                               value === 2 ? 'bg-orange-500' :
+                               value === 3 ? 'bg-yellow-500' :
+                               value === 4 ? 'bg-blue-500' : 'bg-green-500')
+                            }
+                            style={{
+                              width: `${(value / 5) * 100}%`,
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              height: '100%',
+                              zIndex: 1,
+                              transition: 'width 0.3s',
+                            }}
                           />
+                          <div className="flex h-full w-full items-center justify-between px-2" style={{ position: 'relative', zIndex: 2 }}>
+                            {[1, 2, 3, 4, 5].map(num => (
+                              <button
+                                key={num}
+                                type="button"
+                                onClick={() => handleNestedInputChange('proyectoObjetivos', 'importanciaAreas', { ...formData.proyectoObjetivos.importanciaAreas, [area]: num })}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                                  ${value === num ? 'bg-indigo-600 text-white border-indigo-600 scale-110' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                                title={`Nivel ${num}`}
+                              >
+                                {num}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                         <div className={barStyles.labels}>
                           <span>Baja</span>
                           <span>Media</span>
                           <span>Alta</span>
-                        </div>
-                        <div className={barStyles.buttonContainer}>
-                          {[1, 2, 3, 4, 5].map(num => (
-                            <button
-                              key={num}
-                              type="button"
-                              onClick={() => handleNestedInputChange('proyectoObjetivos', 'importanciaAreas', { ...formData.proyectoObjetivos.importanciaAreas, [area]: num })}
-                              className={`${barStyles.button} ${value === num ? barStyles.buttonActive : ''}`}
-                              title={`Nivel ${num}`}
-                            >
-                              {num}
-                            </button>
-                          ))}
                         </div>
                       </div>
                     ))}
