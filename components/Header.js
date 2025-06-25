@@ -123,12 +123,20 @@ const Header = () => {
               </Link>
             ))}
             {session && (
-              <Link 
-                href="/dashboard" 
-                className="link link-hover text-base-content/80 hover:text-base-content ml-8"
-              >
-                Dashboard
-              </Link>
+              <>
+                <Link 
+                  href="/dashboard" 
+                  className="link link-hover text-base-content/80 hover:text-base-content ml-8"
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/expertos" 
+                  className="link link-hover text-base-content/80 hover:text-base-content"
+                >
+                  Expertos
+                </Link>
+              </>
             )}
           </div>
         )}
@@ -200,12 +208,20 @@ const Header = () => {
                     </Link>
                   ))}
                   {session && (
-                    <Link 
-                      href="/dashboard" 
-                      className="link link-hover text-base-content/80 hover:text-base-content"
-                    >
-                      Dashboard
-                    </Link>
+                    <>
+                      <Link 
+                        href="/dashboard" 
+                        className="link link-hover text-base-content/80 hover:text-base-content"
+                      >
+                        Dashboard
+                      </Link>
+                      <Link 
+                        href="/expertos" 
+                        className="link link-hover text-base-content/80 hover:text-base-content"
+                      >
+                        Expertos
+                      </Link>
+                    </>
                   )}
                 </div>
               </div>

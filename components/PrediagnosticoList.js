@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { FaChevronDown, FaTrash, FaPlus } from "react-icons/fa";
+import { FaChevronDown, FaTrash, FaPlus, FaRocket } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
@@ -15,10 +15,13 @@ export default function PrediagnosticoList() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expandedCards, setExpandedCards] = useState({});
+  const [publishingProject, setPublishingProject] = useState(null);
+  const [publishedProjects, setPublishedProjects] = useState(new Set());
 
   useEffect(() => {
     if (session?.user?.id) {
       fetchDiagnoses();
+      fetchPublishedProjects();
     }
   }, [session]);
 
@@ -52,6 +55,26 @@ export default function PrediagnosticoList() {
     }
   };
 
+  const fetchPublishedProjects = async () => {
+    try {
+      const response = await fetch("/api/proyectos-publicados");
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Crear un Set con los proyectos publicados
+        const publishedSet = new Set();
+        result.data.forEach(proyecto => {
+          // Crear una clave única basada en el nombre del proyecto y empresa
+          const key = `${proyecto.nombreEmpresa}-${proyecto.nombreProyecto}`;
+          publishedSet.add(key);
+        });
+        setPublishedProjects(publishedSet);
+      }
+    } catch (error) {
+      console.error("Error al cargar proyectos publicados:", error);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este diagnóstico?')) {
       try {
@@ -69,6 +92,59 @@ export default function PrediagnosticoList() {
       } catch (error) {
         setError(error.message);
       }
+    }
+  };
+
+  const handlePublish = async (diagnosis, matchIndex) => {
+    const match = diagnosis["4. Posibles matches"][matchIndex];
+    const nombreEmpresa = getDiagnosticoInfo(diagnosis);
+    
+    if (!window.confirm(`¿Estás seguro de que deseas publicar el proyecto "${match["Titulo solucion propuesta"]}" para buscar expertos?`)) {
+      return;
+    }
+
+    setPublishingProject(`${diagnosis._id}-${matchIndex}`);
+    
+    try {
+      // Preparar los datos del proyecto para el análisis
+      const proyectoData = {
+        empresa: {
+          nombre: nombreEmpresa,
+          sector: diagnosis["3. Categorias de proyecto"]?.Industria?.[0] || "General",
+        },
+        analisisObjetivos: {
+          situacionActual: match["Titulo solucion propuesta"],
+          viabilidad: match["Descripcion"],
+          recomendaciones: diagnosis["3. Categorias de proyecto"]?.["Categorias de servicio buscado"] || [],
+        },
+      };
+
+      const response = await fetch("/api/proyectos-publicados", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ proyectoData }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`¡Proyecto "${match["Titulo solucion propuesta"]}" publicado exitosamente! Se encontraron ${result.matches.length} expertos compatibles.`);
+        // Marcar el proyecto como publicado usando la misma clave
+        const tituloProyecto = match["Titulo solucion propuesta"];
+        const projectKey = `${nombreEmpresa}-${tituloProyecto}`;
+        setPublishedProjects(prev => new Set([...prev, projectKey]));
+        // Redirigir al tablero de proyectos
+        router.push("/dashboard?tab=proyectos");
+      } else {
+        alert(`Error al publicar: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Error al publicar proyecto:", error);
+      alert("Error al publicar el proyecto. Por favor, intenta de nuevo.");
+    } finally {
+      setPublishingProject(null);
     }
   };
 
@@ -132,10 +208,13 @@ export default function PrediagnosticoList() {
       ) : (
         diagnoses.map((diagnosis) => {
           const nombreEmpresa = getDiagnosticoInfo(diagnosis);
+          const posiblesMatches = diagnosis["4. Posibles matches"] || [];
+          const isExpanded = expandedCards[diagnosis._id];
 
           return (
             <div key={diagnosis._id} className="bg-white rounded-lg shadow-md p-4">
-              <div className="flex justify-between items-center">
+              {/* Header del diagnóstico */}
+              <div className="flex justify-between items-center mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-[#1A3D7C]">
                     {nombreEmpresa}
@@ -152,6 +231,13 @@ export default function PrediagnosticoList() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
+                    onClick={() => toggleCard(diagnosis._id)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                  >
+                    <FaChevronDown className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    <span>{isExpanded ? 'Ocultar' : 'Ver'} Proyectos ({posiblesMatches.length})</span>
+                  </button>
+                  <button
                     onClick={() => handleViewDetails(diagnosis._id)}
                     className="px-4 py-2 bg-[#1A3D7C] text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
@@ -166,6 +252,88 @@ export default function PrediagnosticoList() {
                   </button>
                 </div>
               </div>
+
+              {/* Lista de proyectos (matches) */}
+              {isExpanded && (
+                <div className="space-y-3 border-t border-gray-200 pt-4">
+                  <h4 className="text-md font-semibold text-gray-700 mb-3">
+                    Proyectos Identificados:
+                  </h4>
+                  
+                  {posiblesMatches.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">
+                      No hay proyectos identificados en este diagnóstico
+                    </p>
+                  ) : (
+                    posiblesMatches.map((match, index) => {
+                      const isPublishing = publishingProject === `${diagnosis._id}-${index}`;
+                      const nombreEmpresa = getDiagnosticoInfo(diagnosis);
+                      const tituloProyecto = match["Titulo solucion propuesta"];
+                      const projectKey = `${nombreEmpresa}-${tituloProyecto}`;
+                      const isPublished = publishedProjects.has(projectKey);
+                      
+                      return (
+                        <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-gray-800 mb-2">
+                                {match["Titulo solucion propuesta"]}
+                              </h5>
+                              <p className="text-sm text-gray-600 mb-3">
+                                {match["Descripcion"]}
+                              </p>
+                              
+                              {/* Información del proyecto */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-gray-500">
+                                <div>
+                                  <strong>Industria:</strong> {diagnosis["3. Categorias de proyecto"]?.Industry?.[0] || diagnosis["3. Categorias de proyecto"]?.Industria?.[0] || "No especificada"}
+                                </div>
+                                <div>
+                                  <strong>Servicios:</strong> {diagnosis["3. Categorias de proyecto"]?.["Categorias de servicio buscado"]?.join(", ") || "No especificados"}
+                                </div>
+                                <div>
+                                  <strong>Objetivos:</strong> {diagnosis["3. Categorias de proyecto"]?.["Objetivos de la empresa"]?.join(", ") || "No especificados"}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="ml-4">
+                              {isPublished ? (
+                                <div className="px-4 py-2 bg-green-100 text-green-800 rounded-lg border border-green-200 flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="font-medium">Publicado</span>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handlePublish(diagnosis, index)}
+                                  disabled={isPublishing}
+                                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                                    isPublishing
+                                      ? "bg-gray-400 text-white cursor-not-allowed"
+                                      : "bg-green-600 text-white hover:bg-green-700"
+                                  }`}
+                                >
+                                  {isPublishing ? (
+                                    <>
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                      <span>Publicando...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <FaRocket />
+                                      <span>Publicar</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
           );
         })

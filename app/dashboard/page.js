@@ -6,10 +6,12 @@ import DiagnosticoInfo from "@/components/DiagnosticoInfo";
 import DiagnosticoCentral from "@/components/DiagnosticoCentral";
 import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
-import { useRouter } from "next/navigation";
+import ProyectosTablero from "@/components/ProyectosTablero";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
+import { FaChartBar, FaRocket, FaUsers, FaClipboardList } from "react-icons/fa";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export const dynamic = "force-dynamic";
 // See https://shipfa.st/docs/tutorials/private-page
 export default function Dashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [companyName, setCompanyName] = useState("Nombre de la Empresa");
   const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
@@ -29,6 +32,17 @@ export default function Dashboard() {
   const [isExisting, setIsExisting] = useState(false);
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Estado para las pestañas
+  const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    // Obtener la pestaña activa de los parámetros de URL
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const checkData = async () => {
@@ -128,6 +142,11 @@ export default function Dashboard() {
     }
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    router.push(`/dashboard?tab=${tab}`);
+  };
+
   const MetricCard = ({ title, value }) => (
     <div className="bg-white rounded-lg shadow p-6">
       <h4 className="text-lg font-semibold text-gray-600 mb-2">{title}</h4>
@@ -148,6 +167,13 @@ export default function Dashboard() {
       </div>
     </div>
   );
+
+  const tabs = [
+    { id: "overview", name: "Resumen", icon: FaChartBar },
+    { id: "proyectos", name: "Proyectos", icon: FaRocket },
+    { id: "expertos", name: "Expertos", icon: FaUsers },
+    { id: "diagnosticos", name: "Diagnósticos", icon: FaClipboardList },
+  ];
 
   return (
     <main className="min-h-screen p-8 pb-24">
@@ -172,73 +198,123 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Information Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Información</h2>
-          <div className="w-full">
-            <DiagnosticoInfo />
-          </div>
-        </section>
+        {/* Tabs Navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? "border-[#1A3D7C] text-[#1A3D7C]"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <Icon className="text-lg" />
+                  {tab.name}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
-        {/* Projects Section */}
-        <div className="border-b border-gray-300 my-8"></div>
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Proyectos</h2>
-          <div className="w-full">
-            <PrediagnosticoList />
-          </div>
-        </section>
-        <div className="border-b border-gray-300 my-8"></div>
-
-        {/* Metrics Cards Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
-          <div className="w-full">
-            <MetricsCards />
-          </div>
-        </section>
-
-        {/* Financial Metrics Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
-          <div className="w-full">
-            {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-8 bg-gray-200 rounded"></div>
-                  </div>
-                ))}
+        {/* Tab Content */}
+        {activeTab === "overview" && (
+          <>
+            {/* Information Section */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Información</h2>
+              <div className="w-full">
+                <DiagnosticoInfo />
               </div>
-            ) : (
-              <div className="space-y-4">
-                {isExisting && (
-                  <div className="p-3 bg-blue-50 text-blue-700 rounded-lg">
-                    Métricas del diagnóstico existente
+            </section>
+
+            {/* Metrics Cards Section */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
+              <div className="w-full">
+                <MetricsCards />
+              </div>
+            </section>
+
+            {/* Financial Metrics Section */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
+              <div className="w-full">
+                {isLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                        <div className="h-8 bg-gray-200 rounded"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {isExisting && (
+                      <div className="p-3 bg-blue-50 text-blue-700 rounded-lg">
+                        Métricas del diagnóstico existente
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {Object.entries(metrics).map(([category, value]) => (
+                        <MetricCard
+                          key={category}
+                          title={category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
+                          value={value}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(metrics).map(([category, value]) => (
-                    <MetricCard
-                      key={category}
-                      title={category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
-                      value={value}
-                    />
-                  ))}
-                </div>
               </div>
-            )}
-          </div>
-        </section>
+            </section>
 
-        {/* Conclusions Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
-          <div className="w-full">
-            <Conclusions />
-          </div>
-        </section>
+            {/* Conclusions Section */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
+              <div className="w-full">
+                <Conclusions />
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeTab === "proyectos" && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Proyectos Publicados</h2>
+            <div className="w-full">
+              <ProyectosTablero />
+            </div>
+          </section>
+        )}
+
+        {activeTab === "expertos" && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Búsqueda de Expertos</h2>
+            <div className="w-full">
+              <p className="text-gray-600 mb-4">
+                Publica tus proyectos para encontrar expertos compatibles. Ve a la pestaña "Diagnósticos" para publicar un proyecto.
+              </p>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "diagnosticos" && (
+          <>
+            {/* Projects Section */}
+            <section>
+              <h2 className="text-2xl font-bold mb-4">Diagnósticos y Proyectos</h2>
+              <div className="w-full">
+                <PrediagnosticoList />
+              </div>
+            </section>
+          </>
+        )}
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <FormDiagnostico onClose={() => {

@@ -1,0 +1,225 @@
+{
+  "systemMessage": "Eres un experto analista empresarial especializado en diagnósticos centrales. Tu tarea es analizar la información proporcionada y generar un análisis completo en formato JSON estricto, personalizado específicamente para esta empresa basándote en su sector, ubicación, tamaño y características únicas.",
+  "userPrompt": "Analiza el siguiente diagnóstico central y proporciona la respuesta en el siguiente formato JSON estricto:",
+  "jsonStructure": {
+    "empresa": {
+      "nombre": "string",
+      "sector": "string",
+      "ubicacion": "string"
+    },
+    "fechaAnalisis": "2024-01-01",
+    "resumenEmpresa": {
+      "descripcion": "string",
+      "fortalezas": ["string"],
+      "debilidades": ["string"],
+      "oportunidades": ["string"]
+    },
+    "analisisObjetivos": {
+      "situacionActual": "string",
+      "viabilidad": "string",
+      "recomendaciones": ["string"]
+    },
+    "metricasPorcentuales": {
+      "madurezDigital": "number",
+      "saludFinanciera": "number",
+      "eficienciaOperativa": "number",
+      "recursosHumanos": "number",
+      "marketingVentas": "number",
+      "innovacionDesarrollo": "number",
+      "experienciaCliente": "number",
+      "gestionRiesgos": "number"
+    },
+    "analisisMetricas": {
+      "madurezDigital": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "saludFinanciera": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "eficienciaOperativa": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "recursosHumanos": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "marketingVentas": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "innovacionDesarrollo": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "experienciaCliente": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      },
+      "gestionRiesgos": {
+        "descripcionModulo": {
+          "objetivo": "string",
+          "alcance": "string",
+          "componentes": ["string"]
+        },
+        "conclusionBasadaPuntuacion": {
+          "nivel": "string",
+          "fortalezas": ["string"],
+          "areasMejora": ["string"],
+          "impactoGeneral": "string"
+        },
+        "interpretacionCompleta": {
+          "analisisDetallado": "string",
+          "tendencias": ["string"],
+          "factoresClave": ["string"],
+          "impactoEstrategico": "string"
+        },
+        "interpretacion": "string",
+        "recomendaciones": ["string"]
+      }
+    },
+    "proximosPasos": {
+      "inmediatos": ["string"],
+      "cortoPlazo": ["string"],
+      "medianoPlazo": ["string"]
+    }
+  },
+  "instructions": [
+    "Todos los campos estén presentes, especialmente \"fechaAnalisis\" con la fecha actual",
+    "Los arrays contengan al menos un elemento",
+    "Los strings no estén vacíos",
+    "Los números en metricasPorcentuales estén entre 0 y 100",
+    "Mantén el formato exacto de los nombres de los campos",
+    "Que toda la información esté en español",
+    "Las métricas porcentuales sean números enteros",
+    "Basa tu análisis en los datos proporcionados, especialmente en las métricas y evaluaciones existentes",
+    "Proporciona recomendaciones específicas y accionables basadas en los datos reales",
+    "Para cada métrica en metricasPorcentuales: Cada evaluación tiene un valor de 1 a 5 puntos, Suma todos los puntos de las evaluaciones de la sección, Calcula el porcentaje usando la fórmula: (suma_total / (número_de_evaluaciones * 5)) * 100, Redondea al número entero más cercano, El resultado será un porcentaje entre 0 y 100"
+  ],
+  "importantNote": "Usa los datos de evaluacionAreas proporcionados para calcular las métricas porcentuales. No inventes valores.",
+  "example": {
+    "description": "Para Gestión de Riesgos: Si tienes 5 evaluaciones con valores 3, 3, 3, 2, 3. Suma total = 14 puntos. Máximo posible = 5 evaluaciones * 5 puntos = 25 puntos. Porcentaje = (14 / 25) * 100 = 56%"
+  },
+  "dataPlaceholder": "Datos del diagnóstico a analizar: {dataForAnalysis}"
+} 

@@ -1,15 +1,6 @@
 import OpenAI from "openai";
 import { connectToDatabase } from "@/libs/mongodb";
-
-// Verificar ASSISTANT_ID
-const ASSISTANT_ID = process.env.ASSISTANT_ID;
-if (!ASSISTANT_ID) {
-  throw new Error("ASSISTANT_ID no está configurado en las variables de entorno");
-}
-
-if (!ASSISTANT_ID.startsWith('asst_')) {
-  throw new Error("ASSISTANT_ID tiene un formato inválido. Debe comenzar con 'asst_'");
-}
+import promptConfig from "@/scripts/centralDiagnosticPrompt.json";
 
 // Verificar API key
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -58,7 +49,6 @@ export async function analyzeCentralDiagnostic(diagnosticData, userId) {
   console.log('1. Iniciando análisis del diagnóstico central...');
   console.log('Datos del diagnóstico:', diagnosticData);
 
-  let threadId = null;
   let mongoose = null;
 
   try {
@@ -66,23 +56,15 @@ export async function analyzeCentralDiagnostic(diagnosticData, userId) {
     mongoose = await connectToDatabase();
     console.log('2. Conexión a MongoDB establecida');
 
-    // Crear un thread para el análisis
-    console.log('3. Creando thread en OpenAI...');
-    const threadResponse = await openai.beta.threads.create();
-    
-    if (!threadResponse?.id?.startsWith('thread_')) {
-      throw new Error('Error al crear el thread: ID inválido');
-    }
-    
-    threadId = threadResponse.id;
-    console.log('Thread creado exitosamente:', threadId);
-
     // Preparar los datos para el análisis
     const dataForAnalysis = {
       empresa: {
         nombre: diagnosticData.informacionEmpresa?.nombreEmpresa || '',
         sector: diagnosticData.informacionEmpresa?.sector || '',
-        ubicacion: diagnosticData.informacionEmpresa?.ubicacion || ''
+        ubicacion: diagnosticData.informacionEmpresa?.ubicacion || '',
+        descripcion: diagnosticData.informacionEmpresa?.descripcionActividad || '',
+        numeroEmpleados: diagnosticData.informacionEmpresa?.numeroEmpleados || '',
+        ventas: diagnosticData.informacionEmpresa?.ventas || ''
       },
       resumenEmpresa: {
         descripcion: diagnosticData.informacionEmpresa?.descripcionActividad || '',
@@ -102,293 +84,63 @@ export async function analyzeCentralDiagnostic(diagnosticData, userId) {
     console.log('Métricas calculadas:', dataForAnalysis.metricasPorcentuales);
     console.log('Datos de evaluación:', diagnosticData.evaluacionAreas);
 
-    // Agregar el mensaje con los datos del diagnóstico
-    console.log('4. Agregando mensaje al thread...');
+    // Usar JSON mode con la API de chat completions
+    console.log('3. Enviando solicitud a OpenAI con JSON mode...');
     
-    const prompt = `
-Analiza el siguiente diagnóstico central y proporciona la respuesta en el siguiente formato JSON estricto:
+    // Construir el prompt desde el archivo JSON
+    const jsonStructureString = JSON.stringify(promptConfig.jsonStructure, null, 2);
+    const instructionsString = promptConfig.instructions.map((instruction, index) => `${index + 1}. ${instruction}`).join('\n');
+    
+    const prompt = `${promptConfig.userPrompt}
 
-{
-  "empresa": {
-    "nombre": "string",
-    "sector": "string",
-    "ubicacion": "string"
-  },
-  "fechaAnalisis": "date",
-  "resumenEmpresa": {
-    "descripcion": "string",
-    "fortalezas": ["string"],
-    "debilidades": ["string"],
-    "oportunidades": ["string"]
-  },
-  "analisisObjetivos": {
-    "situacionActual": "string",
-    "viabilidad": "string",
-    "recomendaciones": ["string"]
-  },
-  "metricasPorcentuales": {
-    "madurezDigital": number,
-    "saludFinanciera": number,
-    "eficienciaOperativa": number,
-    "recursosHumanos": number,
-    "marketingVentas": number,
-    "innovacionDesarrollo": number,
-    "experienciaCliente": number,
-    "gestionRiesgos": number
-  },
-  "analisisMetricas": {
-    "madurezDigital": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "saludFinanciera": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "eficienciaOperativa": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "recursosHumanos": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "marketingVentas": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "innovacionDesarrollo": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "experienciaCliente": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    },
-    "gestionRiesgos": {
-      "descripcionModulo": {
-        "objetivo": "string",
-        "alcance": "string",
-        "componentes": ["string"]
-      },
-      "conclusionBasadaPuntuacion": {
-        "nivel": "string",
-        "fortalezas": ["string"],
-        "areasMejora": ["string"],
-        "impactoGeneral": "string"
-      },
-      "interpretacionCompleta": {
-        "analisisDetallado": "string",
-        "tendencias": ["string"],
-        "factoresClave": ["string"],
-        "impactoEstrategico": "string"
-      },
-      "interpretacion": "string",
-      "recomendaciones": ["string"]
-    }
-  },
-  "proximosPasos": {
-    "inmediatos": ["string"],
-    "cortoPlazo": ["string"],
-    "medianoPlazo": ["string"]
-  }
-}
+${jsonStructureString}
 
 Asegúrate de que:
-1. Todos los campos estén presentes
-2. Los arrays contengan al menos un elemento
-3. Los strings no estén vacíos
-4. Los números en metricasPorcentuales estén entre 0 y 100
-5. Mantén el formato exacto de los nombres de los campos
-6. Que toda la información esté en español
-7. Las métricas porcentuales sean números enteros
-8. Basa tu análisis en los datos proporcionados, especialmente en las métricas y evaluaciones existentes
-9. Proporciona recomendaciones específicas y accionables basadas en los datos reales
-10. Para cada métrica en metricasPorcentuales:
-    - Cada evaluación tiene un valor de 1 a 5 puntos
-    - Suma todos los puntos de las evaluaciones de la sección
-    - Calcula el porcentaje usando la fórmula: (suma_total / (número_de_evaluaciones * 5)) * 100
-    - Redondea al número entero más cercano
-    - El resultado será un porcentaje entre 0 y 100
+${instructionsString}
 
-IMPORTANTE: Usa los datos de evaluacionAreas proporcionados para calcular las métricas porcentuales. No inventes valores.
+IMPORTANTE: ${promptConfig.importantNote}
 
-Por ejemplo, para Gestión de Riesgos:
-- Si tienes 5 evaluaciones con valores 3, 3, 3, 2, 3
-- Suma total = 14 puntos
-- Máximo posible = 5 evaluaciones * 5 puntos = 25 puntos
-- Porcentaje = (14 / 25) * 100 = 56%
+${promptConfig.example.description}
 
-Datos del diagnóstico a analizar:
-${JSON.stringify(dataForAnalysis, null, 2)}
-`;
+${promptConfig.dataPlaceholder.replace('{dataForAnalysis}', JSON.stringify(dataForAnalysis, null, 2))}`;
 
-    const messageResponse = await openai.beta.threads.messages.create(threadId, {
-      role: "user",
-      content: prompt
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `${promptConfig.systemMessage}
+
+INFORMACIÓN DE LA EMPRESA:
+- Sector: ${dataForAnalysis.empresa.sector}
+- Ubicación: ${dataForAnalysis.empresa.ubicacion}
+- Descripción: ${dataForAnalysis.empresa.descripcion}
+- Número de empleados: ${dataForAnalysis.empresa.numeroEmpleados}
+- Ventas: ${dataForAnalysis.empresa.ventas}
+
+Tu tarea es analizar la información proporcionada y generar un análisis completo en formato JSON estricto, personalizado específicamente para esta empresa basándote en su sector, ubicación, tamaño y características únicas.`
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 4000
     });
-    
-    if (!messageResponse?.id) {
-      throw new Error('No se pudo agregar el mensaje al thread');
-    }
-    
-    console.log('Mensaje agregado:', messageResponse.id);
 
-    // Ejecutar el asistente y esperar la respuesta
-    console.log('5. Ejecutando asistente y esperando respuesta...');
-    
-    const run = await openai.beta.threads.runs.createAndPoll(threadId, {
-      assistant_id: ASSISTANT_ID,
-    });
-    
-    if (run.status === "failed") {
-      throw new Error(`Error en la ejecución del asistente: ${run.last_error?.message}`);
+    if (!response.choices?.[0]?.message?.content) {
+      throw new Error('No se pudo obtener la respuesta de OpenAI');
     }
 
-    // Obtener los mensajes del thread
-    console.log('6. Obteniendo respuesta del asistente...');
-    
-    const messages = await openai.beta.threads.messages.list(threadId);
-    const lastMessage = messages.data[0];
-    
-    if (!lastMessage?.content?.[0]?.text?.value) {
-      throw new Error('No se pudo obtener la respuesta del asistente');
-    }
-    
-    const rawResponse = lastMessage.content[0].text.value;
+    const rawResponse = response.choices[0].message.content;
     console.log('Respuesta recibida:', rawResponse);
 
-    // Limpiar la respuesta antes de parsearla como JSON
-    let cleanedResponse = rawResponse
-      .replace(/```json\n|\n```/g, '')
-      .replace(/```\n|\n```/g, '')
-      .trim();
-    
-    console.log('Respuesta limpia:', cleanedResponse);
-
-    // Procesar la respuesta
+    // Procesar la respuesta JSON
     let analysis;
     try {
-      analysis = JSON.parse(cleanedResponse);
+      analysis = JSON.parse(rawResponse);
       
       // Validar la estructura de la respuesta
       const requiredStructure = {
@@ -454,7 +206,7 @@ ${JSON.stringify(dataForAnalysis, null, 2)}
       updatedAt: new Date()
     });
 
-    console.log('7. Resultado guardado en la base de datos');
+    console.log('4. Resultado guardado en la base de datos');
 
     return {
       ...analysis,
@@ -465,17 +217,6 @@ ${JSON.stringify(dataForAnalysis, null, 2)}
   } catch (error) {
     console.error('Error en el análisis:', error);
     throw new Error(`Error al analizar el diagnóstico central: ${error.message}`);
-  } finally {
-    // Limpiar recursos
-    if (threadId) {
-      try {
-        console.log('Limpiando thread:', threadId);
-        await openai.beta.threads.delete(threadId);
-        console.log('Thread eliminado:', threadId);
-      } catch (error) {
-        console.error('Error al eliminar thread:', error);
-      }
-    }
   }
 }
 
