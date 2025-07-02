@@ -136,6 +136,12 @@ const Header = () => {
                 >
                   Expertos
                 </Link>
+                <Link 
+                  href="/adminPanel" 
+                  className="link link-hover text-base-content/80 hover:text-base-content"
+                >
+                  Admin
+                </Link>
               </>
             )}
           </div>
@@ -221,6 +227,12 @@ const Header = () => {
                       >
                         Expertos
                       </Link>
+                      <Link 
+                        href="/adminPanel" 
+                        className="link link-hover text-base-content/80 hover:text-base-content"
+                      >
+                        Admin
+                      </Link>
                     </>
                   )}
                 </div>
@@ -232,6 +244,15 @@ const Header = () => {
           <div className="flex flex-col">
             {session ? <ButtonAccount /> : <ButtonSignin extraStyle="btn-primary" />}
           </div>
+          {session && (
+            <Link 
+              href="/adminPanel" 
+              className="block mt-4 text-base-content/80 hover:text-base-content"
+              onClick={() => setIsOpen(false)}
+            >
+              Admin
+            </Link>
+          )}
         </div>
       </div>
     </header>

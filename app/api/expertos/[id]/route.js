@@ -94,6 +94,7 @@ export async function PUT(request, { params }) {
       "gradoExperiencia",
       "experienciaProfesional",
       "serviciosPropuestos",
+      "estado",
     ];
     
     // Actualizar solo los campos permitidos
@@ -103,8 +104,8 @@ export async function PUT(request, { params }) {
       }
     });
     
-    // Resetear estado a pendiente si se actualiza
-    if (experto.estado === "aprobado") {
+    // Resetear estado a pendiente si se actualiza (solo si no se está aprobando)
+    if (experto.estado === "aprobado" && body["estado"] !== "aprobado") {
       experto.estado = "pendiente";
     }
     

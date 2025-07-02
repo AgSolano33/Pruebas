@@ -9,350 +9,310 @@ import Header from "@/components/Header";
 const ExpertosPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("registro");
-  const [hasExpertProfile, setHasExpertProfile] = useState(false);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [formData, setFormData] = useState({
-    nombre: "",
-    semblanza: "",
-    industrias: [],
-    categorias: "",
-    gradoExperiencia: "",
-    experienciaProfesional: "",
-    serviciosPropuestos: ""
-  });
+  const [experto, setExperto] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [matches, setMatches] = useState([]);
+  const [proyectos, setProyectos] = useState([]);
+  const [propuestaVisible, setPropuestaVisible] = useState(null);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [isLoadingNotificaciones, setIsLoadingNotificaciones] = useState(true);
+  const [notificacionExpandida, setNotificacionExpandida] = useState(null);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Verificar si el usuario ya tiene perfil de experto
   useEffect(() => {
-    const checkExpertProfile = async () => {
-      if (session) {
+    const fetchPerfil = async () => {
+      if (status === "authenticated") {
         try {
-          const response = await fetch("/api/expertos?checkProfile=true");
-          const result = await response.json();
-          
-          if (result.success) {
-            setHasExpertProfile(result.hasProfile);
+          const res = await fetch("/api/expertos?checkProfile=true");
+          const data = await res.json();
+          if (data.success && data.data) {
+            setExperto(data.data);
           }
-        } catch (error) {
-          console.error("Error al verificar perfil de experto:", error);
+        } catch (e) {
+          //
         } finally {
-          setIsLoadingProfile(false);
+          setIsLoading(false);
         }
+      } else if (status === "unauthenticated") {
+        setIsLoading(false);
       }
     };
+    fetchPerfil();
+  }, [status]);
 
-    if (status === "authenticated") {
-      checkExpertProfile();
-    } else if (status === "unauthenticated") {
-      setIsLoadingProfile(false);
+  useEffect(() => {
+    const fetchMatches = async () => {
+      if (experto?._id) {
+        try {
+          const res = await fetch(`/api/expert-matching?expertoId=${experto._id}&limit=100`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            setMatches(data.data);
+          }
+        } catch (e) {}
+      }
+    };
+    const fetchProyectos = async () => {
+      try {
+        const res = await fetch(`/api/proyectos-publicados?limit=100`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setProyectos(data.data);
+        }
+      } catch (e) {}
+    };
+    if (experto?._id) {
+      fetchMatches();
+      fetchProyectos();
     }
-  }, [session, status]);
+  }, [experto]);
 
-  // Redirigir si no hay sesión
-  if (status === "loading" || isLoadingProfile) {
+  useEffect(() => {
+    // Obtener notificaciones del experto
+    const fetchNotificaciones = async () => {
+      if (experto?._id) {
+        try {
+          setIsLoadingNotificaciones(true);
+          const res = await fetch(`/api/expertos/notificaciones?limit=100`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            setNotificaciones(data.data);
+          }
+        } catch (e) {}
+        setIsLoadingNotificaciones(false);
+      }
+    };
+    if (experto?._id) {
+      fetchNotificaciones();
+    }
+  }, [experto]);
+
+  if (status === "loading" || isLoading) {
     return <div className="flex justify-center items-center min-h-screen">Cargando...</div>;
   }
-
   if (!session) {
     router.push("/login");
     return null;
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Validación adicional para industrias
-    if (formData.industrias.length === 0) {
-      alert("Debes seleccionar al menos una industria");
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const response = await fetch("/api/expertos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Formulario enviado exitosamente. Tu perfil será revisado por nuestro equipo.");
-        setFormData({
-          nombre: "",
-          semblanza: "",
-          industrias: [],
-          categorias: "",
-          gradoExperiencia: "",
-          experienciaProfesional: "",
-          serviciosPropuestos: ""
-        });
-        setHasExpertProfile(true); // Actualizar estado después de crear perfil
-      } else {
-        alert(`Error: ${result.error}`);
-      }
-    } catch (error) {
-      console.error("Error al enviar formulario:", error);
-      alert("Error al enviar el formulario. Por favor, intenta de nuevo.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Panel de Expertos</h1>
-              <p className="text-gray-600">
-                Gestiona tu perfil de experto y revisa las solicitudes de proyectos
-              </p>
+      <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col lg:flex-row gap-8">
+        {/* Sidebar para pantallas grandes */}
+        <aside className="hidden lg:block w-1/4 flex-shrink-0">
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-bold text-lg mb-2">Mis proyectos</h3>
+              <div className="space-y-2">
+                <div className="bg-gray-100 rounded p-2">Proyectos sugeridos</div>
+                <div className="bg-gray-100 rounded p-2">Proyectos activos</div>
+                <div className="bg-gray-100 rounded p-2">Proyectos finalizados</div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-bold text-lg mb-2">Mis servicios</h3>
+              <div className="text-gray-400">(Próximamente)</div>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-bold text-lg mb-2">Mi contabilidad</h3>
+              <button
+                onClick={() => alert('Próximamente: sección de contabilidad')}
+                className="w-full text-left text-gray-400 hover:text-gray-700 px-0 py-0 bg-transparent border-none outline-none cursor-pointer"
+              >
+                (Próximamente)
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 w-full">
+          {/* Layout para pantallas medianas y pequeñas */}
+          <div className="lg:hidden flex flex-col gap-4 mb-8">
+            <button
+              onClick={() => router.push("/expertos/editar")}
+              className="bg-[#1A3D7C] text-white px-4 py-2 rounded-md hover:bg-[#0f2a5a] transition-colors shadow self-start"
+            >
+              Editar perfil
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">
+              {experto?.nombre || session.user.name || "Nombre del Experto"}
+            </h1>
+            {/* Información del experto */}
+            <div className="bg-white rounded-lg shadow p-6 flex flex-col w-full min-h-[220px]">
+              <h2 className="font-semibold text-lg mb-2">Tu información</h2>
+              {experto ? (
+                <>
+                  <div className="mb-2"><span className="font-medium">Semblanza:</span> {experto.semblanza}</div>
+                  <div className="mb-2"><span className="font-medium">Industrias:</span> {experto.industrias?.join(", ")}</div>
+                  <div className="mb-2"><span className="font-medium">Categorías:</span> {experto.categorias}</div>
+                  <div className="mb-2"><span className="font-medium">Grado de experiencia:</span> {experto.gradoExperiencia}</div>
+                  <div className="mb-2"><span className="font-medium">Experiencia profesional:</span> {experto.experienciaProfesional}</div>
+                  <div className="mb-2"><span className="font-medium">Servicios propuestos:</span> {experto.serviciosPropuestos}</div>
+                </>
+              ) : (
+                <button
+                  onClick={() => router.push("/expertos/editar")}
+                  className="bg-[#1A3D7C] text-white px-4 py-2 rounded-md hover:bg-[#0f2a5a] transition-colors shadow self-start mt-2"
+                >
+                  Crear perfil
+                </button>
+              )}
+              {/* Calificación (placeholder) */}
+              <div className="mt-4 flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-yellow-400 text-xl">★</span>
+                ))}
+                <span className="ml-2 text-gray-400 text-sm">(Próximamente)</span>
+              </div>
+            </div>
+            {/* Servicios sugeridos */}
+            <div className="bg-white rounded-lg shadow p-4 flex flex-col justify-center min-h-[100px]">
+              <h2 className="font-semibold text-base mb-2">Servicios sugeridos</h2>
+              <div className="text-gray-400 text-sm">(Próximamente)</div>
+            </div>
+            {/* Habilidades que los clientes buscan */}
+            <div className="bg-white rounded-lg shadow p-4 flex flex-col justify-center min-h-[100px]">
+              <h2 className="font-semibold text-base mb-2">Habilidades que los clientes buscan</h2>
+              <div className="text-gray-400 text-sm">(Próximamente)</div>
+            </div>
+            {/* Mis servicios */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-bold text-lg mb-2">Mis servicios</h3>
+              <div className="text-gray-400">(Próximamente)</div>
+            </div>
+            {/* Mi contabilidad */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-bold text-lg mb-2">Mi contabilidad</h3>
+              <button
+                onClick={() => alert('Próximamente: sección de contabilidad')}
+                className="w-full text-left text-gray-400 hover:text-gray-700 px-0 py-0 bg-transparent border-none outline-none cursor-pointer"
+              >
+                (Próximamente)
+              </button>
+            </div>
+            {/* Mis proyectos */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="font-bold text-lg mb-2">Mis proyectos</h3>
+              <div className="space-y-2">
+                <div className="bg-gray-100 rounded p-2">Proyectos sugeridos</div>
+                <div className="bg-gray-100 rounded p-2">Proyectos activos</div>
+                <div className="bg-gray-100 rounded p-2">Proyectos finalizados</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Layout para pantallas grandes (como estaba) */}
+          <div className="hidden lg:block">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {experto?.nombre || session.user.name || "Nombre del Experto"}
+                </h1>
+              </div>
+              <button
+                onClick={() => router.push("/expertos/editar")}
+                className="bg-[#1A3D7C] text-white px-4 py-2 rounded-md hover:bg-[#0f2a5a] transition-colors shadow self-start sm:self-auto"
+              >
+                Editar perfil
+              </button>
             </div>
 
-            {/* Pestañas */}
-            <div className="border-b border-gray-200 mb-8">
-              <nav className="-mb-px flex space-x-8">
-                {!hasExpertProfile && (
+            {/* Información del experto: sola y ancha */}
+            <div className="mb-8">
+              <div className="bg-white rounded-lg shadow p-6 flex flex-col w-full min-h-[260px]">
+                <h2 className="font-semibold text-lg mb-2">Tu información</h2>
+                {experto ? (
+                  <>
+                    <div className="mb-2"><span className="font-medium">Semblanza:</span> {experto.semblanza}</div>
+                    <div className="mb-2"><span className="font-medium">Industrias:</span> {experto.industrias?.join(", ")}</div>
+                    <div className="mb-2"><span className="font-medium">Categorías:</span> {experto.categorias}</div>
+                    <div className="mb-2"><span className="font-medium">Grado de experiencia:</span> {experto.gradoExperiencia}</div>
+                    <div className="mb-2"><span className="font-medium">Experiencia profesional:</span> {experto.experienciaProfesional}</div>
+                    <div className="mb-2"><span className="font-medium">Servicios propuestos:</span> {experto.serviciosPropuestos}</div>
+                  </>
+                ) : (
                   <button
-                    onClick={() => setActiveTab("registro")}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === "registro"
-                        ? "border-[#1A3D7C] text-[#1A3D7C]"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
+                    onClick={() => router.push("/expertos/editar")}
+                    className="bg-[#1A3D7C] text-white px-4 py-2 rounded-md hover:bg-[#0f2a5a] transition-colors shadow self-start mt-2"
                   >
-                    Registro de Experto
+                    Crear perfil
                   </button>
                 )}
-                <button
-                  onClick={() => setActiveTab("notificaciones")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "notificaciones"
-                      ? "border-[#1A3D7C] text-[#1A3D7C]"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  Notificaciones de Proyectos
-                </button>
-              </nav>
+                {/* Calificación (placeholder) */}
+                <div className="mt-4 flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-yellow-400 text-xl">★</span>
+                  ))}
+                  <span className="ml-2 text-gray-400 text-sm">(Próximamente)</span>
+                </div>
+              </div>
             </div>
 
-            {/* Contenido de las pestañas */}
-            {activeTab === "registro" && !hasExpertProfile && (
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Registro de Experto</h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Nombre */}
-                  <div>
-                    <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
-                      Nombre Completo *
-                    </label>
-                    <input
-                      type="text"
-                      id="nombre"
-                      name="nombre"
-                      value={formData.nombre}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ingresa tu nombre completo"
-                    />
-                  </div>
+            {/* Segunda fila: Servicios sugeridos y Habilidades */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-2xl mx-auto">
+              {/* Servicios sugeridos */}
+              <div className="bg-white rounded-lg shadow p-4 flex flex-col justify-center min-h-[120px]">
+                <h2 className="font-semibold text-base mb-2">Servicios sugeridos</h2>
+                <div className="text-gray-400 text-sm">(Próximamente)</div>
+              </div>
+              {/* Habilidades que los clientes buscan */}
+              <div className="bg-white rounded-lg shadow p-4 flex flex-col justify-center min-h-[120px]">
+                <h2 className="font-semibold text-base mb-2">Habilidades que los clientes buscan</h2>
+                <div className="text-gray-400 text-sm">(Próximamente)</div>
+              </div>
+            </div>
+          </div>
 
-                  {/* Semblanza */}
-                  <div>
-                    <label htmlFor="semblanza" className="block text-sm font-medium text-gray-700 mb-2">
-                      Semblanza *
-                    </label>
-                    <textarea
-                      id="semblanza"
-                      name="semblanza"
-                      value={formData.semblanza}
-                      onChange={handleInputChange}
-                      required
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Describe brevemente tu perfil profesional y experiencia"
-                    />
-                  </div>
-
-                  {/* Industrias */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Industrias * (máximo 3)
-                    </label>
-                    <div className="space-y-2">
-                      {[
-                        "Industrial Automation",
-                        "Agriculture industry",
-                        "Software and Tech Development",
-                        "Biotechnology and Life Sciences",
-                        "Food & Beverages",
-                        "ClimateTech & Sustainability",
-                        "Creative Industry & arts",
-                        "Beauty and personal care",
-                        "E-commerce",
-                        "Health Services"
-                      ].map((industria) => (
-                        <label key={industria} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            value={industria}
-                            checked={formData.industrias.includes(industria)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                if (formData.industrias.length < 3) {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    industrias: [...prev.industrias, industria]
-                                  }));
-                                }
-                              } else {
-                                setFormData(prev => ({
-                                  ...prev,
-                                  industrias: prev.industrias.filter(ind => ind !== industria)
-                                }));
-                              }
-                            }}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-700">{industria}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {formData.industrias.length > 0 && (
-                      <p className="text-sm text-gray-500 mt-2">
-                        Seleccionadas: {formData.industrias.length}/3
-                      </p>
+          {/* Proyectos con los que haces match */}
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="font-semibold text-lg mb-4">Proyectos con los que haces match</h2>
+            <div className="space-y-4">
+              {isLoadingNotificaciones && (
+                <div className="text-gray-400">Cargando notificaciones...</div>
+              )}
+              {!isLoadingNotificaciones && notificaciones.length === 0 && (
+                <div className="bg-gray-100 rounded p-4 text-gray-400">No tienes proyectos con los que hagas match aún.</div>
+              )}
+              {notificaciones.map((notif, idx) => {
+                const expandida = notificacionExpandida === notif._id;
+                return (
+                  <div
+                    key={notif._id || idx}
+                    className={`border rounded-lg p-4 bg-gray-50 cursor-pointer transition hover:bg-blue-50 ${expandida ? 'ring-2 ring-[#1A3D7C]' : ''}`}
+                    onClick={() => setNotificacionExpandida(expandida ? null : notif._id)}
+                  >
+                    <div className="font-bold text-lg">{notif.nombreProyecto}</div>
+                    {expandida && (
+                      <>
+                        <div className="mb-2 text-sm text-gray-600">{notif.nombreEmpresa} &middot; {notif.industria}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                          {/* Columna izquierda */}
+                          <div>
+                            <button className="bg-[#1A3D7C] text-white px-4 py-2 rounded-md mb-4 hover:bg-[#0f2a5a] transition-colors shadow">Solicitar una cita</button>
+                            <div className="bg-white rounded shadow p-4 mb-4">
+                              <div className="font-semibold mb-1">Descripción del proyecto</div>
+                              <div className="text-gray-700 text-sm">{notif.descripcionProyecto}</div>
+                            </div>
+                          </div>
+                          {/* Columna derecha */}
+                          <div>
+                            <h3 className="font-bold text-lg mb-2">Postular a proyecto</h3>
+                          </div>
+                        </div>
+                        {/* Abajo de las columnas */}
+                        <div className="mt-6 border-t pt-4">
+                          <div className="font-semibold mb-1">¿Por qué haces match?</div>
+                          <div className="text-gray-700 text-sm">{notif.analisisMatch}</div>
+                        </div>
+                      </>
                     )}
                   </div>
-
-                  {/* Categorías */}
-                  <div>
-                    <label htmlFor="categorias" className="block text-sm font-medium text-gray-700 mb-2">
-                      Categorías *
-                    </label>
-                    <input
-                      type="text"
-                      id="categorias"
-                      name="categorias"
-                      value={formData.categorias}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Ej: Consultoría, Desarrollo, Marketing, Estrategia"
-                    />
-                  </div>
-
-                  {/* Grado de Experiencia */}
-                  <div>
-                    <label htmlFor="gradoExperiencia" className="block text-sm font-medium text-gray-700 mb-2">
-                      Grado de Experiencia *
-                    </label>
-                    <select
-                      id="gradoExperiencia"
-                      name="gradoExperiencia"
-                      value={formData.gradoExperiencia}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Selecciona tu nivel de experiencia</option>
-                      <option value="junior">Junior (1-3 años)</option>
-                      <option value="mid-level">Mid-level (3-5 años)</option>
-                      <option value="senior">Senior (5-10 años)</option>
-                      <option value="expert">Expert (10+ años)</option>
-                    </select>
-                  </div>
-
-                  {/* Experiencia Profesional */}
-                  <div>
-                    <label htmlFor="experienciaProfesional" className="block text-sm font-medium text-gray-700 mb-2">
-                      Experiencia Profesional *
-                    </label>
-                    <textarea
-                      id="experienciaProfesional"
-                      name="experienciaProfesional"
-                      value={formData.experienciaProfesional}
-                      onChange={handleInputChange}
-                      required
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Describe tu experiencia profesional, proyectos relevantes y logros"
-                    />
-                  </div>
-
-                  {/* Servicios Propuestos */}
-                  <div>
-                    <label htmlFor="serviciosPropuestos" className="block text-sm font-medium text-gray-700 mb-2">
-                      Servicios Propuestos *
-                    </label>
-                    <textarea
-                      id="serviciosPropuestos"
-                      name="serviciosPropuestos"
-                      value={formData.serviciosPropuestos}
-                      onChange={handleInputChange}
-                      required
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Describe los servicios que ofreces y cómo puedes ayudar a las empresas"
-                    />
-                  </div>
-
-                  {/* Botón de envío */}
-                  <div className="pt-4">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full bg-[#1A3D7C] text-white py-3 px-4 rounded-md hover:bg-[#0f2a5a] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isSubmitting ? "Enviando..." : "Enviar Formulario"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {hasExpertProfile && activeTab === "registro" && (
-              <div className="text-center py-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Ya tienes un perfil de experto</h2>
-                <p className="text-gray-600 mb-6">
-                  Tu perfil de experto ya está registrado. Puedes revisar las notificaciones de proyectos en la pestaña correspondiente.
-                </p>
-                <button
-                  onClick={() => setActiveTab("notificaciones")}
-                  className="bg-[#1A3D7C] text-white py-2 px-4 rounded-md hover:bg-[#0f2a5a] transition-colors"
-                >
-                  Ver Notificaciones
-                </button>
-              </div>
-            )}
-
-            {activeTab === "notificaciones" && (
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Notificaciones de Proyectos</h2>
-                <NotificacionesExperto />
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
