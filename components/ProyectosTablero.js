@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner } from "react-icons/fa";
+import Modal from "@/components/Modal";
 
 export default function ProyectosTablero() {
   const { data: session } = useSession();
@@ -10,12 +11,37 @@ export default function ProyectosTablero() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [seleccionado, setSeleccionado] = useState({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [allMatches, setAllMatches] = useState([]);
+  const [matches, setMatches] = useState([]); // <-- restaurar este estado
+  const [loadingMatches, setLoadingMatches] = useState(false);
+  const [selectedProyecto, setSelectedProyecto] = useState(null);
+  const [errorMatches, setErrorMatches] = useState(null);
 
   useEffect(() => {
     if (session?.user?.id) {
       fetchProyectos();
     }
   }, [session, filtroEstado]);
+
+  // Fetch all expert matches on mount
+  useEffect(() => {
+    const fetchAllMatches = async () => {
+      try {
+        const response = await fetch('/api/expert-matching');
+        const result = await response.json();
+        if (result.success && result.data) {
+          setAllMatches(result.data);
+        } else {
+          console.error('Error al obtener matches:', result.error);
+        }
+      } catch (error) {
+        console.error('Error al obtener matches:', error);
+      }
+    };
+    fetchAllMatches();
+  }, []);
 
   const fetchProyectos = async () => {
     try {
@@ -26,6 +52,8 @@ export default function ProyectosTablero() {
         
       const response = await fetch(url);
       const result = await response.json();
+
+      console.log("proyectos encontrados", result);
 
       if (result.success && result.data) {
         setProyectos(result.data);
@@ -90,6 +118,16 @@ export default function ProyectosTablero() {
     }
   };
 
+  const handleViewMatches = (proyecto) => {
+    setSelectedProyecto(proyecto);
+    setModalOpen(true);
+    setLoadingMatches(false);
+    setErrorMatches(null);
+    // Filtrar los matches ya obtenidos
+    const filtered = allMatches.filter(match => match.nombreEmpresa === proyecto.nombreEmpresa && match.nombreProyecto === proyecto.nombreProyecto);
+    setMatches(filtered);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -139,6 +177,7 @@ export default function ProyectosTablero() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {proyectos.map((proyecto) => (
             <div
+              onClick={() => setSeleccionado(proyecto)}
               key={proyecto._id}
               className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
             >
@@ -228,11 +267,55 @@ export default function ProyectosTablero() {
                     <span>{new Date(proyecto.fechaPublicacion).toLocaleDateString('es-ES')}</span>
                   </div>
                 </div>
+                {/* Botón para ver matches */}
+                <div className="mb-2 flex justify-end">
+                  <button
+                    onClick={() => handleViewMatches(proyecto)}
+                    className="px-3 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold"
+                  >
+                    Ver expertos que hacen match
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+      {/* Modal de matches */}
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
+        <div className="max-w-lg mx-auto">
+          <h2 className="text-xl font-bold mb-4 text-[#1A3D7C]">Expertos que hacen match</h2>
+          {loadingMatches ? (
+            <div className="flex justify-center items-center min-h-[100px]">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1A3D7C]"></div>
+            </div>
+          ) : errorMatches ? (
+            <div className="text-red-500 text-center p-4">{errorMatches}</div>
+          ) : matches.length === 0 ? (
+            <div className="text-center text-gray-500 p-4">No hay expertos compatibles para este proyecto.</div>
+          ) : (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+              {matches.map((match, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <span className="font-semibold text-gray-800">{match.expertoId?.nombre || 'Experto'}</span>
+                      <span className="ml-2 text-xs text-gray-500">{match.gradoExperiencia}</span>
+                    </div>
+                    <span className="text-xs font-semibold text-blue-600">{match.puntuacionMatch}% match</span>
+                  </div>
+                  <div className="text-xs text-gray-600 mb-1"><strong>Industrias:</strong> {Array.isArray(match.industriasExperto) ? match.industriasExperto.join(', ') : match.industriasExperto}</div>
+                  <div className="text-xs text-gray-600 mb-1"><strong>Categorías:</strong> {match.categoriasExperto}</div>
+                  <div className="text-xs text-gray-600 mb-1"><strong>Servicios propuestos:</strong> {match.serviciosPropuestos}</div>
+                  <div className="text-xs text-gray-600 mb-1"><strong>Semblanza:</strong> {match.semblanza}</div>
+                  <div className="text-xs text-gray-600 mb-1"><strong>Análisis:</strong> {match.match}</div>
+                  <div className="text-xs text-gray-600 mb-1"><strong>Industria mejor alineada:</strong> {match.industriaMejor}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 } 

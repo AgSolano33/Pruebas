@@ -200,7 +200,7 @@ export default function Dashboard() {
 
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-8 ">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
