@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner } from "react-icons/fa";
+import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner, FaEye } from "react-icons/fa";
 import Modal from "@/components/Modal";
+import ProyectoContextMenu from "@/components/ProyectoContextMenu";
 
 export default function ProyectosTablero() {
   const { data: session } = useSession();
@@ -18,10 +19,14 @@ export default function ProyectosTablero() {
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [selectedProyecto, setSelectedProyecto] = useState(null);
   const [errorMatches, setErrorMatches] = useState(null);
+  const [expertosData, setExpertosData] = useState(null);
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [selectedProyectoForContext, setSelectedProyectoForContext] = useState(null);
 
   useEffect(() => {
     if (session?.user?.id) {
       fetchProyectos();
+      fetchExpertosData();
     }
   }, [session, filtroEstado]);
 
@@ -64,6 +69,173 @@ export default function ProyectosTablero() {
       setError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExpertosData = async () => {
+    try {
+      // Por ahora usamos datos mock del archivo expertos.json
+      // En el futuro esto vendría de una API
+      const response = await fetch('/expertos.json');
+      const data = await response.json();
+      setExpertosData(data);
+    } catch (error) {
+      console.error('Error al cargar datos de expertos:', error);
+      // Si falla, usamos datos mock hardcodeados con expertos que hacen match
+      setExpertosData({
+        expertos_formulario: [
+          {
+            ID: "mock1",
+            nombre_experto: "Dr. Ana Martínez",
+            categoria: "Servicios Digitales,Negocios,STEAM",
+            estudios_expertos: "Doctorado",
+            experiencia_experto: "Más de 15 años en transformación digital y desarrollo de software. Especialista en implementación de sistemas ERP, automatización de procesos y estrategias de digitalización empresarial. He liderado proyectos de transformación digital en más de 50 empresas de diferentes sectores.",
+            email_experto: "ana.martinez@digitalexpert.com",
+            telefono_experto: "+525512345678",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock2",
+            nombre_experto: "Ing. Carlos Rodríguez",
+            categoria: "Negocios,Servicios Digitales,Soluciones personalizadas",
+            estudios_expertos: "Maestría",
+            experiencia_experto: "Consultor especializado en optimización de procesos empresariales y desarrollo de estrategias digitales. Experiencia en implementación de metodologías ágiles, mejora continua y automatización de flujos de trabajo. He ayudado a más de 30 empresas a mejorar su eficiencia operativa.",
+            email_experto: "carlos.rodriguez@businessconsulting.com",
+            telefono_experto: "+525523456789",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock3",
+            nombre_experto: "Lic. María González",
+            categoria: "Negocios,Investigación",
+            estudios_expertos: "Licenciatura",
+            experiencia_experto: "Especialista en investigación de mercados y análisis de datos empresariales. Experiencia en desarrollo de estrategias de negocio basadas en datos, estudios de viabilidad y análisis de tendencias del mercado. He realizado más de 100 estudios de mercado para empresas de diversos sectores.",
+            email_experto: "maria.gonzalez@marketresearch.com",
+            telefono_experto: "+525534567890",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock4",
+            nombre_experto: "Ing. Roberto Silva",
+            categoria: "Servicios Digitales,STEAM,Soluciones personalizadas",
+            estudios_expertos: "Licenciatura",
+            experiencia_experto: "Desarrollador full-stack con experiencia en tecnologías modernas como React, Node.js, Python y bases de datos. Especialista en desarrollo de aplicaciones web, APIs y sistemas de gestión. He desarrollado más de 20 aplicaciones empresariales y sistemas de automatización.",
+            email_experto: "roberto.silva@techsolutions.com",
+            telefono_experto: "+525545678901",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock5",
+            nombre_experto: "Dra. Laura Fernández",
+            categoria: "Investigación,STEAM",
+            estudios_expertos: "Doctorado",
+            experiencia_experto: "Investigadora especializada en análisis de datos y machine learning aplicado a negocios. Experiencia en desarrollo de modelos predictivos, análisis estadístico y visualización de datos. He publicado más de 15 papers científicos y trabajado en proyectos de investigación aplicada.",
+            email_experto: "laura.fernandez@dataresearch.com",
+            telefono_experto: "+525556789012",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock6",
+            nombre_experto: "Lic. Juan Pérez",
+            categoria: "Negocios,Servicios Digitales",
+            estudios_expertos: "Licenciatura",
+            experiencia_experto: "Consultor en estrategia empresarial y marketing digital. Especialista en desarrollo de planes de negocio, estrategias de crecimiento y marketing digital. He asesorado a más de 40 startups y empresas en crecimiento, ayudándolas a desarrollar estrategias efectivas.",
+            email_experto: "juan.perez@businessstrategy.com",
+            telefono_experto: "+525567890123",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock7",
+            nombre_experto: "Ing. Patricia López",
+            categoria: "Servicios Digitales,Soluciones personalizadas",
+            estudios_expertos: "Maestría",
+            experiencia_experto: "Arquitecta de soluciones digitales con experiencia en diseño de sistemas empresariales, integración de APIs y desarrollo de soluciones personalizadas. Especialista en tecnologías cloud y desarrollo de aplicaciones escalables. He diseñado e implementado más de 25 soluciones empresariales.",
+            email_experto: "patricia.lopez@digitalarchitect.com",
+            telefono_experto: "+525578901234",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock8",
+            nombre_experto: "Dr. Miguel Torres",
+            categoria: "Investigación,Negocios",
+            estudios_expertos: "Doctorado",
+            experiencia_experto: "Investigador y consultor especializado en innovación empresarial y desarrollo de nuevos productos. Experiencia en gestión de proyectos de I+D, análisis de viabilidad técnica y comercial, y desarrollo de estrategias de innovación. He liderado más de 30 proyectos de investigación aplicada.",
+            email_experto: "miguel.torres@innovationlab.com",
+            telefono_experto: "+525589012345",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock9",
+            nombre_experto: "Ing. Sofía Mendoza",
+            categoria: "Servicios Digitales,STEAM",
+            estudios_expertos: "Maestría",
+            experiencia_experto: "Especialista en desarrollo de aplicaciones móviles y sistemas web. Experiencia en React Native, Flutter, y desarrollo de APIs RESTful. He desarrollado más de 15 aplicaciones móviles para empresas de diferentes sectores, incluyendo e-commerce, fintech y salud.",
+            email_experto: "sofia.mendoza@mobileapps.com",
+            telefono_experto: "+525590123456",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock10",
+            nombre_experto: "Lic. Alejandro Ruiz",
+            categoria: "Negocios,Soluciones personalizadas",
+            estudios_expertos: "Licenciatura",
+            experiencia_experto: "Consultor especializado en optimización de procesos de ventas y marketing digital. Experiencia en implementación de CRM, automatización de marketing y estrategias de crecimiento. He ayudado a más de 25 empresas a aumentar sus ventas en un promedio del 40%.",
+            email_experto: "alejandro.ruiz@salesoptimization.com",
+            telefono_experto: "+525501234567",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock11",
+            nombre_experto: "Dra. Carmen Vega",
+            categoria: "Investigación,STEAM",
+            estudios_expertos: "Doctorado",
+            experiencia_experto: "Investigadora en inteligencia artificial y machine learning aplicado a negocios. Especialista en desarrollo de algoritmos predictivos, análisis de big data y automatización de procesos. He publicado más de 20 papers científicos y desarrollado soluciones de IA para empresas Fortune 500.",
+            email_experto: "carmen.vega@airesearch.com",
+            telefono_experto: "+525512345678",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock12",
+            nombre_experto: "Ing. Diego Morales",
+            categoria: "Servicios Digitales,Negocios",
+            estudios_expertos: "Licenciatura",
+            experiencia_experto: "Arquitecto de soluciones cloud y especialista en transformación digital. Experiencia en AWS, Azure y Google Cloud. He migrado más de 50 empresas a la nube y optimizado sus costos en un promedio del 30%. Especialista en seguridad informática y compliance.",
+            email_experto: "diego.morales@cloudarchitect.com",
+            telefono_experto: "+525523456789",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock13",
+            nombre_experto: "Lic. Carmen Ruiz",
+            categoria: "Digitalización de procesos,Optimización de procesos",
+            estudios_expertos: "Maestría",
+            experiencia_experto: "Especialista en digitalización y optimización de procesos empresariales. Experiencia en implementación de metodologías ágiles, Scrum y Kanban. He ayudado a más de 25 empresas a digitalizar sus procesos y mejorar su eficiencia operativa en un 40%. Certificada en Lean Six Sigma y Project Management Professional (PMP).",
+            email_experto: "carmen.ruiz@processoptimization.com",
+            telefono_experto: "+525512345678",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock14",
+            nombre_experto: "Dr. Roberto Mendoza",
+            categoria: "Capacitación y formación,Optimización de procesos",
+            estudios_expertos: "Doctorado",
+            experiencia_experto: "Consultor senior en capacitación empresarial y formación de equipos. Especialista en metodologías ágiles, liderazgo organizacional y desarrollo de competencias. He capacitado a más de 500 profesionales en Scrum, Kanban y gestión de proyectos. Experiencia en transformación cultural y mejora de procesos en empresas de diversos sectores.",
+            email_experto: "roberto.mendoza@trainingexpert.com",
+            telefono_experto: "+525598765432",
+            tipo_usuario: "Experto gestor"
+          },
+          {
+            ID: "mock15",
+            nombre_experto: "Ing. Ana Sofía Vargas",
+            categoria: "Digitalización de procesos,Capacitación y formación",
+            estudios_expertos: "Maestría",
+            experiencia_experto: "Especialista en transformación digital y formación de equipos de desarrollo. Experiencia en implementación de herramientas digitales, automatización de procesos y capacitación en metodologías ágiles. He liderado proyectos de digitalización en más de 30 empresas, mejorando su productividad en un promedio del 35%.",
+            email_experto: "ana.vargas@digitaltransformation.com",
+            telefono_experto: "+525545678901",
+            tipo_usuario: "Experto gestor"
+          }
+        ]
+      });
     }
   };
 
@@ -126,6 +298,11 @@ export default function ProyectosTablero() {
     // Filtrar los matches ya obtenidos
     const filtered = allMatches.filter(match => match.nombreEmpresa === proyecto.nombreEmpresa && match.nombreProyecto === proyecto.nombreProyecto);
     setMatches(filtered);
+  };
+
+  const handleOpenContextMenu = (proyecto) => {
+    setSelectedProyectoForContext(proyecto);
+    setContextMenuOpen(true);
   };
 
   if (loading) {
@@ -270,9 +447,13 @@ export default function ProyectosTablero() {
                 {/* Botón para ver matches */}
                 <div className="mb-2 flex justify-end">
                   <button
-                    onClick={() => handleViewMatches(proyecto)}
-                    className="px-3 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenContextMenu(proyecto);
+                    }}
+                    className="px-3 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold flex items-center gap-2"
                   >
+                    <FaEye />
                     Ver expertos que hacen match
                   </button>
                 </div>
@@ -316,6 +497,17 @@ export default function ProyectosTablero() {
           )}
         </div>
       </Modal>
+
+      {/* Menú Contextual de Proyecto */}
+      <ProyectoContextMenu
+        proyecto={selectedProyectoForContext}
+        isOpen={contextMenuOpen}
+        onClose={() => {
+          setContextMenuOpen(false);
+          setSelectedProyectoForContext(null);
+        }}
+        expertosData={expertosData}
+      />
     </div>
   );
 } 
