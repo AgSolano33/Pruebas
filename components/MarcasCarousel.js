@@ -64,7 +64,7 @@ export default function MarcasCarousel() {
     if (previousTimeRef.current !== undefined) {
       const deltaTime = time - previousTimeRef.current;
       setPosition(prev => {
-        const newPosition = prev - (deltaTime * 0.010); // velocidad de la animación
+        const newPosition = prev - (deltaTime * 0.005); // velocidad de la animación
         return newPosition <= -100 ? 0 : newPosition;
       });
     }

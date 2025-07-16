@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
 import { FaChartBar, FaRocket, FaUsers, FaClipboardList } from "react-icons/fa";
+import Perfil from "@/components/Perfil";
 
 export const dynamic = "force-dynamic";
 
@@ -173,6 +174,7 @@ export default function Dashboard() {
     { id: "proyectos", name: "Proyectos", icon: FaRocket },
     { id: "expertos", name: "Expertos", icon: FaUsers },
     { id: "diagnosticos", name: "Diagnósticos", icon: FaClipboardList },
+    { id: "configuracion", name: "Perfil", icon: FaUsers },
   ];
 
   return (
@@ -314,6 +316,12 @@ export default function Dashboard() {
               </div>
             </section>
           </>
+        )}
+        {activeTab === "configuracion" && (
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Perfil</h2>
+            <Perfil />
+          </section>
         )}
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>

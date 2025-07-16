@@ -20,6 +20,140 @@ const inputStyles = "mt-1 block w-full rounded-lg shadow-sm focus:ring-2 focus:r
 const normalInputStyles = "border-2 border-gray-300 hover:border-gray-400";
 const errorInputStyles = "border-2 border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500";
 
+// 1. Lista de sectores/industrias completa
+const sectoresIndustria = [
+  "Aerospace",
+  "Automotive",
+  "Semiconductors",
+  "Circuit Boards Assembly",
+  "Medical Devices",
+  "Industrial Automation",
+  "Logistics, freight and transport",
+  "Agriculture industry",
+  "Food & Beverages",
+  "Health Services",
+  "Pharmacy",
+  "Beauty and personal care",
+  "Mining & Extraction",
+  "Metallurgy",
+  "Metal mechanic",
+  "E- commerce",
+  "Digital marketing & branding",
+  "ClimateTech & Sustainability",
+  "Construction & Infrastructure",
+  "Entrepreneurship & Innovation",
+  "Retail",
+  "Politics & Public Policy",
+  "Education & STEM",
+  "Safety, Security & Defense",
+  "TI",
+  "Software and Tech Development",
+  "Artificial Intelligence and Big Data",
+  "Process automation",
+  "Tourism and hospitality",
+  "Cultural Heritage Preservation",
+  "Creative Industry & arts",
+  "Livestock & fishing",
+  "Oil and gas",
+  "Toys and Entertainment",
+  "Textile",
+  "Plastics and Polymers",
+  "Banking and Financial Services",
+  "Insurance and Reinsurance",
+  "Non-Profit Organizations (NGOs)",
+  "Biotechnology and Life Sciences",
+  "Otro: Especificar"
+];
+
+// 2. Lista de países mundial (ISO 3166, solo nombres)
+const paisesMundo = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+];
+
+// Diccionario de títulos y descripciones para cada área y subárea
+const evaluacionAreasLabels = {
+  madurezDigital: {
+    title: "Madurez Digital y Tecnología",
+    subareas: [
+      "Nuestra empresa tiene una estrategia digital claramente definida y alineada con nuestros objetivos de negocio.",
+      "Utilizamos tecnologías digitales para mejorar nuestros procesos internos y la eficiencia operativa.",
+      "Nuestros empleados cuentan con las habilidades digitales necesarias para desempeñar sus funciones.",
+      "Aprovechamos el análisis de datos para tomar decisiones estratégicas.",
+      "Estamos actualizados en cuanto a las tendencias y tecnologías emergentes relevantes para nuestro sector (por ejemplo, inteligencia artificial, Internet de las Cosas, blockchain)."
+    ]
+  },
+  saludFinanciera: {
+    title: "Gestión Financiera y Salud Financiera",
+    subareas: [
+      "Nuestra empresa mantiene un flujo de efectivo estable y sin problemas frecuentes.",
+      "Nuestros márgenes de rentabilidad están alineados o por encima del promedio de la industria.",
+      "Nuestra empresa gestiona eficientemente sus costos operativos.",
+      "Nuestra empresa puede acceder fácilmente a financiamiento externo cuando lo necesita.",
+      "Nuestra empresa cuenta con un presupuesto anual formal y realiza un seguimiento financiero regular."
+    ]
+  },
+  eficienciaOperativa: {
+    title: "Eficiencia Operativa y Procesos",
+    subareas: [
+      "Nuestros procesos operativos están mayormente automatizados y son altamente eficientes.",
+      "Nuestras operaciones fluyen sin retrasos ni cuellos de botella significativos.",
+      "La calidad de nuestros productos/servicios es consistente y confiable.",
+      "Contamos con un programa de mejora continua implementado y en operación.",
+      "Utilizamos herramientas de automatización y sistemas ERP para gestionar eficientemente nuestros procesos."
+    ]
+  },
+  recursosHumanos: {
+    title: "Recursos Humanos y Cultura Organizacional",
+    subareas: [
+      "Nuestra empresa mantiene una baja rotación de personal y alta estabilidad laboral.",
+      "Nuestra empresa ofrece amplias oportunidades de formación y desarrollo a los empleados.",
+      "El clima laboral en nuestra empresa es positivo y satisfactorio.",
+      "Nuestros empleados están claramente alineados con los objetivos estratégicos de la empresa.",
+      "Contamos con un sistema formal de evaluación y gestión del desempeño."
+    ]
+  },
+  marketingVentas: {
+    title: "Marketing y Ventas",
+    subareas: [
+      "Contamos con una estrategia de marketing bien definida y actualizada.",
+      "Conocemos bien las necesidades y preferencias de nuestros clientes.",
+      "Utilizamos una amplia variedad de canales de venta para llegar a nuestros clientes.",
+      "Nuestra empresa tiene una diferenciación clara en el mercado respecto a la competencia.",
+      "Utilizamos activamente herramientas digitales (como redes sociales, SEO, SEM) para promocionar nuestros productos/servicios."
+    ]
+  },
+  innovacionDesarrollo: {
+    title: "Innovación y Desarrollo de Productos/Servicios",
+    subareas: [
+      "Hemos lanzado nuevos productos o servicios en los últimos dos años.",
+      "La innovación es una parte integral de nuestra cultura organizacional.",
+      "Invertimos constantemente en investigación y desarrollo.",
+      "Nos adaptamos rápidamente a los cambios del mercado.",
+      "Colaboramos activamente con terceros (universidades, startups) en proyectos de innovación."
+    ]
+  },
+  experienciaCliente: {
+    title: "Experiencia y Satisfacción del Cliente",
+    subareas: [
+      "Recopilamos regularmente feedback de nuestros clientes para mejorar nuestros servicios.",
+      "Nuestros clientes están satisfechos con nuestro servicio de atención.",
+      "Ofrecemos experiencias personalizadas a nuestros clientes.",
+      "Mantenemos una alta tasa de retención de clientes a largo plazo.",
+      "Utilizamos herramientas CRM o ERP para gestionar eficientemente las relaciones con nuestros clientes."
+    ]
+  },
+  gestionRiesgos: {
+    title: "Gestión de Riesgos y Cumplimiento Normativo",
+    subareas: [
+      "Contamos con procesos establecidos para identificar y gestionar riesgos.",
+      "Nos mantenemos al día con las regulaciones y normativas aplicables.",
+      "Contamos con políticas y procedimientos documentados en áreas clave.",
+      "Realizamos auditorías internas de manera regular.",
+      "Capacitamos regularmente a nuestros empleados en cumplimiento y ética empresarial."
+    ]
+  }
+};
+
 export default function DiagnosticoCentral() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -588,13 +722,13 @@ export default function DiagnosticoCentral() {
         {Object.entries(categorias).map(([categoria, subareas]) => (
           <div key={categoria} className="space-y-4">
             <h3 className="text-lg font-medium">
-              {categoria.charAt(0).toUpperCase() + categoria.slice(1).replace(/([A-Z])/g, ' $1')}
+              {evaluacionAreasLabels[categoria]?.title || categoria.charAt(0).toUpperCase() + categoria.slice(1).replace(/([A-Z])/g, ' $1')}
             </h3>
             <div className="space-y-4">
-              {subareas.map(subarea => (
+              {subareas.map((subarea, idx) => (
                 <div key={subarea} className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    {subarea.charAt(0).toUpperCase() + subarea.slice(1).replace(/([A-Z])/g, ' $1')}
+                    {evaluacionAreasLabels[categoria]?.subareas?.[idx] || subarea.charAt(0).toUpperCase() + subarea.slice(1).replace(/([A-Z])/g, ' $1')}
                   </label>
                   <div className={barStyles.container} style={{ position: 'relative', height: '44px' }}>
                     <div
@@ -913,13 +1047,9 @@ export default function DiagnosticoCentral() {
                     required
                   >
                     <option value="">Seleccione un sector</option>
-                    <option value="tecnologia">Tecnología</option>
-                    <option value="servicios">Servicios</option>
-                    <option value="comercio">Comercio</option>
-                    <option value="manufactura">Manufactura</option>
-                    <option value="salud">Salud</option>
-                    <option value="agricultura">Agricultura</option>
-                    <option value="otro">Otro</option>
+                    {sectoresIndustria.map(sector => (
+                      <option key={sector} value={sector}>{sector}</option>
+                    ))}
                   </select>
                   {errors.sector && (
                     <p className="mt-1 text-sm text-red-600">{errors.sector}</p>
@@ -942,13 +1072,17 @@ export default function DiagnosticoCentral() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Ubicación</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.informacionEmpresa.ubicacion}
                     onChange={(e) => handleInputChange('informacionEmpresa', 'ubicacion', e.target.value)}
                     className={`${inputStyles} ${errors.ubicacion ? errorInputStyles : normalInputStyles}`}
                     required
-                  />
+                  >
+                    <option value="">Seleccione un país</option>
+                    {paisesMundo.map(pais => (
+                      <option key={pais} value={pais}>{pais}</option>
+                    ))}
+                  </select>
                   {errors.ubicacion && (
                     <p className="mt-1 text-sm text-red-600">{errors.ubicacion}</p>
                   )}
