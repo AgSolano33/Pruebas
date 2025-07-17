@@ -22,6 +22,7 @@ export default function ProyectosTablero() {
   const [expertosData, setExpertosData] = useState(null);
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [selectedProyectoForContext, setSelectedProyectoForContext] = useState(null);
+  const [shouldRecalculateMatches, setShouldRecalculateMatches] = useState(false);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -29,6 +30,27 @@ export default function ProyectosTablero() {
       fetchExpertosData();
     }
   }, [session, filtroEstado]);
+
+  // Recalcular matches cuando se cargan los datos de expertos y hay proyectos para calcular
+  useEffect(() => {
+    // console.log('useEffect triggered - expertosData:', expertosData);
+    // console.log('proyectos.length:', proyectos.length);
+    // console.log('shouldRecalculateMatches:', shouldRecalculateMatches);
+    
+    if (expertosData && proyectos.length > 0 && shouldRecalculateMatches) {
+      console.log('Recalculando matches para todos los proyectos...');
+      const proyectosConMatches = proyectos.map(proyecto => {
+        const matchCount = calculateExpertMatches(proyecto);
+        return {
+          ...proyecto,
+          matchesGenerados: matchCount
+        };
+      });
+      console.log('Proyectos con matches calculados:', proyectosConMatches);
+      setProyectos(proyectosConMatches);
+      setShouldRecalculateMatches(false);
+    }
+  }, [expertosData, shouldRecalculateMatches]);
 
   // Fetch all expert matches on mount
   useEffect(() => {
@@ -61,7 +83,9 @@ export default function ProyectosTablero() {
       console.log("proyectos encontrados", result);
 
       if (result.success && result.data) {
+        // Solo establecer los proyectos, los matches se calcularán cuando expertosData esté disponible
         setProyectos(result.data);
+        setShouldRecalculateMatches(true);
       } else {
         setError(result.error || 'Error al cargar los proyectos');
       }
@@ -239,6 +263,145 @@ export default function ProyectosTablero() {
     }
   };
 
+  // Función para calcular matches de expertos para un proyecto
+  const calculateExpertMatches = (proyecto) => {
+    if (!expertosData || !expertosData.expertos_formulario) {
+      console.log('No hay datos de expertos disponibles');
+      return 0;
+    }
+
+    const expertos = expertosData.expertos_formulario;
+    console.log(`Calculando matches para proyecto: ${proyecto.nombreProyecto}`);
+    console.log(`Total de expertos disponibles: ${expertos.length}`);
+    let matchCount = 0;
+
+    expertos.forEach(experto => {
+      let puntuacion = 0;
+      
+      // Matching por categorías
+      if (experto.categoria && proyecto.categoriasServicioBuscado) {
+        const categoriasExperto = experto.categoria.split(',').map(cat => cat.trim().toLowerCase());
+        const categoriasProyecto = proyecto.categoriasServicioBuscado.map(cat => cat.toLowerCase());
+        
+        // Buscar coincidencias exactas y parciales
+        const matchesCategoria = categoriasProyecto.filter(catProyecto => 
+          categoriasExperto.some(catExperto => {
+            // Coincidencia exacta
+            if (catExperto === catProyecto) return true;
+            
+            // Coincidencia parcial
+            if (catExperto.includes(catProyecto) || catProyecto.includes(catExperto)) return true;
+            
+            // Coincidencias por palabras clave específicas
+            const palabrasClave = {
+              'servicios digitales': ['digital', 'tecnología', 'software', 'web', 'app', 'digitalización'],
+              'negocios': ['negocio', 'empresa', 'estrategia', 'consultoría', 'gestión'],
+              'investigación': ['investigación', 'análisis', 'datos', 'estudio', 'reporte'],
+              'steam': ['tecnología', 'ciencia', 'ingeniería', 'matemáticas', 'arte'],
+              'soluciones personalizadas': ['personalizado', 'custom', 'específico', 'adaptado'],
+              'digitalización de procesos': ['digitalización', 'procesos', 'digital', 'automatización'],
+              'optimización de procesos': ['optimización', 'procesos', 'mejora', 'eficiencia'],
+              'capacitación y formación': ['capacitación', 'formación', 'entrenamiento', 'educación']
+            };
+            
+            const palabrasExperto = palabrasClave[catExperto] || [];
+            const palabrasProyecto = palabrasClave[catProyecto] || [];
+            
+            return palabrasExperto.some(palabra => 
+              palabrasProyecto.some(palabraProyecto => 
+                palabra.includes(palabraProyecto) || palabraProyecto.includes(palabra)
+              )
+            );
+          })
+        );
+        
+        // Puntuación más alta para coincidencias exactas
+        const coincidenciasExactas = categoriasProyecto.filter(catProyecto => 
+          categoriasExperto.includes(catProyecto)
+        );
+        
+        puntuacion += (coincidenciasExactas.length / categoriasProyecto.length) * 60;
+        puntuacion += ((matchesCategoria.length - coincidenciasExactas.length) / categoriasProyecto.length) * 30;
+      }
+      
+      // Matching por industria
+      if (experto.categoria && proyecto.industria) {
+        const categoriasExperto = experto.categoria.toLowerCase();
+        const industriaProyecto = proyecto.industria.toLowerCase();
+        
+        if (categoriasExperto.includes(industriaProyecto) || industriaProyecto.includes(categoriasExperto)) {
+          puntuacion += 25;
+        }
+        
+        const sectores = {
+          'tecnología': ['software', 'digital', 'tech', 'informática'],
+          'servicios': ['consultoría', 'asesoría', 'servicios'],
+          'manufactura': ['industrial', 'producción', 'fabricación'],
+          'comercio': ['retail', 'ventas', 'comercial']
+        };
+        
+        Object.entries(sectores).forEach(([sector, palabras]) => {
+          if (palabras.some(palabra => industriaProyecto.includes(palabra))) {
+            if (palabras.some(palabra => categoriasExperto.includes(palabra))) {
+              puntuacion += 15;
+            }
+          }
+        });
+      }
+      
+      // Matching por experiencia y objetivo
+      if (experto.experiencia_experto && proyecto.objetivoEmpresa) {
+        const experienciaLower = experto.experiencia_experto.toLowerCase();
+        const objetivoLower = proyecto.objetivoEmpresa.toLowerCase();
+        
+        const palabrasClave = [
+          'desarrollo', 'tecnología', 'digital', 'negocios', 'investigación', 'innovación',
+          'software', 'sistema', 'proceso', 'optimización', 'mejora', 'estrategia',
+          'análisis', 'datos', 'consultoría', 'asesoría', 'implementación', 'gestión'
+        ];
+        
+        const matches = palabrasClave.filter(palabra => 
+          experienciaLower.includes(palabra) && objetivoLower.includes(palabra)
+        );
+        
+        puntuacion += (matches.length / palabrasClave.length) * 25;
+      }
+      
+      // Bonus por nivel de estudios
+      if (experto.estudios_expertos) {
+        const estudios = experto.estudios_expertos.toLowerCase();
+        if (estudios.includes('doctorado')) puntuacion += 10;
+        else if (estudios.includes('maestría')) puntuacion += 8;
+        else if (estudios.includes('licenciatura')) puntuacion += 5;
+      }
+      
+      // Bonus por experiencia específica
+      if (experto.experiencia_experto && proyecto.objetivoEmpresa) {
+        const experienciaLower = experto.experiencia_experto.toLowerCase();
+        const objetivoLower = proyecto.objetivoEmpresa.toLowerCase();
+        
+        const palabrasEspecificas = ['proyecto', 'empresa', 'cliente', 'implementación', 'solución'];
+        const matchesEspecificos = palabrasEspecificas.filter(palabra => 
+          experienciaLower.includes(palabra) && objetivoLower.includes(palabra)
+        );
+        
+        puntuacion += matchesEspecificos.length * 2;
+      }
+      
+      // Asegurar que la puntuación no exceda 100
+      puntuacion = Math.min(puntuacion, 100);
+      
+      // Contar como match si la puntuación es >= 20
+      if (puntuacion >= 20) {
+        matchCount++;
+        console.log(`Match encontrado: ${experto.nombre_experto} - ${puntuacion}%`);
+      }
+    });
+
+    console.log(`Total de matches para ${proyecto.nombreProyecto}: ${matchCount}`);
+    return matchCount;
+  };
+
   const getEstadoColor = (estado) => {
     switch (estado) {
       case "publicado":
@@ -356,7 +519,7 @@ export default function ProyectosTablero() {
             <div
               onClick={() => setSeleccionado(proyecto)}
               key={proyecto._id}
-              className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow"
+              className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow flex flex-col h-full"
             >
               {/* Header de la tarjeta */}
               <div className="p-4 border-b border-gray-100">
@@ -388,7 +551,7 @@ export default function ProyectosTablero() {
               </div>
 
               {/* Contenido de la tarjeta */}
-              <div className="p-4">
+              <div className="p-4 flex-1 flex flex-col">
                 {/* Análisis de OpenAI */}
                 <div className="mb-4">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -434,7 +597,7 @@ export default function ProyectosTablero() {
                 </div>
 
                 {/* Estadísticas */}
-                <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3">
+                <div className="flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 pt-3 mb-4">
                   <div className="flex items-center gap-1">
                     <FaUsers />
                     <span>{proyecto.matchesGenerados} expertos</span>
@@ -445,7 +608,7 @@ export default function ProyectosTablero() {
                   </div>
                 </div>
                 {/* Botón para ver matches */}
-                <div className="mb-2 flex justify-end">
+                <div className="mt-auto flex justify-center p-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
