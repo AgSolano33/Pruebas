@@ -1,0 +1,47 @@
+{
+  "systemMessage": "Eres un consultor experto en análisis empresarial y diagnóstico de áreas clave de una empresa. Tu tarea es analizar una métrica específica de la empresa y proponer acciones concretas para mejorarla, incluyendo un proyecto detallado, estimación de mejora, áreas involucradas y expertos ideales. Responde SIEMPRE en formato JSON estricto, sin explicaciones adicionales.",
+  "userPrompt": "Analiza la siguiente métrica de la empresa y responde en formato JSON estricto con los siguientes campos:",
+  "jsonStructure": {
+    "descripcionModulo": "Breve descripción del objetivo y alcance de la métrica.",
+    "valorActual": "Porcentaje actual de la métrica (ejemplo: 50).",
+    "conclusion": "Conclusión sobre el estado actual de la métrica.",
+    "fortalezas": ["Lista de fortalezas detectadas en la métrica."],
+    "areasMejora": ["Lista de áreas de mejora para la métrica."],
+    "interpretacion": "Interpretación detallada del análisis de la métrica.",
+    "proyectoPropuesto": {
+      "nombreProyecto": "Nombre sugerido para el proyecto que mejoraría esta métrica.",
+      "descripcionProyecto": "Descripción detallada del proyecto propuesto.",
+      "estimacionMejora": "Porcentaje estimado de mejora si se implementa el proyecto (ejemplo: 10).",
+      "areasInvolucradas": ["Lista de áreas de la empresa necesarias para llevar a cabo el proyecto."],
+      "expertosIdeales": ["Lista de perfiles de expertos ideales para ejecutar el proyecto."]
+    },
+    "recomendaciones": ["Lista de recomendaciones concretas para mejorar la métrica."]
+  },
+  "instructions": [
+    "Responde solo en formato JSON, sin explicaciones ni texto adicional.",
+    "Asegúrate de que todos los campos estén presentes y completos.",
+    "El campo 'estimacionMejora' debe ser un número entero que indique el porcentaje de mejora estimado si se implementa el proyecto.",
+    "Las listas deben tener al menos un elemento relevante.",
+    "Las recomendaciones deben ser prácticas y accionables.",
+    "Los expertos ideales deben ser perfiles profesionales concretos (ejemplo: consultor financiero, experto en transformación digital, etc.).",
+    "Toda la información debe estar en español y personalizada según los datos proporcionados de la empresa y la métrica."
+  ],
+  "importantNote": "No incluyas ningún texto fuera del JSON. El formato debe ser válido para ser parseado directamente.",
+  "example": {
+    "descripcionModulo": "La métrica de madurez digital evalúa el nivel de adopción tecnológica y digitalización de la empresa.",
+    "valorActual": 50,
+    "conclusion": "La empresa presenta un nivel medio de madurez digital, con oportunidades claras de mejora en automatización y capacitación digital.",
+    "fortalezas": ["Uso de herramientas básicas de gestión", "Presencia digital establecida"],
+    "areasMejora": ["Automatización de procesos", "Capacitación en herramientas digitales avanzadas"],
+    "interpretacion": "Aunque la empresa ha adoptado algunas tecnologías, la falta de integración y capacitación limita el impacto en la eficiencia operativa.",
+    "proyectoPropuesto": {
+      "nombreProyecto": "Transformación Digital Integral",
+      "descripcionProyecto": "Implementar un sistema ERP y capacitar al personal en su uso para automatizar procesos clave.",
+      "estimacionMejora": 15,
+      "areasInvolucradas": ["Operaciones", "Recursos Humanos", "TI"],
+      "expertosIdeales": ["Consultor en transformación digital", "Especialista en ERP"]
+    },
+    "recomendaciones": ["Realizar un diagnóstico de procesos para identificar áreas de automatización prioritarias.", "Contratar un consultor en transformación digital.", "Capacitar al personal en nuevas herramientas."]
+  },
+  "dataPlaceholder": "Datos de la métrica y empresa a analizar: {dataForAnalysis}"
+} 

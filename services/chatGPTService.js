@@ -101,56 +101,49 @@ export async function analyzeDiagnosticWithGPT(diagnosticData, userId) {
     console.log('4. Agregando mensaje al thread...');
     console.log('Usando threadId:', threadId);
     
-    const prompt = `
-Analiza el siguiente diagnóstico y proporciona la respuesta en el siguiente formato JSON estricto:
+    // Descomenta y adapta para seguir la estructura que sí funciona
+    const prediagnosticoPrompt = require("@/scripts/prediagnostico.json");
+    const jsonStructureString = JSON.stringify(prediagnosticoPrompt.jsonStructure, null, 2);
+    const instructionsString = prediagnosticoPrompt.instructions
+      ? prediagnosticoPrompt.instructions.split('\n').map((instruction, index) => `${index + 1}. ${instruction}`).join('\n')
+      : '';
+    const prompt = `${prediagnosticoPrompt.userPrompt}
 
-{
-  "1. Situacion actual de la empresa y objetivos": {
-    "Diagnostico general": "La empresa 'nombreEmpresa' ",
-    "Retos principales": "string",
-    "Objetivos": "string"
-  },
-  "2. Posibles soluciones": [
-    {
-      "Solucion": "string",
-      "Herramientas": ["string"]
-    }
-  ],
-  "3. Categorias de proyecto": {
-    "Industry": ["string"],
-    "Categorias de servicio buscado": ["string"],
-    "Objetivos de la empresa": ["string"]
-  },
-  "4. Posibles matches": [
-    {
-      "Titulo solucion propuesta": "string",
-      "Descripcion": "string"
-    }
-  ]
-}
+${jsonStructureString}
 
 Asegúrate de que:
-1. Todos los campos estén presentes
-2. Los arrays contengan al menos un elemento
-3. Los strings no estén vacíos
-4. Mantén el formato exacto de los nombres de los campos
-5. Reemplaza [nombreEmpresa] con el nombre real de la empresa del diagnóstico
-6. Que toda la informacion este en español.
+${instructionsString}
 
-Datos del diagnóstico a analizar:
-${JSON.stringify(diagnosticData, null, 2)}
-`;
+INFORMACIÓN DE LA EMPRESA:
+- Nombre del proyecto: ${diagnosticData.nombreEmpresaProyecto || ''}
+- Giro de actividad: ${diagnosticData.giroActividad || ''}
+- Actividad económica: ${diagnosticData.descripcionActividad || ''}
+- Número de empleados: ${diagnosticData.numeroEmpleados || ''}
+- Ventas anuales estimadas: ${diagnosticData.ventasAnualesEstimadas || ''}
+- Inversión disponible: ${diagnosticData.disponibleInvertir || ''}`;
 
-    const messageResponse = await openai.beta.threads.messages.create(threadId, {
-      role: "user",
-      content: prompt
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: prediagnosticoPrompt.systemMessage
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
     });
     
-    if (!messageResponse || !messageResponse.id) {
+    if (!response || !response.id) {
       throw new Error('No se pudo agregar el mensaje al thread');
     }
     
-    console.log('Mensaje agregado:', messageResponse.id);
+    console.log('Mensaje agregado:', response.id);
 
     // Ejecutar el asistente y esperar la respuesta
     console.log('5. Ejecutando asistente y esperando respuesta...');
@@ -220,43 +213,30 @@ ${JSON.stringify(diagnosticData, null, 2)}
     // Procesar la respuesta
     let analysis;
     try {
+      const content = response.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error('No se pudo obtener la respuesta de OpenAI');
+      }
+      // Log para depuración: mostrar la respuesta cruda de OpenAI
+      console.log('Respuesta cruda de OpenAI:', content);
+      // Limpiar la respuesta si viene con markdown
+      let cleanedResponse = content;
+      if (cleanedResponse.includes('```json')) {
+        cleanedResponse = cleanedResponse.replace(/```json\n|\n```/g, '');
+      } else if (cleanedResponse.includes('```')) {
+        cleanedResponse = cleanedResponse.replace(/```\n|\n```/g, '');
+      }
+      cleanedResponse = cleanedResponse.trim();
+      // Mejorar el prompt: incluir el ejemplo JSON directamente
+      // (esto se hace arriba en el prompt, pero aquí solo el log)
       analysis = JSON.parse(cleanedResponse);
-      
       // Validar la estructura de la respuesta
-      const requiredStructure = {
-        "1. Situacion actual de la empresa y objetivos": {
-          "Diagnostico general": "string",
-          "Retos principales": "string",
-          "Objetivos": "string"
-        },
-        "2. Posibles soluciones": "array",
-        "3. Categorias de proyecto": {
-          "Industria": "array",
-          "Categorias de servicio buscado": "array",
-          "Objetivos de la empresa": "array"
-        },
-        "4. Posibles matches": "array"
-      };
-
-      // Validar que todos los campos requeridos existan
-      for (const [key, value] of Object.entries(requiredStructure)) {
-        if (!analysis[key]) {
-          throw new Error(`Falta el campo requerido: ${key}`);
-        }
-      }
-
-      // Validar la estructura de las soluciones
-      if (!Array.isArray(analysis["2. Posibles soluciones"]) || 
-          analysis["2. Posibles soluciones"].length === 0) {
-        throw new Error("El campo '2. Posibles soluciones' debe ser un array no vacío");
-      }
-
-      // Validar la estructura de los matches
-      if (!Array.isArray(analysis["4. Posibles matches"]) || 
-          analysis["4. Posibles matches"].length === 0) {
-        throw new Error("El campo '4. Posibles matches' debe ser un array no vacío");
-      }
-
+      // const requiredStructure = require("@/scripts/prediagnostico.json").jsonStructure;
+      // for (const key of Object.keys(requiredStructure)) {
+      //   if (!analysis[key]) {
+      //     throw new Error(`Falta el campo requerido: ${key}`);
+      //   }
+      // }
     } catch (error) {
       console.error('Error al validar la respuesta:', error);
       throw new Error(`Error en el formato de la respuesta: ${error.message}`);
