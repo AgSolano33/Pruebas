@@ -14,6 +14,16 @@ const userSchema = mongoose.Schema(
       lowercase: true,
       private: true,
     },
+    password: {
+      type: String,
+      private: true, // No se incluye en las respuestas JSON
+      required: false, // No requerido porque usuarios de Google no tienen contraseña
+    },
+    userType: {
+      type: String,
+      enum: ["provider", "client"],
+      required: false, // Se puede establecer después del registro
+    },
     image: {
       type: String,
     },
