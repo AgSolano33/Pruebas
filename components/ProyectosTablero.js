@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner, FaEye } from "react-icons/fa";
+import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner, FaEye, FaTachometerAlt } from "react-icons/fa";
 import Modal from "@/components/Modal";
 import ProyectoContextMenu from "@/components/ProyectoContextMenu";
+import ProyectoDashboard from "@/components/ProyectoDashboard";
 
 export default function ProyectosTablero() {
   const { data: session } = useSession();
@@ -23,6 +24,8 @@ export default function ProyectosTablero() {
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [selectedProyectoForContext, setSelectedProyectoForContext] = useState(null);
   const [shouldRecalculateMatches, setShouldRecalculateMatches] = useState(false);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [selectedProyectoForDashboard, setSelectedProyectoForDashboard] = useState(null);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -468,6 +471,11 @@ export default function ProyectosTablero() {
     setContextMenuOpen(true);
   };
 
+  const handleOpenDashboard = (proyecto) => {
+    setSelectedProyectoForDashboard(proyecto);
+    setDashboardOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -607,18 +615,31 @@ export default function ProyectosTablero() {
                     <span>{new Date(proyecto.fechaPublicacion).toLocaleDateString('es-ES')}</span>
                   </div>
                 </div>
-                {/* Botón para ver matches */}
-                <div className="mt-auto flex justify-center p-2">
+                {/* Botones de acción */}
+                <div className="mt-auto flex flex-col gap-2 p-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleOpenContextMenu(proyecto);
                     }}
-                    className="px-3 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold flex items-center gap-2"
+                    className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold flex items-center gap-2 justify-center"
                   >
                     <FaEye />
                     Ver expertos que hacen match
                   </button>
+                  
+                  {proyecto.estado === "en_proceso" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenDashboard(proyecto);
+                      }}
+                      className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-semibold flex items-center gap-2 justify-center"
+                    >
+                      <FaTachometerAlt />
+                      Dashboard del Proyecto
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -668,6 +689,17 @@ export default function ProyectosTablero() {
         onClose={() => {
           setContextMenuOpen(false);
           setSelectedProyectoForContext(null);
+        }}
+        expertosData={expertosData}
+      />
+
+      {/* Dashboard Individual del Proyecto */}
+      <ProyectoDashboard
+        proyecto={selectedProyectoForDashboard}
+        isOpen={dashboardOpen}
+        onClose={() => {
+          setDashboardOpen(false);
+          setSelectedProyectoForDashboard(null);
         }}
         expertosData={expertosData}
       />

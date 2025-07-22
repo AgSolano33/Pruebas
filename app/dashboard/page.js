@@ -286,7 +286,35 @@ export default function Dashboard() {
 
         {activeTab === "proyectos" && (
           <section>
-            <h2 className="text-2xl font-bold mb-4">Proyectos Publicados</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
+              <button
+                onClick={async () => {
+                  if (confirm('¿Estás seguro de que quieres limpiar todos los proyectos y crear proyectos de ejemplo ZPinn?')) {
+                    try {
+                      const response = await fetch('/api/clean-projects', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        }
+                      });
+                      const result = await response.json();
+                      if (result.success) {
+                        alert(result.message);
+                        router.refresh();
+                      } else {
+                        alert('Error: ' + result.error);
+                      }
+                    } catch (error) {
+                      alert('Error al limpiar proyectos: ' + error.message);
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+              >
+                Limpiar y Crear Proyectos ZPinn
+              </button>
+            </div>
             <div className="w-full">
               <ProyectosTablero />
             </div>

@@ -230,7 +230,7 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
       time: meetingForm.time,
       duration: meetingForm.duration,
       message: meetingForm.message,
-      status: 'pending', // pending, confirmed, rejected, cancelled
+      status: 'confirmed', // Cambiado de 'pending' a 'confirmed' para aceptar automáticamente
       createdAt: new Date().toISOString()
     };
     
@@ -240,8 +240,13 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
       [selectedExpert.ID]: meetingRequest
     }));
     
-    // Simular envío de solicitud de reunión
-    alert(`Solicitud de reunión enviada al experto para el ${meetingForm.date} a las ${meetingForm.time}. Te notificaremos cuando confirme la cita.`);
+    // Simular cambio de estado del proyecto de "en_espera" a "en_proceso"
+    if (proyecto) {
+      proyecto.estado = "en_proceso";
+    }
+    
+    // Simular envío de solicitud de reunión y aceptación automática
+    alert(`¡Excelente! El experto ha aceptado la reunión para el ${meetingForm.date} a las ${meetingForm.time}. El proyecto ha pasado a estado "En Proceso".`);
     
     // Cerrar modal y resetear formulario
     setShowMeetingModal(false);
@@ -252,6 +257,9 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
       duration: '30',
       message: ''
     });
+    
+    // Cerrar el menú contextual para que se actualice el estado del proyecto
+    onClose();
   };
 
   const handleInputChange = (e) => {
