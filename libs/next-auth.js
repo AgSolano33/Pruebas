@@ -74,6 +74,29 @@ export const authOptions = {
  
   adapter: MongoDBAdapter(clientPromise),
   callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      // Si es un usuario nuevo de Google, establecer userType por defecto
+      if (account?.provider === "google" && !user.userType) {
+        // Obtener userType de la URL de callback si existe
+        const urlParams = new URLSearchParams(account.callbackUrl || '');
+        const userType = urlParams.get('userType');
+        
+        if (userType) {
+          try {
+            await connectToDatabase();
+            await User.findOneAndUpdate(
+              { email: user.email },
+              { userType: userType },
+              { upsert: true }
+            );
+            user.userType = userType;
+          } catch (error) {
+            console.error("Error setting userType:", error);
+          }
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

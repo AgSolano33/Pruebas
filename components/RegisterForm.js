@@ -5,14 +5,18 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import UserTypeSelector from "./UserTypeSelector";
 
-export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin }) {
+export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin, userType: preSelectedUserType = null }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userType, setUserType] = useState(null);
+  const [userType, setUserType] = useState(preSelectedUserType ? {
+    id: preSelectedUserType,
+    title: preSelectedUserType === "client" ? "Busco Soluciones" : "Brindo Soluciones",
+    icon: preSelectedUserType === "client" ? "🔍" : "💼"
+  } : null);
   const [isLoading, setIsLoading] = useState(false);
-  const [step, setStep] = useState("type"); // "type" or "form"
+  const [step, setStep] = useState(preSelectedUserType ? "form" : "type"); // "type" or "form"
   const router = useRouter();
 
   const handleUserTypeSelect = (type) => {
@@ -58,25 +62,35 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin }) {
           name,
           email,
           password,
-          userType: userType.id,
+          userType: typeof userType === 'string' ? userType : userType.id,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(`¡Usuario registrado exitosamente como ${userType.title}! Ahora puedes iniciar sesión.`);
-        // Cambiar a modo login y pasar el email para pre-llenar
-        if (onSwitchToLogin) {
-          onSwitchToLogin(email); // Pasar el email al login
-        }
+        const userTypeTitle = typeof userType === 'string' ? 
+          (userType === "client" ? "Busco Soluciones" : "Brindo Soluciones") : 
+          userType.title;
+        toast.success(`¡Usuario registrado exitosamente como ${userTypeTitle}! Ahora puedes iniciar sesión.`);
+        
         // Limpiar el formulario
         setName("");
         setEmail("");
         setPassword("");
         setConfirmPassword("");
-        setUserType(null);
-        setStep("type");
+        
+        // Si hay onSuccess callback, usarlo (para el modal del header)
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Cambiar a modo login y pasar el email para pre-llenar
+          if (onSwitchToLogin) {
+            onSwitchToLogin(email); // Pasar el email al login
+          }
+          setUserType(null);
+          setStep("type");
+        }
       } else {
         toast.error(data.error || "Error al registrar usuario");
       }
@@ -87,8 +101,8 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin }) {
     }
   };
 
-  // Mostrar selector de tipo de usuario
-  if (step === "type") {
+  // Mostrar selector de tipo de usuario solo si no hay tipo predefinido
+  if (step === "type" && !preSelectedUserType) {
     return (
       <UserTypeSelector 
         onSelect={handleUserTypeSelect}
@@ -103,7 +117,11 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin }) {
       {/* Header con tipo de usuario seleccionado */}
       <div className="text-center mb-6">
         <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
-          {userType.icon && <userType.icon className="w-4 h-4" />}
+          {userType.icon && typeof userType.icon === 'string' ? (
+            <span>{userType.icon}</span>
+          ) : (
+            userType.icon && <userType.icon className="w-4 h-4" />
+          )}
           {userType.title}
         </div>
         <h3 className="text-lg font-semibold">Completa tu registro</h3>
@@ -185,13 +203,15 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin }) {
           )}
         </button>
 
-        <button
-          type="button"
-          onClick={handleBackToTypeSelection}
-          className="btn btn-ghost w-full"
-        >
-          ← Cambiar tipo de usuario
-        </button>
+        {!preSelectedUserType && (
+          <button
+            type="button"
+            onClick={handleBackToTypeSelection}
+            className="btn btn-ghost w-full"
+          >
+            ← Cambiar tipo de usuario
+          </button>
+        )}
 
         {onSwitchToLogin && (
           <button

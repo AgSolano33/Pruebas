@@ -7,6 +7,7 @@ import DiagnosticoCentral from "@/components/DiagnosticoCentral";
 import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import ProyectosTablero from "@/components/ProyectosTablero";
+import ExpertosAplicaciones from "@/components/ExpertosAplicaciones";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Modal from "@/components/Modal";
@@ -48,6 +49,20 @@ export default function Dashboard() {
     const checkData = async () => {
       if (!session?.user?.id) return;
 
+      // Verificar si el usuario tiene userType establecido
+      if (!session.user.userType) {
+        // Redirigir al selector de tipo de usuario
+        router.push("/user-type-selector");
+        return;
+      }
+
+      // Si es proveedor, redirigir a la página de expertos
+      if (session.user.userType === "provider") {
+        router.push("/expertos");
+        return;
+      }
+
+      // Si es cliente, continuar con el flujo normal
       let userHasDiagnosticoCentral = false;
       let userHasPrediagnosticos = false;
 
@@ -89,7 +104,7 @@ export default function Dashboard() {
     if (status === "authenticated") {
       checkData();
     }
-  }, [status, session]);
+  }, [status, session, router]);
 
   if (status === "loading") {
     return (
@@ -295,11 +310,9 @@ export default function Dashboard() {
 
         {activeTab === "expertos" && (
           <section>
-            <h2 className="text-2xl font-bold mb-4">Búsqueda de Expertos</h2>
+            <h2 className="text-2xl font-bold mb-4">Expertos que Aplicaron</h2>
             <div className="w-full">
-              <p className="text-gray-600 mb-4">
-                Publica tus proyectos para encontrar expertos compatibles. Ve a la pestaña "Diagnósticos" para publicar un proyecto.
-              </p>
+              <ExpertosAplicaciones />
             </div>
           </section>
         )}

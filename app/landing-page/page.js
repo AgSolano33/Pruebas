@@ -8,6 +8,10 @@ import Header from "@/components/Header";
 import Carousel from "@/components/Carousel";
 import MarcasCarousel from "@/components/MarcasCarousel";
 import CarouselAliados from "@/components/CarouselAliados";
+import Seccion2 from "@/components/Seccion2";
+import Seccion6 from "@/components/Seccion6";
+import Seccion7 from "@/components/Seccion7";
+import Seccion8 from "@/components/Seccion8";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 
@@ -42,24 +46,11 @@ export default function LandingPage() {
         </div>
 
         {/* Sección Cómo funciona? */}
-        <section className="py-16 bg-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-[#BFD730] mb-8">¿Cómo funciona?</h2>
-            <p className="text-xl text-gray-600 mb-12">
-              Somos la única plataforma en español que conecta, gestiona y capacita equipos freelance para ofrecer soluciones integrales para empresas.
-            </p>
-            {/* Espacio para la imagen */}
-            <div className="mb-12 flex justify-center">
-              <Image
-                src="/funcion.png"
-                alt="Cómo funciona CLA"
-                width={800} 
-                height={400} 
-                priority
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-          </div>
+        <section className="">
+          <Seccion2 />
+        </section>
+        <section className="">
+          <Seccion8 />
         </section>
 
         {/* Sección Testimonios */}
@@ -90,6 +81,14 @@ export default function LandingPage() {
         {/* Sección Aliados */}
         <section className="py-16 bg-gray-50">
           <CarouselAliados />
+        </section>
+        {/* grid de ayudas */}
+        <section className="">
+          <Seccion6 />
+        </section>
+         {/* calltoaction */}
+        <section className="">
+          <Seccion7 />
         </section>
       </main>
       <Footer />

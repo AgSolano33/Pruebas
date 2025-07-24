@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import NotificacionesExperto from "@/components/NotificacionesExperto";
 import Header from "@/components/Header";
+import toast from "react-hot-toast";
 
 const ExpertosPage = () => {
   const { data: session, status } = useSession();
@@ -53,7 +54,7 @@ const ExpertosPage = () => {
     };
     const fetchProyectos = async () => {
       try {
-        const res = await fetch(`/api/proyectos-publicados?limit=100`);
+        const res = await fetch(`/api/proyectos-publicados?limit=100&allProjects=true`);
         const data = await res.json();
         if (data.success && data.data) {
           setProyectos(data.data);
@@ -116,7 +117,7 @@ const ExpertosPage = () => {
             <div className="bg-white rounded-lg shadow p-4">
               <h3 className="font-bold text-lg mb-2">Mi contabilidad</h3>
               <button
-                onClick={() => alert('Próximamente: sección de contabilidad')}
+                onClick={() => toast.info('Próximamente: sección de contabilidad')}
                 className="w-full text-left text-gray-400 hover:text-gray-700 px-0 py-0 bg-transparent border-none outline-none cursor-pointer"
               >
                 (Próximamente)
@@ -185,7 +186,7 @@ const ExpertosPage = () => {
             <div className="bg-white rounded-lg shadow p-4">
               <h3 className="font-bold text-lg mb-2">Mi contabilidad</h3>
               <button
-                onClick={() => alert('Próximamente: sección de contabilidad')}
+                onClick={() => toast.info('Próximamente: sección de contabilidad')}
                 className="w-full text-left text-gray-400 hover:text-gray-700 px-0 py-0 bg-transparent border-none outline-none cursor-pointer"
               >
                 (Próximamente)

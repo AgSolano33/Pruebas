@@ -134,9 +134,16 @@ export async function GET(request) {
     const industria = searchParams.get("industria");
     const limit = parseInt(searchParams.get("limit")) || 10;
     const page = parseInt(searchParams.get("page")) || 1;
+    const allProjects = searchParams.get("allProjects") === "true";
     
     // Construir filtros
     const filtros = {};
+    
+    // Solo filtrar por userId si no se solicita todos los proyectos (para expertos)
+    if (!allProjects) {
+      filtros.userId = session.user.id;
+    }
+    
     if (estado) filtros.estado = estado;
     if (industria) filtros.industria = { $regex: industria, $options: 'i' };
     
@@ -164,6 +171,71 @@ export async function GET(request) {
     
   } catch (error) {
     console.error("Error al obtener proyectos publicados:", error);
+    return NextResponse.json(
+      { success: false, error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
+} 
+
+// PUT - Actualizar estado del proyecto
+export async function PUT(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+    
+    await connectToDatabase();
+    
+    const body = await request.json();
+    const { proyectoId, nuevoEstado } = body;
+    
+    if (!proyectoId || !nuevoEstado) {
+      return NextResponse.json(
+        { success: false, error: "ID del proyecto y nuevo estado son requeridos" },
+        { status: 400 }
+      );
+    }
+    
+    // Verificar que el proyecto pertenece al usuario
+    const proyecto = await ProyectoPublicado.findOne({
+      _id: proyectoId,
+      userId: session.user.id
+    });
+    
+    if (!proyecto) {
+      return NextResponse.json(
+        { success: false, error: "Proyecto no encontrado o no autorizado" },
+        { status: 404 }
+      );
+    }
+    
+    // Validar que el nuevo estado es válido
+    const estadosValidos = ["publicado", "en_espera", "en_proceso", "completado", "cancelado"];
+    if (!estadosValidos.includes(nuevoEstado)) {
+      return NextResponse.json(
+        { success: false, error: "Estado no válido" },
+        { status: 400 }
+      );
+    }
+    
+    // Actualizar el estado del proyecto
+    proyecto.estado = nuevoEstado;
+    await proyecto.save();
+    
+    return NextResponse.json({
+      success: true,
+      message: `Proyecto ${nuevoEstado} exitosamente`,
+      data: proyecto
+    });
+    
+  } catch (error) {
+    console.error("Error al actualizar proyecto:", error);
     return NextResponse.json(
       { success: false, error: "Error interno del servidor" },
       { status: 500 }

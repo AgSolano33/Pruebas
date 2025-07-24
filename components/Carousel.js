@@ -46,13 +46,13 @@ export default function Carousel({ onOpenModal }) {
             className="w-full h-full bg-cover bg-center"
             style={{ backgroundImage: `url(${slide.image})` }}
           >
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center">
-              <div className="text-center text-white p-8">
-                <h2 className="text-4xl font-bold mb-4">{slide.title}</h2>
-                <p className="text-xl mb-8">{slide.description}</p>
+            <div className="absolute inset-0 bg-white bg-opacity-90 flex flex-col items-center justify-center">
+              <div className="text-center text-gray-800 p-8">
+                <h2 className="text-4xl font-bold mb-4 text-[#1A3D7C]">{slide.title}</h2>
+                <p className="text-xl mb-8 text-gray-700">{slide.description}</p>
                 <button 
                   onClick={onOpenModal}
-                  className="btn btn-primary"
+                  className="btn btn-primary bg-[#1A3D7C] hover:bg-[#0f2a5a] border-none"
                 >
                   Realizar Prediagnóstico
                 </button>
@@ -66,7 +66,7 @@ export default function Carousel({ onOpenModal }) {
           <button
             key={index}
             className={`w-3 h-3 rounded-full ${
-              index === currentSlide ? "bg-white" : "bg-white/50"
+              index === currentSlide ? "bg-[#1A3D7C]" : "bg-gray-400"
             }`}
             onClick={() => setCurrentSlide(index)}
           />

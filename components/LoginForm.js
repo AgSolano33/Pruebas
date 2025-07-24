@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
-export default function LoginForm({ onSuccess, onCancel, prefillEmail = "" }) {
+export default function LoginForm({ onSuccess, onCancel, prefillEmail = "", userType = null }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +36,20 @@ export default function LoginForm({ onSuccess, onCancel, prefillEmail = "" }) {
         if (onSuccess) {
           onSuccess();
         } else {
+          // Si hay userType, actualizar el usuario
+          if (userType) {
+            try {
+              await fetch("/api/update-user-type", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userType }),
+              });
+            } catch (error) {
+              console.error("Error updating user type:", error);
+            }
+          }
           router.push("/dashboard");
         }
       }

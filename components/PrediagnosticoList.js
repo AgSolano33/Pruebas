@@ -6,6 +6,8 @@ import { FaChevronDown, FaTrash, FaPlus, FaRocket } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
+import toast from "react-hot-toast";
+import ConfirmDialog from "./ConfirmDialog";
 
 export default function PrediagnosticoList() {
   const { data: session } = useSession();
@@ -17,6 +19,13 @@ export default function PrediagnosticoList() {
   const [expandedCards, setExpandedCards] = useState({});
   const [publishingProject, setPublishingProject] = useState(null);
   const [publishedProjects, setPublishedProjects] = useState(new Set());
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: null,
+    type: "warning"
+  });
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -76,76 +85,89 @@ export default function PrediagnosticoList() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este diagnóstico?')) {
-      try {
-        const response = await fetch(`/api/diagnoses?id=${id}`, {
-          method: 'DELETE',
-        });
+    setConfirmDialog({
+      isOpen: true,
+      title: "Eliminar Diagnóstico",
+      message: "¿Estás seguro de que deseas eliminar este diagnóstico? Esta acción no se puede deshacer.",
+      onConfirm: async () => {
+        try {
+          const response = await fetch(`/api/diagnoses?id=${id}`, {
+            method: 'DELETE',
+          });
 
-        const result = await response.json();
+          const result = await response.json();
 
-        if (result.success) {
-          setDiagnoses(diagnoses.filter(d => d._id !== id));
-        } else {
-          setError(result.error || 'Error al eliminar el diagnóstico');
+          if (result.success) {
+            setDiagnoses(diagnoses.filter(d => d._id !== id));
+            toast.success('Diagnóstico eliminado exitosamente');
+          } else {
+            toast.error(result.error || 'Error al eliminar el diagnóstico');
+          }
+        } catch (error) {
+          toast.error('Error al eliminar el diagnóstico');
         }
-      } catch (error) {
-        setError(error.message);
-      }
-    }
+        setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
+      },
+      type: "warning"
+    });
   };
 
   const handlePublish = async (diagnosis, matchIndex) => {
     const match = diagnosis["4. Posibles matches"][matchIndex];
     const nombreEmpresa = getDiagnosticoInfo(diagnosis);
     
-    if (!window.confirm(`¿Estás seguro de que deseas publicar el proyecto "${match["Titulo solucion propuesta"]}" para buscar expertos?`)) {
-      return;
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: "Publicar Proyecto",
+      message: `¿Estás seguro de que deseas publicar el proyecto "${match["Titulo solucion propuesta"]}" para buscar expertos?`,
+      onConfirm: async () => {
+        setPublishingProject(`${diagnosis._id}-${matchIndex}`);
+        
+        try {
+          // Preparar los datos del proyecto para el análisis
+          const proyectoData = {
+            empresa: {
+              nombre: nombreEmpresa,
+              sector: diagnosis["3. Categorias de proyecto"]?.Industria?.[0] || "General",
+            },
+            analisisObjetivos: {
+              situacionActual: match["Titulo solucion propuesta"],
+              viabilidad: match["Descripcion"],
+              recomendaciones: diagnosis["3. Categorias de proyecto"]?.["Categorias de servicio buscado"] || [],
+            },
+          };
 
-    setPublishingProject(`${diagnosis._id}-${matchIndex}`);
-    
-    try {
-      // Preparar los datos del proyecto para el análisis
-      const proyectoData = {
-        empresa: {
-          nombre: nombreEmpresa,
-          sector: diagnosis["3. Categorias de proyecto"]?.Industria?.[0] || "General",
-        },
-        analisisObjetivos: {
-          situacionActual: match["Titulo solucion propuesta"],
-          viabilidad: match["Descripcion"],
-          recomendaciones: diagnosis["3. Categorias de proyecto"]?.["Categorias de servicio buscado"] || [],
-        },
-      };
+          const response = await fetch("/api/proyectos-publicados", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ proyectoData }),
+          });
 
-      const response = await fetch("/api/proyectos-publicados", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ proyectoData }),
-      });
+          const result = await response.json();
 
-      const result = await response.json();
-
-      if (result.success) {
-        alert(`¡Proyecto "${match["Titulo solucion propuesta"]}" publicado exitosamente! Se encontraron ${result.matches.length} expertos compatibles.`);
-        // Marcar el proyecto como publicado usando la misma clave
-        const tituloProyecto = match["Titulo solucion propuesta"];
-        const projectKey = `${nombreEmpresa}-${tituloProyecto}`;
-        setPublishedProjects(prev => new Set([...prev, projectKey]));
-        // Redirigir al tablero de proyectos
-        router.push("/dashboard?tab=proyectos");
-      } else {
-        alert(`Error al publicar: ${result.error}`);
-      }
-    } catch (error) {
-      console.error("Error al publicar proyecto:", error);
-      alert("Error al publicar el proyecto. Por favor, intenta de nuevo.");
-    } finally {
-      setPublishingProject(null);
-    }
+          if (result.success) {
+            toast.success(`¡Proyecto "${match["Titulo solucion propuesta"]}" publicado exitosamente! Se encontraron ${result.matches.length} expertos compatibles.`);
+            // Marcar el proyecto como publicado usando la misma clave
+            const tituloProyecto = match["Titulo solucion propuesta"];
+            const projectKey = `${nombreEmpresa}-${tituloProyecto}`;
+            setPublishedProjects(prev => new Set([...prev, projectKey]));
+            // Redirigir al tablero de proyectos
+            router.push("/dashboard?tab=proyectos");
+          } else {
+            toast.error(`Error al publicar: ${result.error}`);
+          }
+        } catch (error) {
+          console.error("Error al publicar proyecto:", error);
+          toast.error("Error al publicar el proyecto. Por favor, intenta de nuevo.");
+        } finally {
+          setPublishingProject(null);
+        }
+        setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
+      },
+      type: "info"
+    });
   };
 
   const handleViewDetails = (diagnosisId) => {
@@ -343,6 +365,16 @@ export default function PrediagnosticoList() {
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <FormDiagnostico onClose={() => setIsModalOpen(false)} />
       </Modal>
+
+      {/* Diálogo de confirmación */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        type={confirmDialog.type}
+      />
     </div>
   );
 }
