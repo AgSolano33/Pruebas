@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { FaTimes, FaPlus, FaUser, FaCheckCircle, FaClock, FaListUl, FaChartBar, FaUsers, FaRocket } from "react-icons/fa";
+import postulacionesStore from "@/libs/postulacionesStore";
+import tareasStore from "@/libs/tareasStore";
 
 export default function ProyectoDashboard({ proyecto, isOpen, onClose, expertosData }) {
   const [tareas, setTareas] = useState({
@@ -19,92 +21,119 @@ export default function ProyectoDashboard({ proyecto, isOpen, onClose, expertosD
   });
   const [expertosAsignados, setExpertosAsignados] = useState([]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (isOpen && proyecto && expertosData) {
-      // Simular expertos asignados al proyecto (los que tienen citas confirmadas)
-      const expertos = expertosData.expertos_formulario || [];
-      // Por ahora, asignar los primeros 3 expertos como ejemplo
-      setExpertosAsignados(expertos.slice(0, 3));
-      
-      // Inicializar con algunas tareas de ejemplo
-      setTareas({
-        porHacer: [
-          {
-            id: 1,
-            titulo: 'Análisis de requerimientos',
-            descripcion: 'Realizar un análisis detallado de los requerimientos del proyecto',
-            expertoAsignado: expertos[0]?.nombre_experto || 'Experto 1',
-            prioridad: 'alta',
-            fechaLimite: '2024-02-15',
-            fechaCreacion: new Date().toISOString()
-          },
-          {
-            id: 2,
-            titulo: 'Diseño de arquitectura',
-            descripcion: 'Crear el diseño de la arquitectura del sistema',
-            expertoAsignado: expertos[1]?.nombre_experto || 'Experto 2',
-            prioridad: 'media',
-            fechaLimite: '2024-02-20',
-            fechaCreacion: new Date().toISOString()
-          }
-        ],
-        enProceso: [
-          {
-            id: 3,
-            titulo: 'Desarrollo del frontend',
-            descripcion: 'Implementar la interfaz de usuario',
-            expertoAsignado: expertos[2]?.nombre_experto || 'Experto 3',
-            prioridad: 'alta',
-            fechaLimite: '2024-02-25',
-            fechaCreacion: new Date().toISOString()
-          }
-        ],
-        terminadas: []
-      });
+      actualizarExpertosAsignados();
+      cargarTareas();
     }
   }, [isOpen, proyecto, expertosData]);
+
+  // Suscribirse a cambios en el store de postulaciones
+  useEffect(() => {
+    if (isOpen && proyecto) {
+      const unsubscribe = postulacionesStore.subscribe(() => {
+        actualizarExpertosAsignados();
+      });
+      return unsubscribe;
+    }
+  }, [isOpen, proyecto]);
+
+  // Suscribirse a cambios en el store de tareas
+  useEffect(() => {
+    if (isOpen && proyecto) {
+      const unsubscribe = tareasStore.subscribe(() => {
+        cargarTareas();
+      });
+      return unsubscribe;
+    }
+  }, [isOpen, proyecto]);
+
+  const actualizarExpertosAsignados = () => {
+    if (!proyecto) return;
+    
+    // Obtener solo los expertos que han sido aceptados para este proyecto
+    const postulaciones = postulacionesStore.getPostulaciones(proyecto._id);
+    const expertosAceptados = postulaciones
+      .filter(post => post.estado === 'aceptada')
+      .map(post => post.experto);
+    
+    console.log('Expertos aceptados para el proyecto:', expertosAceptados);
+    console.log('Estructura del primer experto:', expertosAceptados[0]);
+    
+    // Si no hay expertos aceptados, usar datos mock
+    if (expertosAceptados.length === 0) {
+      console.log('No hay expertos aceptados, usando datos mock');
+      setExpertosAsignados([
+        {
+          nombre: "Pedro García",
+          _id: "pedro_001",
+          semblanza: "Experto en servicios digitales"
+        }
+      ]);
+    } else {
+      setExpertosAsignados(expertosAceptados);
+    }
+    
+    console.log('Expertos asignados finales:', expertosAceptados.length > 0 ? expertosAceptados : [
+      {
+        nombre: "Pedro García",
+        _id: "pedro_001",
+        semblanza: "Experto en servicios digitales"
+      }
+    ]);
+    
+    // Inicializar tareas por defecto si no existen
+    const tareasExistentes = tareasStore.getTareas(proyecto._id);
+    if (tareasExistentes.porHacer.length === 0 && 
+        tareasExistentes.enProceso.length === 0 && 
+        tareasExistentes.terminadas.length === 0) {
+      tareasStore.inicializarTareasPorDefecto(proyecto._id, expertosAceptados[0]?.nombre || 'Pedro García');
+    }
+  };
+
+    const cargarTareas = () => {
+    if (!proyecto) return;
+    
+    const tareasDelProyecto = tareasStore.getTareas(proyecto._id);
+    setTareas(tareasDelProyecto);
+  };
 
   const handleAddTask = (e) => {
     e.preventDefault();
     
     const task = {
-      id: Date.now(),
-      ...newTask,
-      fechaCreacion: new Date().toISOString()
+      ...newTask
     };
     
-    setTareas(prev => ({
-      ...prev,
-      porHacer: [...prev.porHacer, task]
-    }));
-    
-    setNewTask({
-      titulo: '',
-      descripcion: '',
-      expertoAsignado: '',
-      prioridad: 'media',
-      fechaLimite: ''
-    });
-    
-    setShowAddTask(false);
+    // Agregar tarea al store
+    const success = tareasStore.agregarTarea(proyecto._id, task);
+
+    if (success) {
+      setNewTask({
+        titulo: '',
+        descripcion: '',
+        expertoAsignado: expertosAsignados[0]?.nombre || '',
+        prioridad: 'media',
+        fechaLimite: ''
+      });
+      setShowAddTask(false);
+    }
   };
 
   const moveTask = (taskId, fromColumn, toColumn) => {
-    const task = tareas[fromColumn].find(t => t.id === taskId);
-    if (!task) return;
-    
-    setTareas(prev => ({
-      ...prev,
-      [fromColumn]: prev[fromColumn].filter(t => t.id !== taskId),
-      [toColumn]: [...prev[toColumn], task]
-    }));
+    // Mover tarea usando el store
+    const success = tareasStore.moverTarea(proyecto._id, taskId, fromColumn, toColumn);
+    if (!success) {
+      console.log('Error al mover tarea');
+    }
   };
 
   const deleteTask = (taskId, column) => {
-    setTareas(prev => ({
-      ...prev,
-      [column]: prev[column].filter(t => t.id !== taskId)
-    }));
+    // Eliminar tarea usando el store
+    const success = tareasStore.eliminarTarea(proyecto._id, taskId, column);
+    if (!success) {
+      console.log('Error al eliminar tarea');
+    }
   };
 
   const getPrioridadColor = (prioridad) => {
@@ -217,7 +246,9 @@ export default function ProyectoDashboard({ proyecto, isOpen, onClose, expertosD
                   <strong>Especialidades:</strong> {experto.categoria}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {experto.experiencia_experto.substring(0, 100)}...
+                  {experto.experiencia_experto && experto.experiencia_experto.length > 100 
+                    ? `${experto.experiencia_experto.substring(0, 100)}...` 
+                    : experto.experiencia_experto || 'Sin experiencia especificada'}
                 </div>
               </div>
             ))}
@@ -352,104 +383,89 @@ export default function ProyectoDashboard({ proyecto, isOpen, onClose, expertosD
         {/* Modal para Agregar Tarea */}
         {showAddTask && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-              <div className="flex justify-between items-center p-6 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900">Agregar Nueva Tarea</h3>
+            <div className="bg-white p-3 rounded-lg border shadow-sm max-w-md w-full mx-4">
+              <div className="flex justify-between items-start mb-2">
+                <h5 className="font-medium text-gray-900">Nueva Tarea</h5>
                 <button
                   onClick={() => setShowAddTask(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-red-500 hover:text-red-700"
                 >
-                  <FaTimes className="text-xl" />
+                  <FaTimes />
                 </button>
               </div>
 
-              <form onSubmit={handleAddTask} className="p-6 space-y-4">
+              <form onSubmit={handleAddTask} className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título de la Tarea
-                  </label>
                   <input
                     type="text"
+                    placeholder="Título de la tarea"
                     value={newTask.titulo}
                     onChange={(e) => setNewTask(prev => ({ ...prev, titulo: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción
-                  </label>
                   <textarea
+                    placeholder="Descripción"
                     value={newTask.descripcion}
                     onChange={(e) => setNewTask(prev => ({ ...prev, descripcion: e.target.value }))}
-                    rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    rows="2"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Experto Asignado
-                  </label>
                   <select
                     value={newTask.expertoAsignado}
                     onChange={(e) => setNewTask(prev => ({ ...prev, expertoAsignado: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   >
-                    <option value="">Seleccionar experto</option>
+                    <option value="">Asignar a experto</option>
                     {expertosAsignados.map((experto) => (
-                      <option key={experto.ID} value={experto.nombre_experto}>
-                        {experto.nombre_experto}
+                      <option key={experto._id || experto.ID} value={experto.nombre || experto.nombre_experto}>
+                        {experto.nombre || experto.nombre_experto}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prioridad
-                  </label>
+                <div className="flex gap-2">
                   <select
                     value={newTask.prioridad}
                     onChange={(e) => setNewTask(prev => ({ ...prev, prioridad: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="baja">Baja</option>
                     <option value="media">Media</option>
                     <option value="alta">Alta</option>
                   </select>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Fecha Límite
-                  </label>
                   <input
                     type="date"
                     value={newTask.fechaLimite}
                     onChange={(e) => setNewTask(prev => ({ ...prev, fechaLimite: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowAddTask(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                    className="flex-1 px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
                   >
-                    Crear Tarea
+                    Crear
                   </button>
                 </div>
               </form>

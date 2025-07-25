@@ -477,11 +477,11 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
                       {match.experto.experiencia_experto && (
                         <div className="mb-4">
                           <p className="text-sm text-gray-600 mb-1">Perfil Profesional</p>
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {match.experto.experiencia_experto.length > 200 
-                              ? `${match.experto.experiencia_experto.substring(0, 200)}...` 
-                              : match.experto.experiencia_experto}
-                          </p>
+                                                      <p className="text-sm text-gray-700 leading-relaxed">
+                              {match.experto.experiencia_experto && match.experto.experiencia_experto.length > 200 
+                                ? `${match.experto.experiencia_experto.substring(0, 200)}...` 
+                                : match.experto.experiencia_experto || 'Sin experiencia especificada'}
+                            </p>
                         </div>
                       )}
 

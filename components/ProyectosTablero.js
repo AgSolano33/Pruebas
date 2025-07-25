@@ -2,21 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner, FaEye, FaTachometerAlt } from "react-icons/fa";
+import { FaUsers, FaChartLine, FaClock, FaIndustry, FaCheckCircle, FaTimesCircle, FaSpinner, FaEye, FaTachometerAlt, FaUserPlus } from "react-icons/fa";
 import Modal from "@/components/Modal";
 import ProyectoContextMenu from "@/components/ProyectoContextMenu";
 import ProyectoDashboard from "@/components/ProyectoDashboard";
+import PostulacionesExpertos from "@/components/PostulacionesExpertos";
+import { useProyectosState } from "@/hooks/useProyectosState";
 
 export default function ProyectosTablero() {
   const { data: session } = useSession();
-  const [proyectos, setProyectos] = useState([]);
+  const [proyectosOriginales, setProyectosOriginales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [seleccionado, setSeleccionado] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [allMatches, setAllMatches] = useState([]);
-  const [matches, setMatches] = useState([]); // <-- restaurar este estado
+  const [matches, setMatches] = useState([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [selectedProyecto, setSelectedProyecto] = useState(null);
   const [errorMatches, setErrorMatches] = useState(null);
@@ -26,6 +28,11 @@ export default function ProyectosTablero() {
   const [shouldRecalculateMatches, setShouldRecalculateMatches] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [selectedProyectoForDashboard, setSelectedProyectoForDashboard] = useState(null);
+  const [postulacionesOpen, setPostulacionesOpen] = useState(false);
+  const [selectedProyectoForPostulaciones, setSelectedProyectoForPostulaciones] = useState(null);
+
+  // Usar el hook para manejar el estado de los proyectos
+  const proyectos = useProyectosState(proyectosOriginales);
 
   useEffect(() => {
     if (session?.user?.id) {
@@ -34,15 +41,13 @@ export default function ProyectosTablero() {
     }
   }, [session, filtroEstado]);
 
+
+
   // Recalcular matches cuando se cargan los datos de expertos y hay proyectos para calcular
   useEffect(() => {
-    // console.log('useEffect triggered - expertosData:', expertosData);
-    // console.log('proyectos.length:', proyectos.length);
-    // console.log('shouldRecalculateMatches:', shouldRecalculateMatches);
-    
-    if (expertosData && proyectos.length > 0 && shouldRecalculateMatches) {
+    if (expertosData && proyectosOriginales.length > 0 && shouldRecalculateMatches) {
       console.log('Recalculando matches para todos los proyectos...');
-      const proyectosConMatches = proyectos.map(proyecto => {
+      const proyectosConMatches = proyectosOriginales.map(proyecto => {
         const matchCount = calculateExpertMatches(proyecto);
         return {
           ...proyecto,
@@ -50,7 +55,7 @@ export default function ProyectosTablero() {
         };
       });
       console.log('Proyectos con matches calculados:', proyectosConMatches);
-      setProyectos(proyectosConMatches);
+      setProyectosOriginales(proyectosConMatches);
       setShouldRecalculateMatches(false);
     }
   }, [expertosData, shouldRecalculateMatches]);
@@ -86,8 +91,7 @@ export default function ProyectosTablero() {
       console.log("proyectos encontrados", result);
 
       if (result.success && result.data) {
-        // Solo establecer los proyectos, los matches se calcularán cuando expertosData esté disponible
-        setProyectos(result.data);
+        setProyectosOriginales(result.data);
         setShouldRecalculateMatches(true);
       } else {
         setError(result.error || 'Error al cargar los proyectos');
@@ -104,6 +108,9 @@ export default function ProyectosTablero() {
       // Por ahora usamos datos mock del archivo expertos.json
       // En el futuro esto vendría de una API
       const response = await fetch('/expertos.json');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setExpertosData(data);
     } catch (error) {
@@ -476,6 +483,11 @@ export default function ProyectosTablero() {
     setDashboardOpen(true);
   };
 
+  const handleOpenPostulaciones = (proyecto) => {
+    setSelectedProyectoForPostulaciones(proyecto);
+    setPostulacionesOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -617,16 +629,18 @@ export default function ProyectosTablero() {
                 </div>
                 {/* Botones de acción */}
                 <div className="mt-auto flex flex-col gap-2 p-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenContextMenu(proyecto);
-                    }}
-                    className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-semibold flex items-center gap-2 justify-center"
-                  >
-                    <FaEye />
-                    Ver expertos que hacen match
-                  </button>
+                  {proyecto.estado === "publicado" || proyecto.estado === "en_espera" ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenPostulaciones(proyecto);
+                      }}
+                      className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-semibold flex items-center gap-2 justify-center"
+                    >
+                      <FaUserPlus />
+                      Ver Postulaciones
+                    </button>
+                  ) : null}
                   
                   {proyecto.estado === "en_proceso" && (
                     <button
@@ -700,6 +714,17 @@ export default function ProyectosTablero() {
         onClose={() => {
           setDashboardOpen(false);
           setSelectedProyectoForDashboard(null);
+        }}
+        expertosData={expertosData}
+      />
+
+      {/* Postulaciones de Expertos */}
+      <PostulacionesExpertos
+        proyecto={selectedProyectoForPostulaciones}
+        isOpen={postulacionesOpen}
+        onClose={() => {
+          setPostulacionesOpen(false);
+          setSelectedProyectoForPostulaciones(null);
         }}
         expertosData={expertosData}
       />

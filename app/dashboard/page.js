@@ -286,35 +286,34 @@ export default function Dashboard() {
 
         {activeTab === "proyectos" && (
           <section>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
-              <button
-                onClick={async () => {
-                  if (confirm('¿Estás seguro de que quieres limpiar todos los proyectos y crear proyectos de ejemplo ZPinn?')) {
-                    try {
-                      const response = await fetch('/api/clean-projects', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        }
-                      });
-                      const result = await response.json();
-                      if (result.success) {
-                        alert(result.message);
-                        router.refresh();
-                      } else {
-                        alert('Error: ' + result.error);
-                      }
-                    } catch (error) {
-                      alert('Error al limpiar proyectos: ' + error.message);
-                    }
-                  }
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-              >
-                Limpiar y Crear Proyectos ZPinn
-              </button>
-            </div>
+                    <div className="mb-4">
+          <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
+          <button
+            onClick={() => {
+              // Debug temporal
+              if (typeof window !== 'undefined') {
+                const store = require('@/libs/postulacionesStore').default;
+                store.debugStore();
+              }
+            }}
+            className="ml-4 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+          >
+            Debug Store
+          </button>
+          <button
+            onClick={() => {
+              // Limpiar store temporal
+              if (typeof window !== 'undefined') {
+                const store = require('@/libs/postulacionesStore').default;
+                store.limpiarPostulaciones();
+                window.location.reload();
+              }
+            }}
+            className="ml-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+          >
+            Limpiar Store
+          </button>
+        </div>
             <div className="w-full">
               <ProyectosTablero />
             </div>
