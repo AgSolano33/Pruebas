@@ -255,6 +255,7 @@ export default function FormDiagnostico({ onClose }) {
       </h2>
 
       <div className="text-sm text-gray-600 mb-6 space-y-2">
+        <p>Nota:</p>
         <p>Es fundamental que tus respuestas sean lo más claras y específicas posibles. Esto nos ayuda a entender tu problema de manera más efectiva y, por ende, a darte una mejor solución.</p>
       </div>
 
