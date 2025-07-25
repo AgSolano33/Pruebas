@@ -88,8 +88,8 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin, use
           if (onSwitchToLogin) {
             onSwitchToLogin(email); // Pasar el email al login
           }
-          setUserType(null);
-          setStep("type");
+        setUserType(null);
+        setStep("type");
         }
       } else {
         toast.error(data.error || "Error al registrar usuario");
@@ -204,13 +204,13 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin, use
         </button>
 
         {!preSelectedUserType && (
-          <button
-            type="button"
-            onClick={handleBackToTypeSelection}
-            className="btn btn-ghost w-full"
-          >
-            ← Cambiar tipo de usuario
-          </button>
+        <button
+          type="button"
+          onClick={handleBackToTypeSelection}
+          className="btn btn-ghost w-full"
+        >
+          ← Cambiar tipo de usuario
+        </button>
         )}
 
         {onSwitchToLogin && (

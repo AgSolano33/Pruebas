@@ -21,7 +21,8 @@ function ClientBenefitsContent() {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // Redirect to dashboard or handle success
+    // Redirect to dashboard after successful login
+    window.location.href = "/dashboard";
   };
 
   const switchToLogin = (email = "") => {
