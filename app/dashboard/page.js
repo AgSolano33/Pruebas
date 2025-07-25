@@ -173,7 +173,6 @@ export default function Dashboard() {
   const tabs = [
     { id: "overview", name: "Resumen", icon: FaChartBar },
     { id: "proyectos", name: "Proyectos", icon: FaRocket },
-    { id: "expertos", name: "Expertos", icon: FaUsers },
     { id: "diagnosticos", name: "Diagnósticos", icon: FaClipboardList },
     { id: "configuracion", name: "Perfil", icon: FaUsers },
   ];
@@ -210,14 +209,14 @@ export default function Dashboard() {
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                  className={`py-2 px-1 border-b-2 font-medium text-sm flex flex-col items-center gap-1 md:flex-row md:gap-2 ${
                     activeTab === tab.id
                       ? "border-[#1A3D7C] text-[#1A3D7C]"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
                   <Icon className="text-lg" />
-                  {tab.name}
+                  <span className="hidden md:inline">{tab.name}</span>
                 </button>
               );
             })}
@@ -313,17 +312,6 @@ export default function Dashboard() {
             <h2 className="text-2xl font-bold mb-4">Proyectos Publicados</h2>
             <div className="w-full">
               <ProyectosTablero />
-            </div>
-          </section>
-        )}
-
-        {activeTab === "expertos" && (
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Búsqueda de Expertos</h2>
-            <div className="w-full">
-              <p className="text-gray-600 mb-4">
-                Publica tus proyectos para encontrar expertos compatibles. Ve a la pestaña "Diagnósticos" para publicar un proyecto.
-              </p>
             </div>
           </section>
         )}

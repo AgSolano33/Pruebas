@@ -286,24 +286,81 @@ const ExpertosPage = () => {
                     {expandida && (
                       <>
                         <div className="mb-2 text-sm text-gray-600">{notif.nombreEmpresa} &middot; {notif.industria}</div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                          {/* Columna izquierda */}
-                          <div>
-                            <button className="bg-[#1A3D7C] text-white px-4 py-2 rounded-md mb-4 hover:bg-[#0f2a5a] transition-colors shadow">Solicitar una cita</button>
-                            <div className="bg-white rounded shadow p-4 mb-4">
-                              <div className="font-semibold mb-1">Descripción del proyecto</div>
+                        <div className="grid grid-cols-1 gap-4 mt-4">
+                          {/* Industria */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Industria</div>
+                            <div className="text-gray-700 text-sm">{notif.industria}</div>
+                          </div>
+
+                          {/* Nombre del proyecto */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Nombre del Proyecto</div>
+                            <div className="text-gray-700 text-sm">{notif.nombreProyecto}</div>
+                          </div>
+
+                          {/* Categorías del proyecto */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Categorías del Proyecto</div>
+                            <div className="flex flex-wrap gap-1">
+                              {notif.categoriasServicioBuscado?.map((categoria, index) => (
+                                <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                  {categoria}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Descripción del proyecto */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Descripción del Proyecto</div>
+                            <div className="text-gray-700 text-sm">{notif.descripcionProyecto}</div>
+                          </div>
+
+                          {/* Servicios */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Servicios</div>
+                            <div className="flex flex-wrap gap-1">
+                              {notif.categoriasServicioBuscado?.map((servicio, index) => (
+                                <span key={index} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                  {servicio}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Objetivos (Categorizados) */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Objetivos (Categorizados)</div>
+                            <div className="bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
                               <div className="text-gray-700 text-sm">{notif.descripcionProyecto}</div>
                             </div>
                           </div>
-                          {/* Columna derecha */}
-                          <div>
-                            <h3 className="font-bold text-lg mb-2">Postular a proyecto</h3>
+
+                          {/* % de compatibilidad */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">% de Compatibilidad</div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-2xl font-bold text-blue-600">{notif.puntuacionMatch}%</div>
+                              <div className="text-xs text-gray-500">match</div>
+                            </div>
                           </div>
-                        </div>
-                        {/* Abajo de las columnas */}
-                        <div className="mt-6 border-t pt-4">
-                          <div className="font-semibold mb-1">¿Por qué haces match?</div>
-                          <div className="text-gray-700 text-sm">{notif.analisisMatch}</div>
+
+                          {/* Justificación de compatibilidad */}
+                          <div className="bg-white rounded shadow p-3">
+                            <div className="font-semibold mb-1 text-sm">Justificación de Compatibilidad</div>
+                            <div className="text-gray-700 text-sm">{notif.analisisMatch}</div>
+                          </div>
+
+                          {/* Botones de acción */}
+                          <div className="flex gap-2 mt-4">
+                            <button className="flex-1 bg-[#1A3D7C] text-white px-4 py-2 rounded-md hover:bg-[#0f2a5a] transition-colors shadow text-sm">
+                              Postularse al Proyecto
+                            </button>
+                            <button className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors shadow text-sm">
+                              Agendar una Cita
+                            </button>
+                          </div>
                         </div>
                       </>
                     )}

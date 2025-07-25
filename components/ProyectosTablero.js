@@ -173,35 +173,29 @@ export default function ProyectosTablero() {
 
               {/* Contenido de la tarjeta */}
               <div className="p-4">
-                {/* Análisis de OpenAI */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                    <FaChartLine />
-                    Análisis de Compatibilidad
+                {/* Industria */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                    <FaIndustry />
+                    Industria
                   </h4>
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-700 mb-2">
-                      {proyecto.analisisOpenAI.match}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-600">
-                        Industria: {proyecto.analisisOpenAI.industriaMejor}
-                      </span>
-                      <span className="text-xs font-semibold text-blue-600">
-                        {proyecto.analisisOpenAI.puntuacionMatch}% match
-                      </span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-600">{proyecto.industria}</p>
                 </div>
 
-                {/* Categorías de servicio */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Servicios Buscados:</h4>
+                {/* Nombre del proyecto */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-1">Nombre del Proyecto</h4>
+                  <p className="text-sm text-gray-600">{proyecto.nombreProyecto}</p>
+                </div>
+
+                {/* Categorías del proyecto */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-1">Categorías del Proyecto</h4>
                   <div className="flex flex-wrap gap-1">
                     {proyecto.categoriasServicioBuscado.map((categoria, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                        className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
                       >
                         {categoria}
                       </span>
@@ -209,12 +203,66 @@ export default function ProyectosTablero() {
                   </div>
                 </div>
 
-                {/* Objetivo */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Objetivo:</h4>
+                {/* Descripción del proyecto */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-1">Descripción del Proyecto</h4>
                   <p className="text-sm text-gray-600 line-clamp-3">
                     {proyecto.objetivoEmpresa}
                   </p>
+                </div>
+
+                {/* Servicios */}
+                <div className="mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-1">Servicios</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {proyecto.categoriasServicioBuscado.map((servicio, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
+                      >
+                        {servicio}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Objetivos (Categorizados) */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-1">Objetivos (Categorizados)</h4>
+                  <div className="bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
+                    <p className="text-sm text-gray-700">{proyecto.objetivoEmpresa}</p>
+                  </div>
+                </div>
+
+                {/* Revisar matches */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <FaChartLine />
+                    Revisar Matches
+                  </h4>
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-600">
+                        Expertos encontrados: {proyecto.matchesGenerados}
+                      </span>
+                      <span className="text-xs font-semibold text-blue-600">
+                        {proyecto.analisisOpenAI.puntuacionMatch}% compatibilidad
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-700 mb-2">
+                      {proyecto.analisisOpenAI.match}
+                    </p>
+                    <button className="w-full text-xs bg-blue-600 text-white py-1 px-2 rounded hover:bg-blue-700 transition-colors">
+                      Ver propuestas
+                    </button>
+                  </div>
+                </div>
+
+                {/* Solicitar una cita */}
+                <div className="mb-3">
+                  <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                    Solicitar una cita
+                  </button>
                 </div>
 
                 {/* Estadísticas */}

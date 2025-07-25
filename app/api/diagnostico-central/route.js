@@ -80,6 +80,17 @@ export async function POST(request) {
       );
     }
 
+    // Verificar si ya existe un análisis para este usuario en analysis_results
+    const mongoose = require('mongoose');
+    const db = mongoose.connection.db;
+    const existingAnalysis = await db.collection('analysis_results').findOne({ userId: data.userId });
+    if (existingAnalysis) {
+      return NextResponse.json(
+        { error: 'Ya existe un análisis para este usuario. No se puede crear un nuevo diagnóstico central.' },
+        { status: 400 }
+      );
+    }
+
     // Crear el nuevo diagnóstico con el email en ambos lugares
     const diagnosticoData = {
       userId: data.userId,
