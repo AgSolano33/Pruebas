@@ -29,11 +29,12 @@ export default function Dashboard() {
   const [diagnosisData, setDiagnosisData] = useState(null);
   const [metrics, setMetrics] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingDiagnostico, setIsLoadingDiagnostico] = useState(true);
   const [isExisting, setIsExisting] = useState(false);
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expertosSugeridos, setExpertosSugeridos] = useState([]);
+  const [analysisData, setAnalysisData] = useState(null);
+  const [metricAnalyses, setMetricAnalyses] = useState([]);
   
   // Estado para las pestañas
   const [activeTab, setActiveTab] = useState("overview");
@@ -54,7 +55,8 @@ export default function Dashboard() {
       let userHasPrediagnosticos = false;
 
       try {
-        setIsLoadingDiagnostico(true);
+        setIsLoading(true);
+        
         // Verificar Diagnóstico Central
         const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
         if (responseCentral.ok) {
@@ -73,13 +75,55 @@ export default function Dashboard() {
           userHasPrediagnosticos = dataPrediagnosticos && dataPrediagnosticos.length > 0;
         }
 
+        // Cargar análisis si tiene diagnóstico central
+        if (userHasDiagnosticoCentral) {
+          try {
+            const responseAnalysis = await fetch(`/api/analysis_results?userId=${session.user.id}`);
+            if (responseAnalysis.ok) {
+              const analysisResult = await responseAnalysis.json();
+              if (analysisResult.success && analysisResult.data) {
+                setAnalysisData(analysisResult.data);
+              }
+            }
+          } catch (error) {
+            console.error('Error loading analysis:', error);
+          }
+
+          // Cargar análisis de métricas
+          try {
+            const responseMetricAnalyses = await fetch(`/api/metric-analysis/user/${session.user.id}`);
+            if (responseMetricAnalyses.ok) {
+              const metricData = await responseMetricAnalyses.json();
+              if (metricData.success && Array.isArray(metricData.analyses)) {
+                setMetricAnalyses(metricData.analyses.slice(0, 3));
+                
+                // Extraer expertos sugeridos
+                const expertos = [];
+                metricData.analyses.slice(0, 3).forEach(metric => {
+                  const arr = Array.isArray(metric.proyectoId?.analisisOpenAI?.razones)
+                    ? metric.proyectoId.analisisOpenAI.razones
+                    : (metric.proyectoId?.razones || []);
+                  arr.forEach(exp => {
+                    if (exp && !expertos.includes(exp)) expertos.push(exp);
+                  });
+                });
+                setExpertosSugeridos(expertos);
+              }
+            }
+          } catch (error) {
+            console.error('Error loading metric analyses:', error);
+          }
+        }
+
+        // Pequeño delay para asegurar que el loading se muestre
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
       } catch (error) {
-        // Error handling
+        console.error('Error in checkData:', error);
       } finally {
         setHasDiagnosticoCentral(userHasDiagnosticoCentral);
         setHasPrediagnosticos(userHasPrediagnosticos);
         setIsLoading(false);
-        setIsLoadingDiagnostico(false);
 
         // Abrir modal de pre-diagnóstico si no tiene Prediagnósticos
         if (!userHasPrediagnosticos) {
@@ -187,7 +231,7 @@ export default function Dashboard() {
             <h2 className="text-xl text-gray-600">{companyName}</h2>
           </div>
           <div className="flex items-center gap-4">
-            {isLoadingDiagnostico ? (
+            {isLoading ? (
               <div className="animate-pulse bg-gray-200 h-10 w-40 rounded-md"></div>
             ) : !hasDiagnosticoCentral && (
               <button
@@ -226,84 +270,141 @@ export default function Dashboard() {
         {/* Tab Content */}
         {activeTab === "overview" && (
           <>
-            {/* Information Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Proyecto Métrica</h2>
-              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <DiagnosticoInfo onExpertosSugeridos={setExpertosSugeridos} />
-                </div>
-                <div>
-                  <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 border-t-4 border-yellow-400 min-h-[400px]">
-                    <h3 className="text-xl font-bold text-yellow-700 mb-4 flex items-center gap-2">
-                      <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M15 10a4 4 0 11-8 0 4 4 0 018 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm-14 0a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                      Expertos sugeridos
-                    </h3>
-                    {expertosSugeridos.length === 0 ? (
-                      <div className="text-gray-500 text-center">Los expertos sugeridos aparecerán aquí según el análisis de tus métricas.</div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {expertosSugeridos.map((exp, i) => (
-                          <span key={i} className="inline-block px-3 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm shadow-sm border border-yellow-200">
-                            {exp}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+            {isLoading ? (
+              <div className="space-y-8">
+                {/* Loading para Proyecto Métrica */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Proyecto Métrica</h2>
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-2xl shadow-lg p-8 flex items-center justify-center min-h-[400px]">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A3D7C]"></div>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow-lg p-8 flex items-center justify-center min-h-[400px]">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A3D7C]"></div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </section>
+                </section>
 
-            {/* Metrics Cards Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
-              <div className="w-full">
-                <MetricsCards />
-              </div>
-            </section>
-
-            {/* Financial Metrics Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
-              <div className="w-full">
-                {isLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-                        <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                        <div className="h-8 bg-gray-200 rounded"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {isExisting && (
-                      <div className="p-3 bg-blue-50 text-blue-700 rounded-lg">
-                        Métricas del diagnóstico existente
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {Object.entries(metrics).map(([category, value]) => (
-                        <MetricCard
-                          key={category}
-                          title={category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
-                          value={value}
-                        />
+                {/* Loading para Métricas Principales */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
+                  <div className="w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+                          <div className="h-10 bg-gray-200 rounded"></div>
+                        </div>
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
-            </section>
+                </section>
 
-            {/* Conclusions Section */}
-            <section>
-              <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
-              <div className="w-full">
-                <Conclusions />
+                {/* Loading para Diagnóstico General */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
+                  <div className="w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
+                          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                          <div className="h-8 bg-gray-200 rounded"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Loading para Conclusiones */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
+                  <div className="w-full">
+                    <div className="bg-white rounded-lg shadow p-6 animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                      <div className="h-20 bg-gray-200 rounded"></div>
+                    </div>
+                  </div>
+                </section>
               </div>
-            </section>
+            ) : (
+              <>
+                {/* Information Section */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Proyecto Métrica</h2>
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <DiagnosticoInfo 
+                        onExpertosSugeridos={setExpertosSugeridos} 
+                        metricAnalyses={metricAnalyses}
+                        isLoading={false}
+                      />
+                    </div>
+                    <div>
+                      <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 border-t-4 border-yellow-400 min-h-[400px]">
+                        <h3 className="text-xl font-bold text-yellow-700 mb-4 flex items-center gap-2">
+                          <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M15 10a4 4 0 11-8 0 4 4 0 018 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm-14 0a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                          Expertos sugeridos
+                        </h3>
+                        {expertosSugeridos.length === 0 ? (
+                          <div className="text-gray-500 text-center">Los expertos sugeridos aparecerán aquí según el análisis de tus métricas.</div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {expertosSugeridos.map((exp, i) => (
+                              <span key={i} className="inline-block px-3 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm shadow-sm border border-yellow-200">
+                                {exp}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Metrics Cards Section */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
+                  <div className="w-full">
+                    <MetricsCards 
+                      analysisData={analysisData}
+                      isLoading={false}
+                    />
+                  </div>
+                </section>
+
+                {/* Financial Metrics Section */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
+                  <div className="w-full">
+                    <div className="space-y-4">
+                      {isExisting && (
+                        <div className="p-3 bg-blue-50 text-blue-700 rounded-lg">
+                          Métricas del diagnóstico existente
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {Object.entries(metrics).map(([category, value]) => (
+                          <MetricCard
+                            key={category}
+                            title={category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
+                            value={value}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Conclusions Section */}
+                <section>
+                  <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
+                  <div className="w-full">
+                    <Conclusions />
+                  </div>
+                </section>
+              </>
+            )}
           </>
         )}
 

@@ -50,80 +50,19 @@ const MetricCard = ({ title, value, icon: Icon, color, onClick, onAnalyze, analy
   );
 };
 
-const MetricsCards = () => {
+const MetricsCards = ({ analysisData, isLoading }) => {
   const { data: session } = useSession();
   const router = useRouter();
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzingMetric, setAnalyzingMetric] = useState(null);
   const [successMetric, setSuccessMetric] = useState(null);
   const [errorMetric, setErrorMetric] = useState(null);
 
-  useEffect(() => {
-    const fetchAnalysis = async () => {
-      if (!session?.user?.id) {
-        setError('No se encontró el ID del usuario');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Primero verificar si tiene diagnóstico central
-        const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
-        if (responseCentral.ok) {
-          const dataCentral = await responseCentral.json();
-          const hasCentral = dataCentral && Object.keys(dataCentral).length > 0;
-          setHasDiagnosticoCentral(hasCentral);
-          
-          
-          // Si tiene diagnóstico central, verificar si fue creado recientemente
-          if (hasCentral && dataCentral.createdAt) {
-            const createdAt = new Date(dataCentral.createdAt);
-            const now = new Date();
-            const timeDiff = now - createdAt;
-            const minutesDiff = timeDiff / (1000 * 60);
-            
-            // Si el diagnóstico fue creado en los últimos 10 minutos, mostrar análisis en progreso
-            if (minutesDiff < 10) {
-              setIsAnalyzing(true);
-            }
-          }
-        }
-
-        // Luego buscar el análisis
-        const response = await fetch(`/api/analysis_results?userId=${session.user.id}`);
-        console.log('Response URL:', `/api/analysis_results?userId=${session.user.id}`);
-        const result = await response.json();
-        console.log('API Response:', result);
-
-        if (result.success && result.data) {
-          console.log('metricasPorcentuales:', JSON.stringify(result.data.metricasPorcentuales, null, 2));
-          setAnalysis(result.data);
-          setIsAnalyzing(false); // Si hay análisis, no está analizando
-        } else if (result.success && !result.data) {
-          // No hay análisis disponible aún
-          
-          setAnalysis(null);
-          // Si tiene diagnóstico central pero no análisis, está analizando
-          if (hasDiagnosticoCentral) {
-            setIsAnalyzing(true);
-          }
-        } else {
-          setError(result.error || 'Error al cargar el análisis');
-        }
-      } catch (error) {
-        console.error('Error fetching analysis:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnalysis();
-  }, [session]);
+  // Usar los datos pasados como props
+  const analysis = analysisData;
+  const loading = isLoading;
+  const error = null;
+  const hasDiagnosticoCentral = !!analysisData;
+  const isAnalyzing = false; // Ya no necesitamos este estado aquí
 
   const handleViewDetails = (metricKey) => {
     router.push(`/metric-details/${metricKey}?userId=${session.user.id}`);

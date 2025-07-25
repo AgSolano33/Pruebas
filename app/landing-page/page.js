@@ -33,7 +33,15 @@ export default function LandingPage() {
 
   // Add loading state handling
   if (status === 'loading') {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1A3D7C] to-[#00AEEF]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-white mb-2">Community Lab Alliance</h2>
+          <p className="text-white/80">Cargando...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

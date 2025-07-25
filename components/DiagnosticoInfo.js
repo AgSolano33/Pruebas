@@ -17,38 +17,25 @@ function Badge({ children, color = "indigo" }) {
   );
 }
 
-export default function DiagnosticoInfo({ onExpertosSugeridos }) {
+export default function DiagnosticoInfo({ onExpertosSugeridos, metricAnalyses, isLoading }) {
   const { data: session } = useSession();
-  const [metricAnalyses, setMetricAnalyses] = useState([]);
   const [openIndex, setOpenIndex] = useState(null);
 
-  useEffect(() => {
-    if (!session?.user?.id) return;
-    const fetchMetricAnalyses = async () => {
-      try {
-        const res = await fetch(`/api/metric-analysis/user/${session.user.id}`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.analyses)) {
-          setMetricAnalyses(data.analyses.slice(0, 3));
-          // Extraer expertos sugeridos de todos los análisis
-          const expertos = [];
-          data.analyses.slice(0, 3).forEach(metric => {
-            const arr = Array.isArray(metric.proyectoId?.analisisOpenAI?.razones)
-              ? metric.proyectoId.analisisOpenAI.razones
-              : (metric.proyectoId?.razones || []);
-            arr.forEach(exp => {
-              if (exp && !expertos.includes(exp)) expertos.push(exp);
-            });
-          });
-          if (onExpertosSugeridos) onExpertosSugeridos(expertos);
-          window.dispatchEvent(new CustomEvent('expertos-sugeridos', { detail: expertos }));
-        }
-      } catch (error) {
-        // Manejo de error
-      }
-    };
-    fetchMetricAnalyses();
-  }, [session, onExpertosSugeridos]);
+  // Si se pasan metricAnalyses como prop, usarlas directamente
+  const analyses = metricAnalyses || [];
+
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto py-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-indigo-400">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!session) {
     return (
@@ -61,10 +48,10 @@ export default function DiagnosticoInfo({ onExpertosSugeridos }) {
   return (
     <div className="max-w-5xl mx-auto py-8">
       <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-indigo-400">
-        {metricAnalyses.length === 0 && (
+        {analyses.length === 0 && (
           <div className="text-center text-gray-500">No hay análisis de métricas disponibles.</div>
         )}
-        {metricAnalyses.map((metric, idx) => (
+        {analyses.map((metric, idx) => (
           <div key={metric._id} className="mb-2">
             <button
               className={`w-full text-left px-4 py-3 rounded-lg font-semibold text-indigo-900 bg-indigo-50 hover:bg-indigo-100 transition flex items-center justify-between ${openIndex === idx ? 'border-l-4 border-indigo-500' : ''}`}
