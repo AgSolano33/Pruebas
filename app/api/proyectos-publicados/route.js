@@ -135,17 +135,36 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get("limit")) || 10;
     const page = parseInt(searchParams.get("page")) || 1;
     const allProjects = searchParams.get("allProjects") === "true";
+    const userType = searchParams.get("userType");
+    
+    console.log("GET /api/proyectos-publicados - Params:", {
+      estado,
+      industria,
+      limit,
+      page,
+      allProjects,
+      userType,
+      sessionUserId: session.user.id
+    });
     
     // Construir filtros
     const filtros = {};
     
-    // Solo filtrar por userId si no se solicita todos los proyectos (para expertos)
-    if (!allProjects) {
+    // Si es un proveedor (userType=provider) o se solicita allProjects, mostrar todos los proyectos
+    // Si es un cliente, solo mostrar sus propios proyectos
+    if (userType !== "provider" && !allProjects) {
       filtros.userId = session.user.id;
     }
     
-    if (estado) filtros.estado = estado;
+    // Para proveedores, solo mostrar proyectos publicados
+    if (userType === "provider") {
+      filtros.estado = "publicado";
+    }
+    
+    if (estado && userType !== "provider") filtros.estado = estado;
     if (industria) filtros.industria = { $regex: industria, $options: 'i' };
+    
+    console.log("Applied filters:", filtros);
     
     const skip = (page - 1) * limit;
     
@@ -157,6 +176,8 @@ export async function GET(request) {
       .lean();
     
     const total = await ProyectoPublicado.countDocuments(filtros);
+    
+    console.log("Found projects:", proyectos.length, "Total:", total);
     
     return NextResponse.json({
       success: true,

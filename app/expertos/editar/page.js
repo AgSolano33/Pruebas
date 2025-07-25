@@ -82,26 +82,34 @@ const EditarExpertoPage = () => {
     setIsSubmitting(true);
     setError("");
     setSuccess("");
-    if (!expertoId) {
-      setError("No se encontró el perfil de experto");
-      setIsSubmitting(false);
-      return;
-    }
+    
     try {
-      const res = await fetch(`/api/expertos/${expertoId}`, {
+      let res;
+      if (expertoId) {
+        // Actualizar perfil existente
+        res = await fetch(`/api/expertos/${expertoId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      } else {
+        // Crear nuevo perfil
+        res = await fetch(`/api/expertos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+      }
+      
       const data = await res.json();
       if (data.success) {
-        setSuccess("Perfil actualizado exitosamente");
+        setSuccess(expertoId ? "Perfil actualizado exitosamente" : "Perfil creado exitosamente");
         setTimeout(() => router.push("/expertos"), 1200);
       } else {
-        setError(data.error || "Error al actualizar");
+        setError(data.error || "Error al guardar el perfil");
       }
     } catch (e) {
-      setError("Error al actualizar el perfil");
+      setError("Error al guardar el perfil");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,7 +124,7 @@ const EditarExpertoPage = () => {
       >
         ← Regresar a Expertos
       </button>
-      <h1 className="text-2xl font-bold mb-6">Editar perfil de experto</h1>
+      <h1 className="text-2xl font-bold mb-6">{expertoId ? 'Editar' : 'Crear'} perfil de experto</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-medium mb-1">Nombre completo</label>
@@ -167,7 +175,7 @@ const EditarExpertoPage = () => {
         {error && <div className="text-red-500 text-sm">{error}</div>}
         {success && <div className="text-green-600 text-sm">{success}</div>}
         <button type="submit" disabled={isSubmitting} className="bg-[#1A3D7C] text-white px-4 py-2 rounded hover:bg-[#0f2a5a] disabled:opacity-50">
-          {isSubmitting ? "Guardando..." : "Guardar cambios"}
+          {isSubmitting ? "Guardando..." : (expertoId ? "Actualizar perfil" : "Crear perfil")}
         </button>
       </form>
     </div>

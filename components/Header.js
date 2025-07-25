@@ -56,23 +56,11 @@ const Header = () => {
   const isLandingPage = pathname === '/';
 
   const handleBuscoSoluciones = () => {
-    if (session) {
-      router.push("/dashboard");
-    } else {
-      setSelectedUserType("client");
-      setAuthMode("login");
-      setShowAuthModal(true);
-    }
+    router.push("/busco-soluciones");
   };
 
   const handleBrindoSoluciones = () => {
-    if (session) {
-      router.push("/expertos");
-    } else {
-      setSelectedUserType("provider");
-      setAuthMode("login");
-      setShowAuthModal(true);
-    }
+    router.push("/brindo-soluciones");
   };
 
   const handleAuthSuccess = () => {
@@ -188,20 +176,24 @@ const Header = () => {
                 {link.label}
               </Link>
             ))}
-            <button
-              onClick={handleBuscoSoluciones}
-              className="link link-hover text-base-content/80 hover:text-base-content"
-              title="Busco Soluciones"
-            >
-              Busco Soluciones
-            </button>
-            <button
-              onClick={handleBrindoSoluciones}
-              className="link link-hover text-base-content/80 hover:text-base-content"
-              title="Brindo Soluciones"
-            >
-              Brindo Soluciones
-            </button>
+            {!session && (
+              <>
+                <button
+                  onClick={handleBuscoSoluciones}
+                  className="link link-hover text-base-content/80 hover:text-base-content"
+                  title="Busco Soluciones"
+                >
+                  Busco Soluciones
+                </button>
+                <button
+                  onClick={handleBrindoSoluciones}
+                  className="link link-hover text-base-content/80 hover:text-base-content"
+                  title="Brindo Soluciones"
+                >
+                  Brindo Soluciones
+                </button>
+              </>
+            )}
             {session && (
               <>
                 <Link 
@@ -293,26 +285,30 @@ const Header = () => {
                       {link.label}
                     </Link>
                   ))}
-                  <button
-                    onClick={() => {
-                      handleBuscoSoluciones();
-                      setIsOpen(false);
-                    }}
-                    className="link link-hover text-base-content/80 hover:text-base-content text-left"
-                    title="Busco Soluciones"
-                  >
-                    Busco Soluciones
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleBrindoSoluciones();
-                      setIsOpen(false);
-                    }}
-                    className="link link-hover text-base-content/80 hover:text-base-content text-left"
-                    title="Brindo Soluciones"
-                  >
-                    Brindo Soluciones
-                  </button>
+                  {!session && (
+                    <>
+                      <button
+                        onClick={() => {
+                          handleBuscoSoluciones();
+                          setIsOpen(false);
+                        }}
+                        className="link link-hover text-base-content/80 hover:text-base-content text-left"
+                        title="Busco Soluciones"
+                      >
+                        Busco Soluciones
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleBrindoSoluciones();
+                          setIsOpen(false);
+                        }}
+                        className="link link-hover text-base-content/80 hover:text-base-content text-left"
+                        title="Brindo Soluciones"
+                      >
+                        Brindo Soluciones
+                      </button>
+                    </>
+                  )}
                   {session && (
                     <>
                       <Link 

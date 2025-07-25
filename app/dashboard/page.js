@@ -8,6 +8,9 @@ import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import ProyectosTablero from "@/components/ProyectosTablero";
 import ExpertosAplicaciones from "@/components/ExpertosAplicaciones";
+import ProviderProfile from "@/components/ProviderProfile";
+import ProviderServices from "@/components/ProviderServices";
+import ProviderProjects from "@/components/ProviderProjects";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Modal from "@/components/Modal";
@@ -33,6 +36,9 @@ export default function Dashboard() {
   const [isExisting, setIsExisting] = useState(false);
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userType, setUserType] = useState(null);
+  const [providerHasProfile, setProviderHasProfile] = useState(false);
+  const [isLoadingProviderProfile, setIsLoadingProviderProfile] = useState(true);
   
   // Estado para las pestañas
   const [activeTab, setActiveTab] = useState("overview");
@@ -56,9 +62,21 @@ export default function Dashboard() {
         return;
       }
 
-      // Si es proveedor, redirigir a la página de expertos
+      setUserType(session.user.userType);
+
+      // Si es proveedor, verificar si tiene perfil
       if (session.user.userType === "provider") {
-        router.push("/expertos");
+        try {
+          const response = await fetch("/api/expertos?checkProfile=true");
+          if (response.ok) {
+            const data = await response.json();
+            setProviderHasProfile(data.hasProfile);
+          }
+        } catch (error) {
+          console.error("Error checking provider profile:", error);
+        } finally {
+          setIsLoadingProviderProfile(false);
+        }
         return;
       }
 
@@ -189,6 +207,159 @@ export default function Dashboard() {
     { id: "expertos", name: "Expertos", icon: FaUsers },
     { id: "diagnosticos", name: "Diagnósticos", icon: FaClipboardList },
   ];
+
+  const providerTabs = [
+    { id: "overview", name: "Resumen", icon: FaChartBar },
+    { id: "profile", name: "Mi Perfil", icon: FaUsers },
+    { id: "services", name: "Mis Servicios", icon: FaClipboardList },
+    { id: "projects", name: "Proyectos Disponibles", icon: FaRocket },
+  ];
+
+  // Si es proveedor y está cargando, mostrar loading
+  if (userType === "provider" && isLoadingProviderProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando tu perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si es proveedor, mostrar dashboard de proveedor
+  if (userType === "provider") {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-screen-2xl mx-auto p-8">
+          {/* Header del Proveedor */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard Proveedor</h1>
+            <h2 className="text-xl text-gray-600 mt-2">Tu Perfil Profesional</h2>
+            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mt-2">
+              <span>🏠</span>
+              <span>Proveedor</span>
+            </div>
+          </div>
+
+          {/* Tabs de Proveedor */}
+          <div className="border-b border-gray-200 mb-8">
+            <nav className="-mb-px flex space-x-8">
+              {providerTabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                      activeTab === tab.id
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
+                  >
+                    <Icon className="text-lg" />
+                    {tab.name}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Contenido del Dashboard de Proveedor */}
+          {activeTab === "overview" && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-8">Bienvenido a tu Dashboard</h2>
+                
+                {!providerHasProfile ? (
+                  <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
+                    <div className="text-center mb-6">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">👤</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">Completa tu Perfil Profesional</h3>
+                      <p className="text-gray-600">
+                        Para comenzar a recibir propuestas de clientes, necesitas completar tu perfil profesional.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3">¿Qué incluye tu perfil?</h4>
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Información personal y profesional
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Especialidades y categorías de servicio
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Experiencia y habilidades
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                          Servicios que ofreces
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <div className="text-center">
+                      <button
+                        onClick={() => setActiveTab("profile")}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                      >
+                        Completar Mi Perfil
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow-md p-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">Resumen de tu Actividad</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">0</div>
+                        <div className="text-gray-600">Propuestas Recibidas</div>
+                      </div>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">0</div>
+                        <div className="text-gray-600">Proyectos Compatibles</div>
+                      </div>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">0</div>
+                        <div className="text-gray-600">Proyectos Completados</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "profile" && (
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Mi Perfil Profesional</h3>
+              {/* Aquí iría el componente ProviderProfile */}
+              <ProviderProfile />
+            </div>
+          )}
+
+          {activeTab === "services" && (
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <ProviderServices />
+            </div>
+          )}
+
+          {activeTab === "projects" && (
+            <div className="bg-white rounded-lg shadow-md p-8">
+              <ProviderProjects />
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen p-8 pb-24">

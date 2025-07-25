@@ -90,22 +90,22 @@ export default function PrediagnosticoList() {
       title: "Eliminar Diagnóstico",
       message: "¿Estás seguro de que deseas eliminar este diagnóstico? Esta acción no se puede deshacer.",
       onConfirm: async () => {
-        try {
-          const response = await fetch(`/api/diagnoses?id=${id}`, {
-            method: 'DELETE',
-          });
+      try {
+        const response = await fetch(`/api/diagnoses?id=${id}`, {
+          method: 'DELETE',
+        });
 
-          const result = await response.json();
+        const result = await response.json();
 
-          if (result.success) {
-            setDiagnoses(diagnoses.filter(d => d._id !== id));
+        if (result.success) {
+          setDiagnoses(diagnoses.filter(d => d._id !== id));
             toast.success('Diagnóstico eliminado exitosamente');
-          } else {
+        } else {
             toast.error(result.error || 'Error al eliminar el diagnóstico');
-          }
-        } catch (error) {
-          toast.error('Error al eliminar el diagnóstico');
         }
+      } catch (error) {
+          toast.error('Error al eliminar el diagnóstico');
+      }
         setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
       },
       type: "warning"
@@ -121,49 +121,49 @@ export default function PrediagnosticoList() {
       title: "Publicar Proyecto",
       message: `¿Estás seguro de que deseas publicar el proyecto "${match["Titulo solucion propuesta"]}" para buscar expertos?`,
       onConfirm: async () => {
-        setPublishingProject(`${diagnosis._id}-${matchIndex}`);
-        
-        try {
-          // Preparar los datos del proyecto para el análisis
-          const proyectoData = {
-            empresa: {
-              nombre: nombreEmpresa,
-              sector: diagnosis["3. Categorias de proyecto"]?.Industria?.[0] || "General",
-            },
-            analisisObjetivos: {
-              situacionActual: match["Titulo solucion propuesta"],
-              viabilidad: match["Descripcion"],
-              recomendaciones: diagnosis["3. Categorias de proyecto"]?.["Categorias de servicio buscado"] || [],
-            },
-          };
+    setPublishingProject(`${diagnosis._id}-${matchIndex}`);
+    
+    try {
+      // Preparar los datos del proyecto para el análisis
+      const proyectoData = {
+        empresa: {
+          nombre: nombreEmpresa,
+          sector: diagnosis["3. Categorias de proyecto"]?.Industria?.[0] || "General",
+        },
+        analisisObjetivos: {
+          situacionActual: match["Titulo solucion propuesta"],
+          viabilidad: match["Descripcion"],
+          recomendaciones: diagnosis["3. Categorias de proyecto"]?.["Categorias de servicio buscado"] || [],
+        },
+      };
 
-          const response = await fetch("/api/proyectos-publicados", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ proyectoData }),
-          });
+      const response = await fetch("/api/proyectos-publicados", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ proyectoData }),
+      });
 
-          const result = await response.json();
+      const result = await response.json();
 
-          if (result.success) {
+      if (result.success) {
             toast.success(`¡Proyecto "${match["Titulo solucion propuesta"]}" publicado exitosamente! Se encontraron ${result.matches.length} expertos compatibles.`);
-            // Marcar el proyecto como publicado usando la misma clave
-            const tituloProyecto = match["Titulo solucion propuesta"];
-            const projectKey = `${nombreEmpresa}-${tituloProyecto}`;
-            setPublishedProjects(prev => new Set([...prev, projectKey]));
-            // Redirigir al tablero de proyectos
-            router.push("/dashboard?tab=proyectos");
-          } else {
+        // Marcar el proyecto como publicado usando la misma clave
+        const tituloProyecto = match["Titulo solucion propuesta"];
+        const projectKey = `${nombreEmpresa}-${tituloProyecto}`;
+        setPublishedProjects(prev => new Set([...prev, projectKey]));
+        // Redirigir al tablero de proyectos
+        router.push("/dashboard?tab=proyectos");
+      } else {
             toast.error(`Error al publicar: ${result.error}`);
-          }
-        } catch (error) {
-          console.error("Error al publicar proyecto:", error);
+      }
+    } catch (error) {
+      console.error("Error al publicar proyecto:", error);
           toast.error("Error al publicar el proyecto. Por favor, intenta de nuevo.");
-        } finally {
-          setPublishingProject(null);
-        }
+    } finally {
+      setPublishingProject(null);
+    }
         setConfirmDialog({ isOpen: false, title: "", message: "", onConfirm: null, type: "warning" });
       },
       type: "info"

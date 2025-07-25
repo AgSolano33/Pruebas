@@ -5,6 +5,8 @@ import { connectToDatabase } from "@/libs/mongodb";
 import ExpertoMatch from "@/models/ExpertoMatch";
 import ProyectoPublicado from "@/models/ProyectoPublicado";
 
+export const dynamic = 'force-dynamic';
+
 // GET - Obtener aplicaciones que recibió un cliente
 export async function GET(request) {
   try {

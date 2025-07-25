@@ -82,7 +82,7 @@ export default function RegisterForm({ onSuccess, onCancel, onSwitchToLogin, use
         
         // Si hay onSuccess callback, usarlo (para el modal del header)
         if (onSuccess) {
-          onSuccess();
+          onSuccess(email); // Pasar el email al callback
         } else {
           // Cambiar a modo login y pasar el email para pre-llenar
           if (onSwitchToLogin) {

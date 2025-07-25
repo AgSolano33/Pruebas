@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import { matchExpertosConProyecto } from "@/services/expertMatchingService";
+import { connectToDatabase } from "@/libs/mongodb";
+import ExpertoMatch from "@/models/ExpertoMatch";
+import NotificacionExperto from "@/models/NotificacionExperto";
 
-// POST - Realizar matching de expertos con un proyecto
+// POST - Realizar matching de expertos con un proyecto o aplicar a un proyecto
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,7 +18,15 @@ export async function POST(request) {
       );
     }
     
+    await connectToDatabase();
     const body = await request.json();
+    
+    // Si es una aplicación a un proyecto
+    if (body.accion === "aplicar") {
+      return await handleAplicarProyecto(body, session);
+    }
+    
+    // Si es matching de expertos (código original)
     const { proyectoData } = body;
     
     if (!proyectoData) {
@@ -52,6 +63,73 @@ export async function POST(request) {
   }
 }
 
+// Función para manejar la aplicación a un proyecto
+async function handleAplicarProyecto(body, session) {
+  const { proyectoId, expertoId } = body;
+  
+  if (!proyectoId || !expertoId) {
+    return NextResponse.json(
+      { success: false, error: "Faltan parámetros requeridos" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await connectToDatabase();
+    
+    // Verificar si ya existe una aplicación
+    const aplicacionExistente = await ExpertoMatch.findOne({
+      proyectoId,
+      expertoId,
+      estado: { $in: ["pendiente", "aceptado"] }
+    });
+
+    if (aplicacionExistente) {
+      return NextResponse.json(
+        { success: false, error: "Ya has aplicado a este proyecto" },
+        { status: 400 }
+      );
+    }
+
+    // Crear nueva aplicación
+    const nuevaAplicacion = new ExpertoMatch({
+      proyectoId,
+      expertoId,
+      estado: "pendiente",
+      fechaCreacion: new Date(),
+      fechaActualizacion: new Date()
+    });
+
+    await nuevaAplicacion.save();
+
+    // Crear notificación para el cliente
+    const notificacion = new NotificacionExperto({
+      tipo: "nueva_aplicacion",
+      titulo: "Nueva aplicación recibida",
+      mensaje: `Un experto ha aplicado a tu proyecto`,
+      proyectoId,
+      expertoId,
+      leida: false,
+      fechaCreacion: new Date()
+    });
+
+    await notificacion.save();
+
+    return NextResponse.json({
+      success: true,
+      message: "Aplicación enviada exitosamente",
+      data: nuevaAplicacion
+    });
+
+  } catch (error) {
+    console.error("Error al aplicar al proyecto:", error);
+    return NextResponse.json(
+      { success: false, error: "Error al procesar la aplicación" },
+      { status: 500 }
+    );
+  }
+}
+
 // GET - Obtener matches existentes
 export async function GET(request) {
   try {
@@ -77,7 +155,7 @@ export async function GET(request) {
     
     const skip = (page - 1) * limit;
     
-    const ExpertoMatch = (await import("@/models/ExpertoMatch")).default;
+    await connectToDatabase();
     
     const matches = await ExpertoMatch.find(filtros)
       .populate("expertoId", "nombre semblanza industrias categorias gradoExperiencia")

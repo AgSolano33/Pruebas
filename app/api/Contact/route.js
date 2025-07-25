@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/libs/mongodb';
 import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // Obtener el userId de la URL

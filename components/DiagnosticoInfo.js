@@ -21,31 +21,98 @@ export default function DiagnosticoInfo() {
       antiguedad: 0
     }
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDiagnosticoData = async () => {
+    const fetchPrediagnosticoData = async () => {
       if (!session?.user?.id) return;
 
       try {
-        const response = await fetch(`/api/Contact?userId=${session.user.id}`);
+        setLoading(true);
+        // Obtener datos del prediagnóstico
+        const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
         if (response.ok) {
           const data = await response.json();
           if (data && data.length > 0) {
-            setDiagnosticoData(data[0]);
+            // Tomar el prediagnóstico más reciente
+            const prediagnostico = data[0];
+            
+            // Mapear los datos del prediagnóstico al formato esperado
+            setDiagnosticoData({
+              informacionpersonal: {
+                nombre: prediagnostico.nombre || "",
+                apellido: prediagnostico.apellido || "",
+                email: prediagnostico.email || "",
+                telefono: prediagnostico.telefono || "",
+                puesto: prediagnostico.tipoEmpresa || ""
+              },
+              informacionempresa: {
+                sector: prediagnostico.giroActividad || "",
+                nombreEmpresa: prediagnostico.nombreEmpresaProyecto || "",
+                ubicacion: "No especificado", // No hay campo de ubicación en prediagnóstico
+                ventasAnuales: prediagnostico.ventasAnualesEstimadas || 0,
+                antiguedad: 0 // No hay campo de antigüedad en prediagnóstico
+              }
+            });
+          } else {
+            // Si no hay prediagnóstico, usar datos de la sesión como fallback
+            setDiagnosticoData({
+              informacionpersonal: {
+                nombre: session.user.name || "",
+                apellido: "",
+                email: session.user.email || "",
+                telefono: "",
+                puesto: ""
+              },
+              informacionempresa: {
+                sector: "",
+                nombreEmpresa: "",
+                ubicacion: "",
+                ventasAnuales: 0,
+                antiguedad: 0
+              }
+            });
           }
         }
       } catch (error) {
-        console.error("Error fetching diagnostico data:", error);
+        console.error("Error fetching prediagnostico data:", error);
+        // Fallback a datos de sesión en caso de error
+        setDiagnosticoData({
+          informacionpersonal: {
+            nombre: session.user.name || "",
+            apellido: "",
+            email: session.user.email || "",
+            telefono: "",
+            puesto: ""
+          },
+          informacionempresa: {
+            sector: "",
+            nombreEmpresa: "",
+            ubicacion: "",
+            ventasAnuales: 0,
+            antiguedad: 0
+          }
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchDiagnosticoData();
+    fetchPrediagnosticoData();
   }, [session]);
 
   if (!session) {
     return (
       <div className="text-center p-4">
         <p className="text-gray-600">Por favor inicia sesión para ver tu diagnóstico</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center p-4">
+        <p className="text-gray-600">Cargando información del prediagnóstico...</p>
       </div>
     );
   }
