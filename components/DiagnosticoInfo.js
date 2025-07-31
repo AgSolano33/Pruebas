@@ -26,12 +26,10 @@ export default function DiagnosticoInfo({ onExpertosSugeridos, metricAnalyses, i
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto py-8">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-indigo-400">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-20 bg-gray-200 rounded"></div>
-          </div>
+      <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-indigo-400">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+          <div className="h-20 bg-gray-200 rounded"></div>
         </div>
       </div>
     );
@@ -46,70 +44,84 @@ export default function DiagnosticoInfo({ onExpertosSugeridos, metricAnalyses, i
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8">
-      <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-indigo-400">
-        {analyses.length === 0 && (
-          <div className="text-center text-gray-500">No hay análisis de métricas disponibles.</div>
-        )}
-        {analyses.map((metric, idx) => (
-          <div key={metric._id} className="mb-2">
-            <button
-              className={`w-full text-left px-4 py-3 rounded-lg font-semibold text-indigo-900 bg-indigo-50 hover:bg-indigo-100 transition flex items-center justify-between ${openIndex === idx ? 'border-l-4 border-indigo-500' : ''}`}
-              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-            >
-              <span>{metric.metricTitle}</span>
-              <span className="text-indigo-600 font-bold text-lg">{metric.valorPorcentual}%</span>
-              <svg className={`w-5 h-5 ml-2 transition-transform ${openIndex === idx ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-            </button>
-            {openIndex === idx && (
-              <div className="p-4 bg-indigo-50 rounded-b-lg mt-1 animate-fade-in flex flex-col gap-2">
-                <div>
-                  <span className="font-semibold text-green-700">Conclusión:</span>
-                  <span className="ml-1 text-gray-800">{metric.conclusion.impactoGeneral}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-blue-700">Interpretación:</span>
-                  <span className="ml-1 text-gray-700">{metric.interpretacion}</span>
-                </div>
-                <div className="flex flex-wrap gap-2 mb-1">
-                  <span className="font-semibold text-green-700">Fortalezas:</span>
-                  {metric.conclusion.fortalezas.map((f, i) => (
-                    <Badge key={i} color="green">{f}</Badge>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2 mb-1">
-                  <span className="font-semibold text-red-700">Áreas de mejora:</span>
-                  {metric.conclusion.areasMejora.map((a, i) => (
-                    <Badge key={i} color="red">{a}</Badge>
-                  ))}
-                </div>
-                <div>
-                  <span className="font-semibold text-indigo-700">Recomendaciones:</span>
-                  <ul className="list-disc list-inside text-sm text-gray-700 mt-1 ml-4">
-                    {metric.recomendaciones.map((r, i) => <li key={i}>{r}</li>)}
-                  </ul>
-                </div>
-                <div className="bg-indigo-100 rounded-xl p-3 mt-2 flex flex-col gap-1 border border-indigo-200">
-                  <div className="font-semibold text-indigo-700 text-base mb-1 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 4h6a2 2 0 002-2v-6a2 2 0 00-2-2h-2a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
-                    {metric.proyectoId?.nombreProyecto || "Proyecto asociado"}
-                  </div>
-                  <div className="text-sm text-gray-700 mb-1">{metric.proyectoId?.descripcion || ""}</div>
-                  <div className="flex flex-wrap gap-2 items-center mb-1">
-                    <Badge color="blue">% Mejora estimada: {metric.proyectoId?.analisisOpenAI?.puntuacionMatch || metric.proyectoId?.puntuacionMatch || "-"}%</Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <span className="font-semibold text-blue-700">Expertos ideales:</span>
-                    {(Array.isArray(metric.proyectoId?.analisisOpenAI?.razones) ? metric.proyectoId.analisisOpenAI.razones : (metric.proyectoId?.razones || [])).map((exp, i) => (
-                      <Badge key={i} color="yellow">{exp}</Badge>
-                    ))}
-                  </div>
-                </div>
+    <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4 border-indigo-400">
+      <div className="text-center">
+          
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-6 mb-6 border border-indigo-200">
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
               </div>
-            )}
+              <h4 className="text-lg font-semibold text-[#1A3D7C] mb-2">Análisis General de Métricas</h4>
+              <p className="text-gray-600 text-sm">Genera un análisis integral de todas tus métricas específicas con proyectos, expertos y servicios recomendados</p>
+            </div>
+            
+            <button
+              className="w-full px-6 py-3 bg-[#1A3D7C] text-white rounded-lg hover:bg-[#00AEEF] transition-colors font-semibold flex items-center justify-center gap-2"
+              onClick={async (event) => {
+                try {
+                  // Mostrar loading
+                  const button = event.currentTarget;
+                  const originalText = button.innerHTML;
+                  button.innerHTML = `
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Generando Análisis...</span>
+                  `;
+                  button.disabled = true;
+
+                  // Llamar al endpoint para generar el análisis general
+                  const response = await fetch('/api/metric-general', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      userId: session.user.id,
+                      empresa: {
+                        nombre: session.user.name || 'Mi Empresa',
+                        sector: 'General',
+                        ubicacion: 'N/A'
+                      }
+                    }),
+                  });
+
+                  const data = await response.json();
+                  
+                  if (data.success) {
+                    // Recargar la página para mostrar el análisis general
+                    window.location.reload();
+                  } else {
+                    alert('Error al generar el análisis: ' + (data.error || 'Error desconocido'));
+                  }
+                } catch (error) {
+                  console.error('Error generating general analysis:', error);
+                  alert('Error al generar el análisis general');
+                } finally {
+                  // Restaurar el botón
+                  const button = event.currentTarget;
+                  button.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Generar Análisis General
+                  `;
+                  button.disabled = false;
+                }
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Generar Análisis General
+            </button>
           </div>
-        ))}
+          
+          <div className="text-sm text-gray-500">
+            <p>El análisis incluirá conclusiones por área, proyectos integrales, expertos recomendados y servicios holísticos</p>
+          </div>
+        </div>
       </div>
-    </div>
   );
 } 

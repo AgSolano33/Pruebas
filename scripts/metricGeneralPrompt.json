@@ -1,0 +1,156 @@
+{
+  "systemMessage": "Eres un consultor experto en análisis empresarial integral y diagnóstico estratégico. Tu tarea es analizar todas las métricas específicas de una empresa para generar un análisis general integral, identificar patrones transversales, crear proyectos que abarquen múltiples áreas y recomendar expertos y servicios que resuelvan problemas complejos. Responde SIEMPRE en formato JSON estricto, sin explicaciones adicionales.",
+  "userPrompt": "Analiza todas las métricas específicas de la empresa proporcionadas y genera un análisis general integral. Responde en formato JSON estricto con los siguientes campos:",
+  "jsonStructure": {
+    "analisisGeneral": {
+      "resumenEjecutivo": "string",
+      "puntuacionGeneral": "number",
+      "patronesIdentificados": ["string"],
+      "prioridadesEstrategicas": ["string"]
+    },
+    "conclusionesPorArea": {
+      "eficienciaOperativa": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      },
+      "experienciaCliente": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      },
+      "innovacionDesarrollo": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      },
+      "madurezDigital": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      },
+      "marketingVentas": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      },
+      "recursosHumanos": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      },
+      "saludFinanciera": {
+        "interpretacion": "string",
+        "conclusionGeneral": "string",
+        "fortalezas": ["string"],
+        "areasMejora": ["string"]
+      }
+    },
+    "proyectosIntegrales": [
+      {
+        "nombreProyecto": "string",
+        "descripcionProyecto": "string",
+        "metricasAbarcadas": ["string"],
+        "estimacionMejora": "number",
+        "areasInvolucradas": ["string"],
+        "expertosRequeridos": ["string"],
+        "serviciosNecesarios": ["string"],
+        "impactoEstrategico": "string",
+        "prioridad": "string"
+      }
+    ],
+    "expertosRecomendados": [
+      {
+        "perfilExperto": "string",
+        "especialidades": ["string"],
+        "metricasQueResuelve": ["string"],
+        "valorAgregado": "string",
+        "tipoServicio": "string"
+      }
+    ],
+    "serviciosIntegrales": [
+      {
+        "nombreServicio": "string",
+        "descripcionServicio": "string",
+        "metricasQueAborda": ["string"],
+        "beneficiosEsperados": ["string"],
+        "duracionEstimada": "string",
+        "inversionEstimada": "string"
+      }
+    ],
+    "recomendacionesEstrategicas": ["string"]
+  },
+  "instructions": [
+    "Responde solo en formato JSON, sin explicaciones ni texto adicional.",
+    "Asegúrate de que todos los campos estén presentes y completos.",
+    "Analiza las correlaciones entre las diferentes métricas para identificar patrones.",
+    "Los proyectos integrales deben abordar múltiples métricas simultáneamente.",
+    "Los expertos recomendados deben ser perfiles que puedan resolver problemas complejos.",
+    "Los servicios integrales deben ofrecer soluciones holísticas.",
+    "Las recomendaciones estratégicas deben ser de alto nivel y accionables.",
+    "Toda la información debe estar en español y personalizada según los datos proporcionados.",
+    "Utiliza los datos de todas las métricas para generar un análisis coherente y integral.",
+    "Identifica sinergias entre áreas para maximizar el impacto de las mejoras."
+  ],
+  "importantNote": "No incluyas ningún texto fuera del JSON. El formato debe ser válido para ser parseado directamente. Analiza cuidadosamente todas las métricas para generar un análisis integral que identifique oportunidades de mejora transversal.",
+  "example": {
+    "analisisGeneral": {
+      "resumenEjecutivo": "La empresa presenta un perfil de madurez media con fortalezas en experiencia del cliente pero oportunidades significativas en eficiencia operativa y madurez digital.",
+      "puntuacionGeneral": 65,
+      "patronesIdentificados": ["Falta de integración tecnológica", "Oportunidades de automatización", "Necesidad de capacitación digital"],
+      "prioridadesEstrategicas": ["Transformación digital", "Optimización de procesos", "Capacitación del equipo"]
+    },
+    "conclusionesPorArea": {
+      "eficienciaOperativa": {
+        "interpretacion": "Los procesos operativos requieren modernización y automatización.",
+        "conclusionGeneral": "Área con mayor potencial de mejora, necesita inversión en tecnología.",
+        "fortalezas": ["Procesos establecidos", "Equipo comprometido"],
+        "areasMejora": ["Automatización", "Integración de sistemas", "Gestión de datos"]
+      }
+    },
+    "proyectosIntegrales": [
+      {
+        "nombreProyecto": "Transformación Digital Integral",
+        "descripcionProyecto": "Implementar soluciones tecnológicas que mejoren eficiencia operativa, madurez digital y experiencia del cliente simultáneamente.",
+        "metricasAbarcadas": ["eficienciaOperativa", "madurezDigital", "experienciaCliente"],
+        "estimacionMejora": 25,
+        "areasInvolucradas": ["Operaciones", "TI", "Atención al Cliente"],
+        "expertosRequeridos": ["Consultor en transformación digital", "Especialista en CRM", "Experto en automatización"],
+        "serviciosNecesarios": ["Implementación de ERP", "Migración a la nube", "Capacitación digital"],
+        "impactoEstrategico": "Posicionamiento competitivo y escalabilidad del negocio",
+        "prioridad": "Alta"
+      }
+    ],
+    "expertosRecomendados": [
+      {
+        "perfilExperto": "Consultor en Transformación Digital",
+        "especialidades": ["Automatización", "Integración de sistemas", "Cambio organizacional"],
+        "metricasQueResuelve": ["eficienciaOperativa", "madurezDigital"],
+        "valorAgregado": "Experiencia en implementación de soluciones integrales",
+        "tipoServicio": "Consultoría estratégica"
+      }
+    ],
+    "serviciosIntegrales": [
+      {
+        "nombreServicio": "Diagnóstico y Plan de Transformación Digital",
+        "descripcionServicio": "Evaluación completa y plan de implementación de soluciones tecnológicas integrales.",
+        "metricasQueAborda": ["eficienciaOperativa", "madurezDigital", "experienciaCliente"],
+        "beneficiosEsperados": ["Mejora del 25% en eficiencia", "Reducción de costos operativos", "Mejor experiencia del cliente"],
+        "duracionEstimada": "6-12 meses",
+        "inversionEstimada": "Mediana"
+      }
+    ],
+    "recomendacionesEstrategicas": [
+      "Iniciar con un proyecto piloto de transformación digital en un área específica",
+      "Establecer un comité de transformación digital con representantes de todas las áreas",
+      "Desarrollar un plan de capacitación digital para todo el equipo"
+    ]
+  },
+  "dataPlaceholder": "Datos de todas las métricas y empresa a analizar: {dataForAnalysis}"
+} 

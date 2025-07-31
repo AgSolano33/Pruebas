@@ -16,10 +16,24 @@ const openai = new OpenAI({
 export async function analyzeMetric({ userId, metricKey, metricTitle, valorPorcentual, empresa, datosMetrica }) {
   await connectToDatabase();
 
-  // Construir el prompt
+  // Construir el prompt con los datos del formulario
   const jsonStructureString = JSON.stringify(promptConfig.jsonStructure, null, 2);
   const instructionsString = promptConfig.instructions.map((instruction, index) => `${index + 1}. ${instruction}`).join('\n');
-  const prompt = `${promptConfig.userPrompt}\n\n${jsonStructureString}\n\nAsegúrate de que:\n${instructionsString}\n\nIMPORTANTE: ${promptConfig.importantNote}\n\nEjemplo:\n${JSON.stringify(promptConfig.example, null, 2)}\n\n${promptConfig.dataPlaceholder.replace('{dataForAnalysis}', JSON.stringify({ empresa, metricKey, metricTitle, valorPorcentual, datosMetrica }, null, 2))}`;
+  
+  // Crear un prompt personalizado que incluya los datos del formulario
+  const formDataSummary = datosMetrica.formData ? 
+    `\n\nDatos del formulario de evaluación:\n${JSON.stringify(datosMetrica.formData, null, 2)}` : '';
+  
+  const prompt = `${promptConfig.userPrompt}\n\n${jsonStructureString}\n\nAsegúrate de que:\n${instructionsString}\n\nIMPORTANTE: ${promptConfig.importantNote}\n\nEjemplo:\n${JSON.stringify(promptConfig.example, null, 2)}\n\n${promptConfig.dataPlaceholder.replace('{dataForAnalysis}', JSON.stringify({ 
+    empresa, 
+    metricKey, 
+    metricTitle, 
+    valorPorcentual, 
+    datosMetrica: {
+      ...datosMetrica,
+      formDataSummary: formDataSummary
+    }
+  }, null, 2))}${formDataSummary}`;
 
   // Llamar a OpenAI
   const response = await openai.chat.completions.create({
@@ -28,7 +42,7 @@ export async function analyzeMetric({ userId, metricKey, metricTitle, valorPorce
     messages: [
       {
         role: "system",
-        content: promptConfig.systemMessage
+        content: promptConfig.systemMessage + "\n\nAnaliza los datos del formulario proporcionado para generar un análisis más preciso y personalizado basado en las respuestas específicas del usuario."
       },
       {
         role: "user",

@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaChartLine, FaBuilding, FaUsers, FaShoppingCart, FaLightbulb, FaUserFriends, FaShieldAlt } from 'react-icons/fa';
 
-const MetricCard = ({ title, value, icon: Icon, color, onClick, onAnalyze, analyzing }) => {
+const MetricCard = ({ title, value, icon: Icon, color, onViewDetails }) => {
   const getLevelColor = (value) => {
     if (value >= 80) return 'text-green-600';
     if (value >= 60) return 'text-blue-600';
@@ -23,10 +23,7 @@ const MetricCard = ({ title, value, icon: Icon, color, onClick, onAnalyze, analy
   };
 
   return (
-    <div 
-      className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow relative"
-      onClick={onClick}
-    >
+    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow relative">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-full ${color}`}>
           <Icon className="text-white text-xl" />
@@ -40,11 +37,10 @@ const MetricCard = ({ title, value, icon: Icon, color, onClick, onAnalyze, analy
         <span className="text-3xl font-bold text-gray-900">{value}%</span>
       </div>
       <button
-        className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full"
-        onClick={e => { e.stopPropagation(); onAnalyze && onAnalyze(); }}
-        disabled={analyzing}
+        className="px-4 py-2 bg-[#1A3D7C] text-white rounded-md hover:bg-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#1A3D7C] focus:ring-offset-2 w-full transition-colors"
+        onClick={onViewDetails}
       >
-        {analyzing ? 'Analizando...' : 'Analizar métrica'}
+        Ver detalles
       </button>
     </div>
   );
@@ -53,9 +49,6 @@ const MetricCard = ({ title, value, icon: Icon, color, onClick, onAnalyze, analy
 const MetricsCards = ({ analysisData, isLoading }) => {
   const { data: session } = useSession();
   const router = useRouter();
-  const [analyzingMetric, setAnalyzingMetric] = useState(null);
-  const [successMetric, setSuccessMetric] = useState(null);
-  const [errorMetric, setErrorMetric] = useState(null);
 
   // Usar los datos pasados como props
   const analysis = analysisData;
@@ -68,38 +61,7 @@ const MetricsCards = ({ analysisData, isLoading }) => {
     router.push(`/metric-details/${metricKey}?userId=${session.user.id}`);
   };
 
-  const handleAnalyzeMetric = async (metric) => {
-    setAnalyzingMetric(metric.key);
-    setSuccessMetric(null);
-    setErrorMetric(null);
-    try {
-      const res = await fetch(`/api/metric-analysis/${metric.key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: session.user.id,
-          metricTitle: metric.title,
-          valorPorcentual: metric.value,
-          empresa: {
-            nombre: analysis.empresa?.nombre,
-            sector: analysis.empresa?.sector,
-            ubicacion: analysis.empresa?.ubicacion
-          },
-          datosMetrica: analysis.analisisMetricas[metric.key] || {}
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setSuccessMetric(metric.key);
-      } else {
-        setErrorMetric(data.error || 'Error al analizar la métrica');
-      }
-    } catch (err) {
-      setErrorMetric('Error al analizar la métrica');
-    } finally {
-      setAnalyzingMetric(null);
-    }
-  };
+
 
   
 
@@ -222,18 +184,7 @@ const MetricsCards = ({ analysisData, isLoading }) => {
   ];
 
   return (
-    <>
-      {successMetric && (
-        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-center">
-          ¡Análisis de la métrica realizado y proyecto creado!
-        </div>
-      )}
-      {errorMetric && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
-          {errorMetric}
-        </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((metric) => (
           <MetricCard
             key={metric.key}
@@ -241,13 +192,10 @@ const MetricsCards = ({ analysisData, isLoading }) => {
             value={metric.value}
             icon={metric.icon}
             color={metric.color}
-            onClick={() => handleViewDetails(metric.key)}
-            onAnalyze={() => handleAnalyzeMetric(metric)}
-            analyzing={analyzingMetric === metric.key}
+            onViewDetails={() => handleViewDetails(metric.key)}
           />
         ))}
       </div>
-    </>
   );
 };
 

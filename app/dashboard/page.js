@@ -11,8 +11,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Modal from "@/components/Modal";
 import FormDiagnostico from "@/components/FormDiagnostico";
-import { FaChartBar, FaRocket, FaUsers, FaClipboardList } from "react-icons/fa";
+import { FaChartBar, FaRocket, FaUsers, FaClipboardList, FaChartLine } from "react-icons/fa";
 import Perfil from "@/components/Perfil";
+import MetricGeneralAnalysis from "@/components/MetricGeneralAnalysis";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +34,11 @@ export default function Dashboard() {
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expertosSugeridos, setExpertosSugeridos] = useState([]);
+  const [expertosAnalisisGeneral, setExpertosAnalisisGeneral] = useState([]);
   const [analysisData, setAnalysisData] = useState(null);
   const [metricAnalyses, setMetricAnalyses] = useState([]);
+  const [showAnalisisGeneral, setShowAnalisisGeneral] = useState(false);
+  const [generalAnalysisData, setGeneralAnalysisData] = useState(null);
   
   // Estado para las pestañas
   const [activeTab, setActiveTab] = useState("overview");
@@ -112,6 +116,23 @@ export default function Dashboard() {
             }
           } catch (error) {
             console.error('Error loading metric analyses:', error);
+          }
+
+          // Cargar expertos del análisis general
+          try {
+            const responseGeneralAnalysis = await fetch(`/api/metric-general?userId=${session.user.id}`);
+            if (responseGeneralAnalysis.ok) {
+              const generalData = await responseGeneralAnalysis.json();
+              if (generalData.success && generalData.data) {
+                setGeneralAnalysisData(generalData.data);
+                if (generalData.data?.expertosRecomendados) {
+                  const expertosGeneral = generalData.data.expertosRecomendados.map(experto => experto.perfilExperto);
+                  setExpertosAnalisisGeneral(expertosGeneral);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error loading general analysis experts:', error);
           }
         }
 
@@ -274,8 +295,7 @@ export default function Dashboard() {
               <div className="space-y-8">
                 {/* Loading para Proyecto Métrica */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Proyecto Métrica</h2>
-                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div className="bg-white rounded-2xl shadow-lg p-8 flex items-center justify-center min-h-[400px]">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1A3D7C]"></div>
                     </div>
@@ -287,7 +307,6 @@ export default function Dashboard() {
 
                 {/* Loading para Métricas Principales */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
                   <div className="w-full">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -303,7 +322,6 @@ export default function Dashboard() {
 
                 {/* Loading para Diagnóstico General */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
                   <div className="w-full">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {[1, 2, 3].map((i) => (
@@ -318,7 +336,6 @@ export default function Dashboard() {
 
                 {/* Loading para Conclusiones */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
                   <div className="w-full">
                     <div className="bg-white rounded-lg shadow p-6 animate-pulse">
                       <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
@@ -331,8 +348,7 @@ export default function Dashboard() {
               <>
                 {/* Information Section */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Proyecto Métrica</h2>
-                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                     <div>
                       <DiagnosticoInfo 
                         onExpertosSugeridos={setExpertosSugeridos} 
@@ -344,17 +360,35 @@ export default function Dashboard() {
                       <div className="bg-white rounded-2xl shadow-lg p-8 flex flex-col gap-4 border-t-4 border-yellow-400 min-h-[400px]">
                         <h3 className="text-xl font-bold text-yellow-700 mb-4 flex items-center gap-2">
                           <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M15 10a4 4 0 11-8 0 4 4 0 018 0zm6 0a2 2 0 11-4 0 2 2 0 014 0zm-14 0a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                          Expertos sugeridos
+                          Expertos Recomendados
                         </h3>
-                        {expertosSugeridos.length === 0 ? (
-                          <div className="text-gray-500 text-center">Los expertos sugeridos aparecerán aquí según el análisis de tus métricas.</div>
+                        {expertosAnalisisGeneral.length === 0 ? (
+                          <div className="text-gray-500 text-center">
+                            {expertosSugeridos.length === 0 ? (
+                              "Los expertos sugeridos aparecerán aquí según el análisis de tus métricas."
+                            ) : (
+                              <div>
+                                <p className="mb-2">Expertos de métricas específicas:</p>
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                  {expertosSugeridos.map((exp, i) => (
+                                    <span key={i} className="inline-block px-3 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm shadow-sm border border-yellow-200">
+                                      {exp}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         ) : (
-                          <div className="flex flex-wrap gap-2 justify-center">
-                            {expertosSugeridos.map((exp, i) => (
-                              <span key={i} className="inline-block px-3 py-2 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-sm shadow-sm border border-yellow-200">
-                                {exp}
-                              </span>
-                            ))}
+                          <div>
+                            <p className="text-sm text-gray-600 mb-3 text-center">Expertos recomendados del análisis general:</p>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              {expertosAnalisisGeneral.map((exp, i) => (
+                                <span key={i} className="inline-block px-3 py-2 rounded-full bg-green-100 text-green-800 font-semibold text-sm shadow-sm border border-green-200">
+                                  {exp}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -364,7 +398,6 @@ export default function Dashboard() {
 
                 {/* Metrics Cards Section */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Métricas Principales</h2>
                   <div className="w-full">
                     <MetricsCards 
                       analysisData={analysisData}
@@ -375,7 +408,6 @@ export default function Dashboard() {
 
                 {/* Financial Metrics Section */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Diagnóstico General</h2>
                   <div className="w-full">
                     <div className="space-y-4">
                       {isExisting && (
@@ -396,9 +428,81 @@ export default function Dashboard() {
                   </div>
                 </section>
 
+                {/* Análisis General Section */}
+                {generalAnalysisData && (
+                  <section>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-2xl font-bold text-[#1A3D7C]">Análisis General de Métricas</h2>
+                      <button
+                        onClick={() => setShowAnalisisGeneral(!showAnalisisGeneral)}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1A3D7C] text-white rounded-md hover:bg-[#00AEEF] transition-colors"
+                      >
+                        <FaChartLine className="text-sm" />
+                        {showAnalisisGeneral ? 'Ocultar Detalles' : 'Ver Detalles'}
+                        <svg 
+                          className={`w-4 h-4 transition-transform ${showAnalisisGeneral ? 'rotate-180' : ''}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {showAnalisisGeneral ? (
+                      <div className="w-full">
+                        <MetricGeneralAnalysis 
+                          analysisData={generalAnalysisData}
+                          isLoading={false}
+                        />
+                      </div>
+                    ) : (
+                      <div className="bg-white p-6 rounded-lg shadow-md">
+                        <div className="grid md:grid-cols-2 gap-6">
+                          <div>
+                            <h3 className="text-lg font-semibold mb-2">Puntuación General</h3>
+                            <div className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold ${
+                              generalAnalysisData.analisisGeneral.puntuacionGeneral >= 80 ? 'text-green-600 bg-green-100' :
+                              generalAnalysisData.analisisGeneral.puntuacionGeneral >= 60 ? 'text-blue-600 bg-blue-100' :
+                              generalAnalysisData.analisisGeneral.puntuacionGeneral >= 40 ? 'text-yellow-600 bg-yellow-100' :
+                              generalAnalysisData.analisisGeneral.puntuacionGeneral >= 20 ? 'text-orange-600 bg-orange-100' :
+                              'text-red-600 bg-red-100'
+                            }`}>
+                              {generalAnalysisData.analisisGeneral.puntuacionGeneral}% - {
+                                generalAnalysisData.analisisGeneral.puntuacionGeneral >= 80 ? 'Excelente' :
+                                generalAnalysisData.analisisGeneral.puntuacionGeneral >= 60 ? 'Bueno' :
+                                generalAnalysisData.analisisGeneral.puntuacionGeneral >= 40 ? 'Regular' :
+                                generalAnalysisData.analisisGeneral.puntuacionGeneral >= 20 ? 'Bajo' :
+                                'Crítico'
+                              }
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold mb-2">Prioridades Estratégicas</h3>
+                            <ul className="space-y-1">
+                              {generalAnalysisData.analisisGeneral.prioridadesEstrategicas.slice(0, 3).map((prioridad, index) => (
+                                <li key={index} className="flex items-center text-gray-700">
+                                  <svg className="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                  {prioridad}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <h3 className="text-lg font-semibold mb-2">Resumen Ejecutivo</h3>
+                          <p className="text-gray-700 leading-relaxed">{generalAnalysisData.analisisGeneral.resumenEjecutivo}</p>
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                )}
+
                 {/* Conclusions Section */}
                 <section>
-                  <h2 className="text-2xl font-bold mb-4">Conclusiones</h2>
                   <div className="w-full">
                     <Conclusions />
                   </div>
