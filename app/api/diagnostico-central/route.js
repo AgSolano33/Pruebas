@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/libs/mongodb';
 import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 import mongoose from 'mongoose';
 import { analyzeCentralDiagnostic } from '@/services/centralDiagnosticService';
+import { sanitizeObject } from '@/libs/sanitize';
 
 export async function GET(request) {
   try {
@@ -42,6 +43,8 @@ export async function GET(request) {
   }
 }
 
+
+
 export async function POST(request) {
   try {
     // Conectar a la base de datos
@@ -50,11 +53,14 @@ export async function POST(request) {
     // Obtener los datos del diagnóstico
     const data = await request.json();
     
-    console.log('Received data:', JSON.stringify(data, null, 2));
+    // Sanitizar los datos antes de procesarlos
+    const sanitizedData = sanitizeObject(data);
+    
+    console.log('Received data:', JSON.stringify(sanitizedData, null, 2));
 
     // Validar que el email exista y no sea null
-    if (!data.informacionPersonal || !data.informacionPersonal.email) {
-      console.log('Email validation failed:', data.informacionPersonal);
+    if (!sanitizedData.informacionPersonal || !sanitizedData.informacionPersonal.email) {
+      console.log('Email validation failed:', sanitizedData.informacionPersonal);
       return NextResponse.json(
         { error: 'El email es requerido' },
         { status: 400 }
@@ -62,7 +68,7 @@ export async function POST(request) {
     }
 
     // Extraer y validar el email
-    const email = data.informacionPersonal.email.trim();
+    const email = sanitizedData.informacionPersonal.email.trim();
     if (!email) {
       return NextResponse.json(
         { error: 'El email no puede estar vacío' },
@@ -71,9 +77,9 @@ export async function POST(request) {
     }
 
     // Verificar si ya existe un diagnóstico para este usuario
-    console.log('Checking for existing diagnosis with userId:', data.userId, 'and email:', email);
+    console.log('Checking for existing diagnosis with userId:', sanitizedData.userId, 'and email:', email);
     const existingDiagnostico = await DiagnosticoCentral.findOne({ 
-      userId: data.userId,
+      userId: sanitizedData.userId,
       email: email
     });
 
@@ -89,8 +95,8 @@ export async function POST(request) {
     // Verificar si ya existe un análisis para este usuario en analysis_results
     const mongoose = require('mongoose');
     const db = mongoose.connection.db;
-    console.log('Checking for existing analysis with userId:', data.userId);
-    const existingAnalysis = await db.collection('analysis_results').findOne({ userId: data.userId });
+    console.log('Checking for existing analysis with userId:', sanitizedData.userId);
+    const existingAnalysis = await db.collection('analysis_results').findOne({ userId: sanitizedData.userId });
     console.log('Existing analysis found:', existingAnalysis ? 'Yes' : 'No');
     if (existingAnalysis) {
       return NextResponse.json(
@@ -101,15 +107,15 @@ export async function POST(request) {
 
     // Crear el nuevo diagnóstico con el email en ambos lugares
     const diagnosticoData = {
-      userId: data.userId,
+      userId: sanitizedData.userId,
       email: email, // Asegurarnos de que el email esté en la raíz
       informacionPersonal: {
-        ...data.informacionPersonal,
+        ...sanitizedData.informacionPersonal,
         email: email // Mantener el email en informacionPersonal
       },
-      informacionEmpresa: data.informacionEmpresa,
-      proyectoObjetivos: data.proyectoObjetivos,
-      evaluacionAreas: data.evaluacionAreas
+      informacionEmpresa: sanitizedData.informacionEmpresa,
+      proyectoObjetivos: sanitizedData.proyectoObjetivos,
+      evaluacionAreas: sanitizedData.evaluacionAreas
     };
 
     // Crear el nuevo diagnóstico
@@ -120,7 +126,7 @@ export async function POST(request) {
     console.log('Diagnosis saved successfully');
 
     // Lanzar el análisis en background (no bloquea la respuesta)
-    analyzeCentralDiagnostic(diagnosticoData, data.userId)
+    analyzeCentralDiagnostic(diagnosticoData, sanitizedData.userId)
       .then(() => console.log('Análisis completado exitosamente'))
       .catch((analysisError) => console.error('Error al realizar el análisis:', analysisError));
 
