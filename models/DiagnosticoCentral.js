@@ -44,7 +44,7 @@ const diagnosticoCentralSchema = new mongoose.Schema({
     },
     nombreEmpresa: {
       type: String,
-      required: true
+      required: false
     },
     ubicacion: {
       type: String,
@@ -86,11 +86,11 @@ const diagnosticoCentralSchema = new mongoose.Schema({
   proyectoObjetivos: {
     descripcionProyecto: {
       type: String,
-      required: true
+      required: false
     },
     objetivoConsultoria: {
       type: String,
-      required: true
+      required: false
     },
     importanciaAreas: {
       gestionFinanciera: {

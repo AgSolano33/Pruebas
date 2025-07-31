@@ -18,11 +18,18 @@ export async function GET(request, { params }) {
 
     await connectToDatabase();
     
+    console.log('Buscando análisis para userId:', userId, 'metricKey:', metricKey);
+    
     // Buscar el análisis más reciente para esta métrica y usuario
     const analysis = await MetricAnalysisResult.findOne({ 
       userId, 
       metricKey 
     }).sort({ createdAt: -1 }).populate('proyectoId');
+
+    console.log('Resultado de búsqueda:', analysis ? 'Encontrado' : 'No encontrado');
+    if (analysis) {
+      console.log('Análisis encontrado - ID:', analysis._id, 'Fecha:', analysis.createdAt);
+    }
 
     if (!analysis) {
       return NextResponse.json({

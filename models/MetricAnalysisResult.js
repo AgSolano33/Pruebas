@@ -49,6 +49,10 @@ const metricAnalysisResultSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  activo: {
+    type: Boolean,
+    default: true
   }
 });
 

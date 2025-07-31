@@ -39,6 +39,47 @@ export default function UiFormDiagnostico({ onClose }) {
       router.push(config.auth.callbackUrl);
       return;
     }
+    
+    // Pre-llenar con datos del primer pre-diagnóstico si existe
+    const loadPrediagnosticoData = async () => {
+      try {
+        const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+        if (response.ok) {
+          const prediagnosticos = await response.json();
+          if (prediagnosticos && prediagnosticos.length > 0) {
+            const primerPrediagnostico = prediagnosticos[0]; // Tomar el más reciente
+            console.log('Pre-llenando formulario de pre-diagnóstico con datos existentes:', primerPrediagnostico);
+            
+            setFormData(prev => ({
+              ...prev,
+              nombre: primerPrediagnostico.nombre || session?.user?.nombre || "",
+              apellido: primerPrediagnostico.apellido || session?.user?.apellido || "",
+              nivelEstudios: primerPrediagnostico.nivelEstudios || "",
+              tipoEmpresa: primerPrediagnostico.tipoEmpresa || "",
+              nombreEmpresaProyecto: primerPrediagnostico.nombreEmpresaProyecto || "",
+              email: primerPrediagnostico.email || session?.user?.email || "",
+              telefono: (primerPrediagnostico.telefono || "").toString(),
+              giroActividad: primerPrediagnostico.giroActividad || "",
+              descripcionActividad: primerPrediagnostico.descripcionActividad || "",
+              tieneEmpleados: primerPrediagnostico.tieneEmpleados || "",
+              numeroEmpleados: primerPrediagnostico.numeroEmpleados || "",
+              ventasAnualesEstimadas: primerPrediagnostico.ventasAnualesEstimadas || "",
+              mayorObstaculo: primerPrediagnostico.mayorObstaculo || "",
+              gestionDificultades: primerPrediagnostico.gestionDificultades || "",
+              buenResultadoMetrica: primerPrediagnostico.buenResultadoMetrica || "",
+              objetivosAcciones: primerPrediagnostico.objetivosAcciones || "",
+              tipoAyuda: primerPrediagnostico.tipoAyuda || "",
+              disponibleInvertir: primerPrediagnostico.disponibleInvertir || "",
+              genero: primerPrediagnostico.genero || ""
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error al cargar datos del pre-diagnóstico:', error);
+      }
+    };
+    
+    loadPrediagnosticoData();
   }, [session, router]);
 
   const filterOnlyLetters = (value) => {
@@ -88,9 +129,9 @@ export default function UiFormDiagnostico({ onClose }) {
         newErrors.email = "Por favor, ingrese un email válido";
       }
       
-      if (!formData.telefono.trim()) {
+      if (!formData.telefono || !formData.telefono.toString().trim()) {
         newErrors.telefono = "El teléfono es requerido";
-      } else if (!/^[0-9]{10}$/.test(formData.telefono.replace(/\D/g, ""))) {
+      } else if (!/^[0-9]{10}$/.test(formData.telefono.toString().replace(/\D/g, ""))) {
         newErrors.telefono = "El teléfono debe tener 10 dígitos numéricos";
       }
 
@@ -210,6 +251,13 @@ export default function UiFormDiagnostico({ onClose }) {
         return {
           ...prev,
           [name]: filterOnlyLetters(value)
+        };
+      } else if (name === 'telefono') {
+        // Only allow numbers and limit to 10 digits
+        const numericValue = value.replace(/\D/g, '').slice(0, 10);
+        return {
+          ...prev,
+          [name]: numericValue
         };
       } else if (name === 'numeroEmpleados' || name === 'ventasAnualesEstimadas') {
          // Ensure number fields are treated as numbers

@@ -263,7 +263,7 @@ export default function DiagnosticoCentral() {
     }
   });
 
-  // Manejar la sesión del usuario
+  // Manejar la sesión del usuario y pre-llenar con datos del primer pre-diagnóstico
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
       setUserId(session.user.id);
@@ -271,6 +271,48 @@ export default function DiagnosticoCentral() {
         ...prev,
         userId: session.user.id
       }));
+      
+      // Pre-llenar con datos del primer pre-diagnóstico si existe
+      const loadPrediagnosticoData = async () => {
+        try {
+          const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+          if (response.ok) {
+            const prediagnosticos = await response.json();
+            if (prediagnosticos && prediagnosticos.length > 0) {
+              const primerPrediagnostico = prediagnosticos[0]; // Tomar el más reciente
+              console.log('Pre-llenando formulario con datos del primer pre-diagnóstico:', primerPrediagnostico);
+              
+              setFormData(prev => ({
+                ...prev,
+                userId: session.user.id,
+                informacionPersonal: {
+                  ...prev.informacionPersonal,
+                  nombre: primerPrediagnostico.nombre || "",
+                  apellido: primerPrediagnostico.apellido || "",
+                  email: primerPrediagnostico.email || session?.user?.email || "",
+                  telefono: primerPrediagnostico.telefono || "",
+                  nivelEstudios: primerPrediagnostico.nivelEstudios || "",
+                  genero: primerPrediagnostico.genero || ""
+                },
+                informacionEmpresa: {
+                  ...prev.informacionEmpresa,
+                  tipoEmpresa: primerPrediagnostico.tipoEmpresa || "",
+                  nombreEmpresaProyecto: primerPrediagnostico.nombreEmpresaProyecto || "",
+                  giroActividad: primerPrediagnostico.giroActividad || "",
+                  descripcionActividad: primerPrediagnostico.descripcionActividad || "",
+                  tieneEmpleados: primerPrediagnostico.tieneEmpleados === "si" ? true : false,
+                  numeroEmpleados: primerPrediagnostico.numeroEmpleados || "",
+                  ventasAnuales: primerPrediagnostico.ventasAnualesEstimadas || ""
+                }
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error al cargar datos del pre-diagnóstico:', error);
+        }
+      };
+      
+      loadPrediagnosticoData();
     } else if (status === "unauthenticated") {
       router.push('/login');
     }
@@ -485,6 +527,8 @@ export default function DiagnosticoCentral() {
     if (Object.keys(stepErrors).length === 0) {
       if (currentStep < 4) {
         setCurrentStep(prev => prev + 1);
+        // Scroll to top when changing to next step
+        window.scrollTo(0, 0);
       }
     } else {
       setErrors(stepErrors);
@@ -508,12 +552,24 @@ export default function DiagnosticoCentral() {
       return;
     }
 
+    // Scroll to top when submitting
+    window.scrollTo(0, 0);
+
     // Debug: mostrar el estado actual del formulario
     console.log('Submitting form data:', formData);
+    console.log('User ID:', userId);
+    console.log('Session:', session);
 
     // Asegurarnos de que el email esté presente y sea válido
     if (!formData.informacionPersonal.email) {
       toast.error('El email es requerido');
+      return;
+    }
+
+    // Asegurarnos de que el userId esté presente
+    if (!formData.userId) {
+      console.error('No userId found in formData');
+      toast.error('Error: No se encontró el ID del usuario');
       return;
     }
 
@@ -526,10 +582,12 @@ export default function DiagnosticoCentral() {
         body: JSON.stringify(formData)
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al guardar el diagnóstico');
+        throw new Error(data.error || data.message || 'Error al guardar el diagnóstico');
       }
 
       toast.success('Diagnóstico guardado exitosamente. El análisis de su empresa está en progreso.');
@@ -553,7 +611,7 @@ export default function DiagnosticoCentral() {
         break;
       case 2:
         if (!formData.informacionEmpresa.sector) newErrors.sector = "El sector es requerido";
-        if (!formData.informacionEmpresa.nombreEmpresa) newErrors.nombreEmpresa = "El nombre de la empresa es requerido";
+        // if (!formData.informacionEmpresa.nombreEmpresa) newErrors.nombreEmpresa = "El nombre de la empresa es requerido";
         if (!formData.informacionEmpresa.ubicacion) newErrors.ubicacion = "La ubicación es requerida";
         if (!formData.informacionEmpresa.codigoPostal) newErrors.codigoPostal = "El código postal es requerido";
         if (!formData.informacionEmpresa.ciudad) newErrors.ciudad = "La ciudad es requerida";
@@ -567,8 +625,8 @@ export default function DiagnosticoCentral() {
         if (!formData.informacionEmpresa.antiguedad) newErrors.antiguedad = "La antigüedad es requerida";
         break;
       case 3:
-        if (!formData.proyectoObjetivos.descripcionProyecto) newErrors.descripcionProyecto = "La descripción del proyecto es requerida";
-        if (!formData.proyectoObjetivos.objetivoConsultoria) newErrors.objetivoConsultoria = "El objetivo de la consultoría es requerido";
+        // if (!formData.proyectoObjetivos.descripcionProyecto) newErrors.descripcionProyecto = "La descripción del proyecto es requerida";
+        // if (!formData.proyectoObjetivos.objetivoConsultoria) newErrors.objetivoConsultoria = "El objetivo de la consultoría es requerido";
         break;
       case 4:
         // Validación de evaluación de áreas
@@ -1056,7 +1114,7 @@ export default function DiagnosticoCentral() {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Nombre de la Empresa</label>
                   <input
                     type="text"
@@ -1068,7 +1126,7 @@ export default function DiagnosticoCentral() {
                   {errors.nombreEmpresa && (
                     <p className="mt-1 text-sm text-red-600">{errors.nombreEmpresa}</p>
                   )}
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Ubicación</label>
@@ -1139,12 +1197,12 @@ export default function DiagnosticoCentral() {
             </div>
           )}
 
-          {/* Step 3: Proyecto y Objetivos */}
+          {/* Step 3: Importancia de Áreas */}
           {currentStep === 3 && (
             <div className="space-y-6 bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-800">Proyecto y Objetivos</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-800">Importancia de Áreas</h2>
               <div className="space-y-8">
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700">Descripción del Proyecto</label>
                   <textarea
                     value={formData.proyectoObjetivos.descripcionProyecto}
@@ -1163,17 +1221,14 @@ export default function DiagnosticoCentral() {
                   <textarea
                     value={formData.proyectoObjetivos.objetivoConsultoria}
                     onChange={(e) => handleNestedInputChange('proyectoObjetivos', 'objetivoConsultoria', e.target.value)}
-                    className={`${inputStyles} ${errors.objetivoConsultoria ? errorInputStyles : normalInputStyles}`}
-                    rows={4}
                     required
                   />
                   {errors.objetivoConsultoria && (
                     <p className="mt-1 text-sm text-red-600">{errors.objetivoConsultoria}</p>
                   )}
-                </div>
+                </div> */}
 
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Importancia de Áreas</h3>
                   <div className="space-y-4">
                     {Object.entries(formData.proyectoObjetivos.importanciaAreas).map(([area, value]) => (
                       <div key={area} className="space-y-2">

@@ -2440,7 +2440,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Existe un plan de marketing escrito y alineado al plan de negocio?
+                ¿Existe un plan de marketing escrito y alineado al plan de negocio?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2461,7 +2461,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿La propuesta de valor y los diferenciadores se comunican de forma consistente?
+                ¿La propuesta de valor y los diferenciadores se comunican de forma consistente?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2482,7 +2482,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                3️⃣ ¿El posicionamiento de marca (narrativa, identidad visual) está normalizado en todos los canales?
+                ¿El posicionamiento de marca (narrativa, identidad visual) está normalizado en todos los canales?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2503,7 +2503,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                4️⃣ ¿Se definen KPIs de marketing (awareness, leads, ROI) y se revisan al menos trimestralmente?
+                ¿Se definen KPIs de marketing (awareness, leads, ROI) y se revisan al menos trimestralmente?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2524,7 +2524,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                5️⃣ ¿El presupuesto de marketing está fijado y se evalúa el retorno de cada iniciativa?
+                ¿El presupuesto de marketing está fijado y se evalúa el retorno de cada iniciativa?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2545,7 +2545,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                6️⃣ ¿La dirección participa activamente en la revisión de la estrategia de marketing?
+                ¿La dirección participa activamente en la revisión de la estrategia de marketing?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2566,7 +2566,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                7️⃣ ¿El plan contempla un mix on & offline coherente para cada audiencia?
+                ¿El plan contempla un mix on & offline coherente para cada audiencia?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2611,7 +2611,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Realizas estudios de mercado (encuestas, focus, desk research) con regularidad?
+                ¿Realizas estudios de mercado (encuestas, focus, desk research) con regularidad?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2632,7 +2632,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿Mantienes un mapa competitivo actualizado (fortalezas, precios, share of voice)?
+                ¿Mantienes un mapa competitivo actualizado (fortalezas, precios, share of voice)?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2653,7 +2653,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                3️⃣ ¿Segmentas al mercado y adaptas mensajes, precios o productos por segmento?
+                ¿Segmentas al mercado y adaptas mensajes, precios o productos por segmento?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2674,7 +2674,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                4️⃣ ¿Tienes definidos y documentados buyer-personas o perfiles de cliente ideal?
+                ¿Tienes definidos y documentados buyer-personas o perfiles de cliente ideal?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2695,7 +2695,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                5️⃣ ¿Monitoreas tendencias (tecnológicas, regulatorias, consumo) para anticipar cambios?
+                ¿Monitoreas tendencias (tecnológicas, regulatorias, consumo) para anticipar cambios?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2716,7 +2716,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                6️⃣ ¿Empleas herramientas de social listening o analítica de conversaciones on-line?
+                ¿Empleas herramientas de social listening o analítica de conversaciones on-line?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2737,7 +2737,7 @@ const FormularioMarketingVentas = ({ onAnalysisComplete, userId, metricKey, init
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                7️⃣ ¿Ajustas propuestas o promociones de acuerdo con cada segmento identificado?
+                ¿Ajustas propuestas o promociones de acuerdo con cada segmento identificado?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2908,7 +2908,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Tenemos perfiles detallados de nuestros clientes principales?
+                1 ¿Tenemos perfiles detallados de nuestros clientes principales?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2929,7 +2929,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿Entendemos las necesidades y expectativas de cada segmento de clientes?
+                ¿Entendemos las necesidades y expectativas de cada segmento de clientes?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2973,7 +2973,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Hemos mapeado el journey completo del cliente?
+                 ¿Hemos mapeado el journey completo del cliente?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -2994,7 +2994,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿Identificamos y optimizamos los puntos de contacto críticos?
+                ¿Identificamos y optimizamos los puntos de contacto críticos?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3038,7 +3038,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Ofrecemos experiencias personalizadas basadas en el comportamiento del cliente?
+                ¿Ofrecemos experiencias personalizadas basadas en el comportamiento del cliente?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3059,7 +3059,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿Utilizamos datos para hacer recomendaciones relevantes?
+                 ¿Utilizamos datos para hacer recomendaciones relevantes?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3103,7 +3103,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Recopilamos feedback de los clientes de manera sistemática?
+                 ¿Recopilamos feedback de los clientes de manera sistemática?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3124,7 +3124,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿Medimos y analizamos métricas de satisfacción del cliente?
+                 ¿Medimos y analizamos métricas de satisfacción del cliente?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3168,7 +3168,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                1️⃣ ¿Tenemos estrategias activas para retener clientes existentes?
+                 ¿Tenemos estrategias activas para retener clientes existentes?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3189,7 +3189,7 @@ const FormularioExperienciaCliente = ({ onAnalysisComplete, userId, metricKey, i
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2️⃣ ¿Implementamos programas de fidelización efectivos?
+                 ¿Implementamos programas de fidelización efectivos?
               </label>
               <div className="flex gap-4">
                 {[0, 1, 2, 3, 4, 5].map((value) => (
@@ -3757,10 +3757,13 @@ export default function MetricDetails({ params }) {
               setFormData(result.data.datosMetrica.formData);
             }
           }
+        } else {
+          console.log('No se encontró análisis específico para la métrica:', metricKey);
         }
 
         // Si no se encuentra ningún análisis
         console.log('Estado final - hasCentralAnalysis:', hasCentralAnalysis, 'hasSpecificAnalysis:', hasSpecificAnalysis);
+        console.log('hasExistingAnalysis se establecerá en:', hasSpecificAnalysis);
         
         if (!hasCentralAnalysis && !hasSpecificAnalysis) {
           setError("No se encontró el análisis para esta métrica");

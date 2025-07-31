@@ -63,9 +63,11 @@ export default function Dashboard() {
         
         // Verificar Diagnóstico Central
         const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
+        
         if (responseCentral.ok) {
           const dataCentral = await responseCentral.json();
           userHasDiagnosticoCentral = dataCentral && Object.keys(dataCentral).length > 0;
+          
           if (dataCentral && Object.keys(dataCentral).length > 0) {
             setDiagnosisData(dataCentral);
             setCompanyName(dataCentral.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
@@ -83,8 +85,10 @@ export default function Dashboard() {
         if (userHasDiagnosticoCentral) {
           try {
             const responseAnalysis = await fetch(`/api/analysis_results?userId=${session.user.id}`);
+            
             if (responseAnalysis.ok) {
               const analysisResult = await responseAnalysis.json();
+              
               if (analysisResult.success && analysisResult.data) {
                 setAnalysisData(analysisResult.data);
               }
@@ -141,16 +145,16 @@ export default function Dashboard() {
 
       } catch (error) {
         console.error('Error in checkData:', error);
-      } finally {
-        setHasDiagnosticoCentral(userHasDiagnosticoCentral);
-        setHasPrediagnosticos(userHasPrediagnosticos);
-        setIsLoading(false);
+              } finally {
+          setHasDiagnosticoCentral(userHasDiagnosticoCentral);
+          setHasPrediagnosticos(userHasPrediagnosticos);
+          setIsLoading(false);
 
-        // Abrir modal de pre-diagnóstico si no tiene Prediagnósticos
-        if (!userHasPrediagnosticos) {
-          setIsModalOpen(true);
+          // Abrir modal de pre-diagnóstico si no tiene Prediagnósticos
+          if (!userHasPrediagnosticos) {
+            setIsModalOpen(true);
+          }
         }
-      }
     };
 
     if (status === "authenticated") {
@@ -169,6 +173,49 @@ export default function Dashboard() {
   if (showDiagnosticoCentral) {
     return <DiagnosticoCentral />;
   }
+
+
+
+  const generateAnalysis = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      // Mostrar mensaje de carga
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.innerHTML = '⏳ Generando...';
+      button.disabled = true;
+      
+      const response = await fetch(`/api/debug/generate-analysis?userId=${session.user.id}`, {
+        method: 'POST'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        button.innerHTML = '✅ ¡Completado!';
+        button.className = 'px-6 py-3 bg-green-600 text-white rounded-md font-semibold';
+        
+        // Esperar un momento y luego recargar
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        button.innerHTML = originalText;
+        button.disabled = false;
+        alert('Error al generar análisis: ' + result.error);
+      }
+    } catch (error) {
+      const button = event.target;
+      button.innerHTML = '❌ Error';
+      button.disabled = false;
+      setTimeout(() => {
+        button.innerHTML = '🔄 Generar Análisis';
+        button.disabled = false;
+      }, 3000);
+      alert('Error al generar análisis: ' + error.message);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -396,40 +443,93 @@ export default function Dashboard() {
                   </div>
                 </section>
 
-                {/* Metrics Cards Section */}
-                <section>
-                  <div className="w-full">
-                    <MetricsCards 
-                      analysisData={analysisData}
-                      isLoading={false}
-                    />
+                        {/* Diagnóstico Central Section - Solo mostrar si no tiene análisis */}
+        {!analysisData && (
+          <section className="mb-6">
+            {hasDiagnosticoCentral ? (
+              // Si tiene diagnóstico central pero no análisis
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-800 mb-2">
+                      ✅ Diagnóstico Central Completado
+                    </h3>
+                    <p className="text-blue-700 mb-4">
+                      Has completado tu diagnóstico central. Ahora necesitamos generar el análisis para mostrar tus métricas.
+                    </p>
                   </div>
-                </section>
+                  <button
+                    onClick={generateAnalysis}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-semibold"
+                  >
+                    🔄 Generar Análisis
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Si no tiene diagnóstico central
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold text-orange-800 mb-2">
+                      📋 Diagnóstico Central Pendiente
+                    </h3>
+                    <p className="text-orange-700 mb-4">
+                      Para ver tus métricas y análisis, necesitas completar el diagnóstico central de tu empresa.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowDiagnosticoCentral(true)}
+                    className="px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors font-semibold"
+                  >
+                    🚀 Comenzar Diagnóstico
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
-                {/* Financial Metrics Section */}
-                <section>
-                  <div className="w-full">
-                    <div className="space-y-4">
-                      {isExisting && (
-                        <div className="p-3 bg-blue-50 text-blue-700 rounded-lg">
-                          Métricas del diagnóstico existente
+
+
+        {/* Metrics Cards Section - Solo mostrar si hay análisis */}
+        {analysisData && (
+          <section>
+            <div className="w-full">
+              <MetricsCards 
+                analysisData={analysisData}
+                isLoading={false}
+              />
+            </div>
+          </section>
+        )}
+
+                {/* Financial Metrics Section - Solo mostrar si hay análisis */}
+                {analysisData && (
+                  <section>
+                    <div className="w-full">
+                      <div className="space-y-4">
+                        {isExisting && (
+                          <div className="p-3 bg-blue-50 text-blue-700 rounded-lg">
+                            Métricas del diagnóstico existente
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {Object.entries(metrics).map(([category, value]) => (
+                            <MetricCard
+                              key={category}
+                              title={category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
+                              value={value}
+                            />
+                          ))}
                         </div>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Object.entries(metrics).map(([category, value]) => (
-                          <MetricCard
-                            key={category}
-                            title={category.charAt(0).toUpperCase() + category.slice(1).replace(/([A-Z])/g, ' $1')}
-                            value={value}
-                          />
-                        ))}
                       </div>
                     </div>
-                  </div>
-                </section>
+                  </section>
+                )}
 
-                {/* Análisis General Section */}
-                {generalAnalysisData && (
+                {/* Análisis General Section - Solo mostrar si hay análisis */}
+                {analysisData && generalAnalysisData && (
                   <section>
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-2xl font-bold text-[#1A3D7C]">Análisis General de Métricas</h2>

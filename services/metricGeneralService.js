@@ -82,6 +82,43 @@ export async function analyzeGeneralMetrics({ userId, empresa }) {
     throw new Error('Error al parsear la respuesta de OpenAI: ' + error.message);
   }
 
+  // Mantener solo 2 análisis generales activos por usuario (actual + anterior)
+  const analisisGeneralesExistentes = await MetricGeneralAnalysis.find({ userId, activo: true })
+    .sort({ createdAt: -1 })
+    .limit(2)
+    .lean();
+
+  // Si hay más de 1 análisis general activo, marcar los análisis más antiguos como inactivos
+  if (analisisGeneralesExistentes.length >= 2) {
+    const analisisAMarcarInactivos = await MetricGeneralAnalysis.find({ userId, activo: true })
+      .sort({ createdAt: -1 })
+      .skip(2);
+    
+    if (analisisAMarcarInactivos.length > 0) {
+      // Obtener los IDs de los proyectos asociados a los análisis que se van a marcar como inactivos
+      const proyectoIdsAMarcarInactivos = analisisAMarcarInactivos
+        .flatMap(analisis => analisis.proyectosIntegrales || [])
+        .map(proyecto => proyecto.proyectoId)
+        .filter(id => id); // Filtrar IDs válidos
+      
+      // Marcar los proyectos asociados como inactivos
+      if (proyectoIdsAMarcarInactivos.length > 0) {
+        await ProyectoPublicado.updateMany(
+          { _id: { $in: proyectoIdsAMarcarInactivos } },
+          { activo: false }
+        );
+        console.log(`Marcados ${proyectoIdsAMarcarInactivos.length} proyectos como inactivos del usuario ${userId}`);
+      }
+      
+      // Marcar los análisis generales antiguos como inactivos
+      await MetricGeneralAnalysis.updateMany(
+        { _id: { $in: analisisAMarcarInactivos.map(a => a._id) } },
+        { activo: false }
+      );
+      console.log(`Marcados ${analisisAMarcarInactivos.length} análisis generales como inactivos del usuario ${userId}`);
+    }
+  }
+
   // Crear proyectos para cada proyecto integral identificado
   const proyectosCreados = [];
   for (const proyectoIntegral of analysis.proyectosIntegrales) {
@@ -93,7 +130,7 @@ export async function analyzeGeneralMetrics({ userId, empresa }) {
       categoriasServicioBuscado: proyectoIntegral.areasInvolucradas,
       objetivoEmpresa: proyectoIntegral.descripcionProyecto,
       descripcion: proyectoIntegral.descripcionProyecto,
-      estado: "publicado",
+      estado: "aprobacion",
       presupuesto: undefined,
       plazo: undefined,
       analisisOpenAI: {

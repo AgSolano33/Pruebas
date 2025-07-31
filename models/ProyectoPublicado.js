@@ -64,8 +64,14 @@ const proyectoPublicadoSchema = new mongoose.Schema(
     // Estado del proyecto
     estado: {
       type: String,
-      enum: ["publicado", "en_espera", "en_proceso", "completado", "cancelado"],
+      enum: ["publicado", "en_espera", "en_proceso", "completado", "cancelado", "aprobacion"],
       default: "publicado",
+    },
+    
+    // Campo para manejar activo/inactivo
+    activo: {
+      type: Boolean,
+      default: true,
     },
     
     // Información adicional

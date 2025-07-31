@@ -57,6 +57,8 @@ const MetricsCards = ({ analysisData, isLoading }) => {
   const hasDiagnosticoCentral = !!analysisData;
   const isAnalyzing = false; // Ya no necesitamos este estado aquí
 
+
+
   const handleViewDetails = (metricKey) => {
     router.push(`/metric-details/${metricKey}?userId=${session.user.id}`);
   };
@@ -124,64 +126,75 @@ const MetricsCards = ({ analysisData, isLoading }) => {
     );
   }
 
+  // Check if metricasPorcentuales exists
+  if (!analysis.metricasPorcentuales) {
+    return (
+      <div className="text-center text-gray-500 p-4">
+        <span className="text-[#1A3D7C] font-semibold">Los datos de métricas no están disponibles. Por favor, complete el diagnóstico central.</span>
+      </div>
+    );
+  }
+
   const metrics = [
     {
       key: 'madurezDigital',
       title: 'Madurez Digital',
       icon: FaChartLine,
       color: 'bg-blue-500',
-      value: analysis.metricasPorcentuales.madurezDigital
+      value: analysis.metricasPorcentuales.madurezDigital || 0
     },
     {
       key: 'saludFinanciera',
       title: 'Salud Financiera',
       icon: FaBuilding,
       color: 'bg-green-500',
-      value: analysis.metricasPorcentuales.saludFinanciera
+      value: analysis.metricasPorcentuales.saludFinanciera || 0
     },
     {
       key: 'eficienciaOperativa',
       title: 'Eficiencia Operativa',
       icon: FaUsers,
       color: 'bg-purple-500',
-      value: analysis.metricasPorcentuales.eficienciaOperativa
+      value: analysis.metricasPorcentuales.eficienciaOperativa || 0
     },
     {
       key: 'recursosHumanos',
       title: 'Recursos Humanos',
       icon: FaUserFriends,
       color: 'bg-yellow-500',
-      value: analysis.metricasPorcentuales.recursosHumanos
+      value: analysis.metricasPorcentuales.recursosHumanos || 0
     },
     {
       key: 'marketingVentas',
       title: 'Marketing y Ventas',
       icon: FaShoppingCart,
       color: 'bg-red-500',
-      value: analysis.metricasPorcentuales.marketingVentas
+      value: analysis.metricasPorcentuales.marketingVentas || 0
     },
     {
       key: 'innovacionDesarrollo',
       title: 'Innovación y Desarrollo',
       icon: FaLightbulb,
       color: 'bg-indigo-500',
-      value: analysis.metricasPorcentuales.innovacionDesarrollo
+      value: analysis.metricasPorcentuales.innovacionDesarrollo || 0
     },
     {
       key: 'experienciaCliente',
       title: 'Experiencia del Cliente',
       icon: FaUsers,
       color: 'bg-pink-500',
-      value: analysis.metricasPorcentuales.experienciaCliente
+      value: analysis.metricasPorcentuales.experienciaCliente || 0
     },
     {
       key: 'gestionRiesgos',
       title: 'Gestión de Riesgos',
       icon: FaShieldAlt,
       color: 'bg-gray-500',
-      value: analysis.metricasPorcentuales.gestionRiesgos
+      value: analysis.metricasPorcentuales.gestionRiesgos || 0
     }
   ];
+
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

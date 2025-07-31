@@ -49,9 +49,12 @@ export async function POST(request) {
 
     // Obtener los datos del diagnóstico
     const data = await request.json();
+    
+    console.log('Received data:', JSON.stringify(data, null, 2));
 
     // Validar que el email exista y no sea null
     if (!data.informacionPersonal || !data.informacionPersonal.email) {
+      console.log('Email validation failed:', data.informacionPersonal);
       return NextResponse.json(
         { error: 'El email es requerido' },
         { status: 400 }
@@ -68,10 +71,13 @@ export async function POST(request) {
     }
 
     // Verificar si ya existe un diagnóstico para este usuario
+    console.log('Checking for existing diagnosis with userId:', data.userId, 'and email:', email);
     const existingDiagnostico = await DiagnosticoCentral.findOne({ 
       userId: data.userId,
       email: email
     });
+
+    console.log('Existing diagnosis found:', existingDiagnostico ? 'Yes' : 'No');
 
     if (existingDiagnostico) {
       return NextResponse.json(
@@ -83,7 +89,9 @@ export async function POST(request) {
     // Verificar si ya existe un análisis para este usuario en analysis_results
     const mongoose = require('mongoose');
     const db = mongoose.connection.db;
+    console.log('Checking for existing analysis with userId:', data.userId);
     const existingAnalysis = await db.collection('analysis_results').findOne({ userId: data.userId });
+    console.log('Existing analysis found:', existingAnalysis ? 'Yes' : 'No');
     if (existingAnalysis) {
       return NextResponse.json(
         { error: 'Ya existe un análisis para este usuario. No se puede crear un nuevo diagnóstico central.' },
@@ -105,8 +113,11 @@ export async function POST(request) {
     };
 
     // Crear el nuevo diagnóstico
+    console.log('Creating new diagnosis with data:', JSON.stringify(diagnosticoData, null, 2));
     const diagnostico = new DiagnosticoCentral(diagnosticoData);
+    console.log('Diagnosis model created, attempting to save...');
     await diagnostico.save();
+    console.log('Diagnosis saved successfully');
 
     // Lanzar el análisis en background (no bloquea la respuesta)
     analyzeCentralDiagnostic(diagnosticoData, data.userId)

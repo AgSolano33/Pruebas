@@ -64,6 +64,42 @@ export async function analyzeMetric({ userId, metricKey, metricTitle, valorPorce
     throw new Error('Error al parsear la respuesta de OpenAI: ' + error.message);
   }
 
+  // Mantener solo 2 análisis completos activos por usuario (actual + anterior)
+  const analisisExistentes = await MetricAnalysisResult.find({ userId, activo: true })
+    .sort({ fechaAnalisis: -1 })
+    .limit(2)
+    .lean();
+
+  // Si hay más de 1 análisis activo, marcar los análisis más antiguos como inactivos
+  if (analisisExistentes.length >= 2) {
+    const analisisAMarcarInactivos = await MetricAnalysisResult.find({ userId, activo: true })
+      .sort({ fechaAnalisis: -1 })
+      .skip(2);
+    
+    if (analisisAMarcarInactivos.length > 0) {
+      // Obtener los IDs de los proyectos asociados a los análisis que se van a marcar como inactivos
+      const proyectoIdsAMarcarInactivos = analisisAMarcarInactivos
+        .map(analisis => analisis.proyectoId)
+        .filter(id => id); // Filtrar IDs válidos
+      
+      // Marcar los proyectos asociados como inactivos
+      if (proyectoIdsAMarcarInactivos.length > 0) {
+        await ProyectoPublicado.updateMany(
+          { _id: { $in: proyectoIdsAMarcarInactivos } },
+          { activo: false }
+        );
+        console.log(`Marcados ${proyectoIdsAMarcarInactivos.length} proyectos como inactivos del usuario ${userId}`);
+      }
+      
+      // Marcar los análisis antiguos como inactivos
+      await MetricAnalysisResult.updateMany(
+        { _id: { $in: analisisAMarcarInactivos.map(a => a._id) } },
+        { activo: false }
+      );
+      console.log(`Marcados ${analisisAMarcarInactivos.length} análisis como inactivos del usuario ${userId}`);
+    }
+  }
+
   // Crear el proyecto asociado
   const proyecto = await ProyectoPublicado.create({
     userId,
@@ -73,7 +109,7 @@ export async function analyzeMetric({ userId, metricKey, metricTitle, valorPorce
     categoriasServicioBuscado: analysis.proyectoPropuesto.areasInvolucradas,
     objetivoEmpresa: analysis.proyectoPropuesto.descripcionProyecto,
     descripcion: analysis.proyectoPropuesto.descripcionProyecto,
-    estado: "publicado",
+    estado: "aprobacion",
     presupuesto: undefined,
     plazo: undefined,
     analisisOpenAI: {
