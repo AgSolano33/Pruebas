@@ -314,7 +314,7 @@ export default function Dashboard() {
 
         {/* Tabs Navigation */}
         <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+          <nav className="-mb-px flex space-x-8 ">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
@@ -614,7 +614,34 @@ export default function Dashboard() {
 
         {activeTab === "proyectos" && (
           <section>
-            <h2 className="text-2xl font-bold mb-4">Proyectos Publicados</h2>
+                    <div className="mb-4">
+          <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
+          <button
+            onClick={() => {
+              // Debug temporal
+              if (typeof window !== 'undefined') {
+                const store = require('@/libs/postulacionesStore').default;
+                store.debugStore();
+              }
+            }}
+            className="ml-4 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+          >
+            Debug Store
+          </button>
+          <button
+            onClick={() => {
+              // Limpiar store temporal
+              if (typeof window !== 'undefined') {
+                const store = require('@/libs/postulacionesStore').default;
+                store.limpiarPostulaciones();
+                window.location.reload();
+              }
+            }}
+            className="ml-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+          >
+            Limpiar Store
+          </button>
+        </div>
             <div className="w-full">
               <ProyectosTablero />
             </div>

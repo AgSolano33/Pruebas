@@ -3,8 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { FaTachometerAlt, FaIndustry, FaCalendar } from "react-icons/fa";
 import NotificacionesExperto from "@/components/NotificacionesExperto";
+import ProyectosDisponibles from "@/components/ProyectosDisponibles";
+import ExpertoDashboard from "@/components/ExpertoDashboard";
 import Header from "@/components/Header";
+import postulacionesStore from "@/libs/postulacionesStore";
 
 const ExpertosPage = () => {
   const { data: session, status } = useSession();
@@ -17,6 +21,10 @@ const ExpertosPage = () => {
   const [notificaciones, setNotificaciones] = useState([]);
   const [isLoadingNotificaciones, setIsLoadingNotificaciones] = useState(true);
   const [notificacionExpandida, setNotificacionExpandida] = useState(null);
+  const [expertosData, setExpertosData] = useState(null);
+  const [activeTab, setActiveTab] = useState("perfil");
+  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [selectedProyectoForDashboard, setSelectedProyectoForDashboard] = useState(null);
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -38,6 +46,67 @@ const ExpertosPage = () => {
     };
     fetchPerfil();
   }, [status]);
+
+  useEffect(() => {
+    const fetchExpertosData = async () => {
+      try {
+        const response = await fetch('/expertos.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setExpertosData(data);
+        
+        // Simular que el usuario actual es "Pedro" (primer experto de la lista)
+        if (data.expertos_formulario && data.expertos_formulario.length > 0) {
+          const pedro = data.expertos_formulario[0];
+          // Crear un perfil de experto simulado basado en Pedro
+          const perfilPedro = {
+            _id: pedro.ID,
+            nombre: pedro.nombre_experto,
+            semblanza: "Experto en servicios digitales y transformación empresarial",
+            industrias: ["Tecnología", "Consultoría", "Digital"],
+            categorias: pedro.categoria,
+            gradoExperiencia: "Senior",
+            experienciaProfesional: pedro.experiencia_experto,
+            serviciosPropuestos: "Consultoría digital, Implementación de sistemas, Optimización de procesos",
+            estado: "aprobado"
+          };
+          setExperto(perfilPedro);
+        }
+      } catch (error) {
+        console.error('Error al cargar datos de expertos:', error);
+        // Datos mock de respaldo para Pedro
+        const perfilPedro = {
+          _id: "pedro_001",
+          nombre: "Pedro García",
+          semblanza: "Experto en servicios digitales y transformación empresarial",
+          industrias: ["Tecnología", "Consultoría", "Digital"],
+          categorias: "Servicios Digitales,Negocios,STEAM",
+          gradoExperiencia: "Senior",
+          experienciaProfesional: "Más de 15 años en transformación digital y desarrollo de software.",
+          serviciosPropuestos: "Consultoría digital, Implementación de sistemas, Optimización de procesos",
+          estado: "aprobado"
+        };
+        setExperto(perfilPedro);
+        setExpertosData({
+          expertos_formulario: [
+            {
+              ID: "pedro_001",
+              nombre_experto: "Pedro García",
+              categoria: "Servicios Digitales,Negocios,STEAM",
+              estudios_expertos: "Doctorado",
+              experiencia_experto: "Más de 15 años en transformación digital y desarrollo de software.",
+              email_experto: "pedro.garcia@digitalexpert.com",
+              telefono_experto: "+525512345678",
+              tipo_usuario: "Experto gestor"
+            }
+          ]
+        });
+      }
+    };
+    fetchExpertosData();
+  }, []);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -67,24 +136,61 @@ const ExpertosPage = () => {
   }, [experto]);
 
   useEffect(() => {
-    // Obtener notificaciones del experto
-    const fetchNotificaciones = async () => {
+    // Obtener proyectos donde el experto fue aceptado
+    const fetchProyectosAceptados = async () => {
       if (experto?._id) {
         try {
           setIsLoadingNotificaciones(true);
-          const res = await fetch(`/api/expertos/notificaciones?limit=100`);
-          const data = await res.json();
-          if (data.success && data.data) {
-            setNotificaciones(data.data);
+          
+          // Obtener todos los proyectos
+          const response = await fetch('/api/proyectos-publicados');
+          if (response.ok) {
+            const data = await response.json();
+            const proyectos = data.data || [];
+            
+            // Filtrar proyectos donde Pedro fue aceptado
+            const proyectosAceptados = proyectos.filter(proyecto => {
+              const postulaciones = postulacionesStore.getPostulaciones(proyecto._id);
+              return postulaciones.some(post => 
+                post.experto._id === experto._id && post.estado === 'aceptada'
+              );
+            });
+            
+            // Guardar los proyectos completos para usar en el dashboard
+            setProyectos(proyectos);
+            
+            // Convertir a formato de notificaciones para mostrar
+            const notificacionesFormateadas = proyectosAceptados.map(proyecto => ({
+              _id: proyecto._id,
+              nombreProyecto: proyecto.nombreProyecto,
+              nombreEmpresa: proyecto.nombreEmpresa,
+              industria: proyecto.industria,
+              descripcionProyecto: proyecto.objetivoEmpresa,
+              analisisMatch: `Has sido aceptado para trabajar en este proyecto. Estado: ${proyecto.estado}`,
+              estado: proyecto.estado
+            }));
+            
+            console.log('Proyectos aceptados encontrados:', proyectosAceptados.length);
+            console.log('Notificaciones formateadas:', notificacionesFormateadas);
+            
+            setNotificaciones(notificacionesFormateadas);
+          } else {
+            console.error('Error al cargar proyectos');
+            setNotificaciones([]);
           }
-        } catch (e) {}
-        setIsLoadingNotificaciones(false);
+        } catch (error) {
+          console.error('Error al cargar proyectos:', error);
+          setNotificaciones([]);
+        } finally {
+          setIsLoadingNotificaciones(false);
+        }
       }
     };
+    
     if (experto?._id) {
-      fetchNotificaciones();
+      fetchProyectosAceptados();
     }
-  }, [experto]);
+  }, [experto?._id]);
 
   if (status === "loading" || isLoading) {
     return <div className="flex justify-center items-center min-h-screen">Cargando...</div>;
@@ -264,25 +370,54 @@ const ExpertosPage = () => {
             </div>
           </div>
 
-          {/* Proyectos con los que haces match */}
+          {/* Proyectos de los que formas parte */}
           <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="font-semibold text-lg mb-4">Proyectos con los que haces match</h2>
+            <h2 className="font-semibold text-lg mb-4">Proyectos de los que formas parte</h2>
             <div className="space-y-4">
               {isLoadingNotificaciones && (
-                <div className="text-gray-400">Cargando notificaciones...</div>
+                <div className="text-gray-400">Cargando proyectos...</div>
               )}
               {!isLoadingNotificaciones && notificaciones.length === 0 && (
-                <div className="bg-gray-100 rounded p-4 text-gray-400">No tienes proyectos con los que hagas match aún.</div>
+                <div className="bg-gray-100 rounded p-4 text-gray-400">No formas parte de ningún proyecto aún.</div>
               )}
-              {notificaciones.map((notif, idx) => {
+                            {notificaciones.map((notif, idx) => {
                 const expandida = notificacionExpandida === notif._id;
                 return (
                   <div
                     key={notif._id || idx}
-                    className={`border rounded-lg p-4 bg-gray-50 cursor-pointer transition hover:bg-blue-50 ${expandida ? 'ring-2 ring-[#1A3D7C]' : ''}`}
+                    className={`bg-white rounded-lg border shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md ${expandida ? 'ring-2 ring-[#1A3D7C] shadow-lg' : ''}`}
                     onClick={() => setNotificacionExpandida(expandida ? null : notif._id)}
                   >
-                    <div className="font-bold text-lg">{notif.nombreProyecto}</div>
+                    {/* Header de la tarjeta */}
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                            Proyecto Activo
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-500">
+                            {new Date().toLocaleDateString('es-ES')}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <h3 className="text-lg font-bold text-[#1A3D7C] mb-1">
+                        {notif.nombreEmpresa}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {notif.nombreProyecto}
+                      </p>
+                      
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <FaIndustry />
+                        <span>{notif.industria}</span>
+                      </div>
+                    </div>
+
+                    {/* Contenido expandido */}
                     {expandida && (
                       <>
                         <div className="mb-2 text-sm text-gray-600">{notif.nombreEmpresa} &middot; {notif.industria}</div>
@@ -369,8 +504,27 @@ const ExpertosPage = () => {
               })}
             </div>
           </div>
+
+          {/* Nueva sección: Proyectos Disponibles */}
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 className="font-semibold text-lg mb-4">Proyectos Disponibles</h2>
+            <ProyectosDisponibles expertoData={experto} />
+          </div>
         </main>
       </div>
+
+      {/* Modal del Dashboard del Experto */}
+      {dashboardOpen && selectedProyectoForDashboard && (
+        <ExpertoDashboard
+          proyecto={selectedProyectoForDashboard}
+          experto={experto}
+          isOpen={dashboardOpen}
+          onClose={() => {
+            setDashboardOpen(false);
+            setSelectedProyectoForDashboard(null);
+          }}
+        />
+      )}
     </div>
   );
 };

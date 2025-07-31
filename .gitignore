@@ -84,3 +84,6 @@ public/sitemap-0.xml
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# sensitive data files
+expertos.json
