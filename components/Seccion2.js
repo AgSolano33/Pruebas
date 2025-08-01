@@ -1,9 +1,4 @@
 import React from "react";
-<<<<<<< HEAD
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-=======
->>>>>>> QA
 
 const pasos = [
   {
