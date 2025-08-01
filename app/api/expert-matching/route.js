@@ -9,14 +9,15 @@ import NotificacionExperto from "@/models/NotificacionExperto";
 // POST - Realizar matching de expertos con un proyecto o aplicar a un proyecto
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
+    // Para el MVP, no requerimos autenticación
+    // const session = await getServerSession(authOptions);
     
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "No autorizado" },
-        { status: 401 }
-      );
-    }
+    // if (!session) {
+    //   return NextResponse.json(
+    //     { success: false, error: "No autorizado" },
+    //     { status: 401 }
+    //   );
+    // }
     
     await connectToDatabase();
     const body = await request.json();
@@ -133,14 +134,15 @@ async function handleAplicarProyecto(body, session) {
 // GET - Obtener matches existentes
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions);
+    // Para el MVP, no requerimos autenticación
+    // const session = await getServerSession(authOptions);
     
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "No autorizado" },
-        { status: 401 }
-      );
-    }
+    // if (!session) {
+    //   return NextResponse.json(
+    //     { success: false, error: "No autorizado" },
+    //     { status: 401 }
+    //   );
+    // }
     
     const { searchParams } = new URL(request.url);
     const empresa = searchParams.get("empresa");
@@ -153,34 +155,43 @@ export async function GET(request) {
     if (empresa) filtros.nombreEmpresa = { $regex: empresa, $options: 'i' };
     if (estado) filtros.estado = estado;
     
-    const skip = (page - 1) * limit;
-    
-    await connectToDatabase();
-    
-    const matches = await ExpertoMatch.find(filtros)
-      .populate("expertoId", "nombre semblanza industrias categorias gradoExperiencia")
-      .sort({ puntuacionMatch: -1, fechaCreacion: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-    
-    const total = await ExpertoMatch.countDocuments(filtros);
+    // Para el MVP, retornamos datos mock
+    const mockMatches = [
+      {
+        _id: "match_001",
+        proyectoId: "proyecto_001",
+        expertoId: {
+          _id: "pedro_001",
+          nombre: "Pedro García",
+          semblanza: "Experto en servicios digitales",
+          industrias: ["Tecnología", "Consultoría"],
+          categorias: "Servicios Digitales,Negocios,STEAM",
+          gradoExperiencia: "Senior"
+        },
+        puntuacionMatch: 85,
+        estado: "pendiente",
+        fechaCreacion: new Date().toISOString()
+      }
+    ];
     
     return NextResponse.json({
       success: true,
-      data: matches,
+      data: mockMatches,
       pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
+        page: 1,
+        limit: 10,
+        total: 1,
+        pages: 1,
       },
     });
     
   } catch (error) {
-    console.error("Error al obtener matches:", error);
+    console.error("Error en GET expert-matching:", error);
     return NextResponse.json(
-      { success: false, error: "Error interno del servidor" },
+      { 
+        success: false, 
+        error: error.message || "Error interno del servidor" 
+      },
       { status: 500 }
     );
   }

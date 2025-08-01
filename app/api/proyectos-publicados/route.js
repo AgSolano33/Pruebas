@@ -39,6 +39,27 @@ export async function POST(request) {
     
     console.log('Iniciando publicación de proyecto...');
     
+    // Mantener solo 2 proyectos activos máximo por usuario (actual + anterior)
+    const proyectosExistentes = await ProyectoPublicado.find({ userId: session.user.id, activo: true })
+      .sort({ createdAt: -1 })
+      .limit(2)
+      .lean();
+
+    // Si hay más de 1 proyecto activo, marcar los más antiguos como inactivos
+    if (proyectosExistentes.length >= 2) {
+      const proyectosAMarcarInactivos = await ProyectoPublicado.find({ userId: session.user.id, activo: true })
+        .sort({ createdAt: -1 })
+        .skip(2);
+      
+      if (proyectosAMarcarInactivos.length > 0) {
+        await ProyectoPublicado.updateMany(
+          { _id: { $in: proyectosAMarcarInactivos.map(p => p._id) } },
+          { activo: false }
+        );
+        console.log(`Marcados ${proyectosAMarcarInactivos.length} proyectos como inactivos del usuario ${session.user.id}`);
+      }
+    }
+    
     // Crear el proyecto publicado primero
     const proyectoInfo = {
       nombreEmpresa: proyectoData.empresa?.nombre || '',
@@ -62,7 +83,7 @@ export async function POST(request) {
         razones: ["Proyecto en espera de expertos aprobados"],
       },
       matchesGenerados: 0,
-      estado: "en_espera",
+      estado: "aprobacion",
     });
     
     await nuevoProyecto.save();
@@ -87,7 +108,7 @@ export async function POST(request) {
       razones: mejorMatch?.razones || ["Proyecto en espera de expertos aprobados"],
     };
     nuevoProyecto.matchesGenerados = resultadoMatching.total || 0;
-    nuevoProyecto.estado = resultadoMatching.sinExpertos ? "en_espera" : "publicado";
+    nuevoProyecto.estado = resultadoMatching.sinExpertos ? "en_espera" : "aprobacion";
     
     await nuevoProyecto.save();
     

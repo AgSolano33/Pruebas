@@ -39,6 +39,47 @@ export default function FormDiagnostico({ onClose }) {
       router.push(config.auth.callbackUrl);
       return;
     }
+    
+    // Pre-llenar con datos del primer pre-diagnóstico si existe
+    const loadPrediagnosticoData = async () => {
+      try {
+        const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+        if (response.ok) {
+          const prediagnosticos = await response.json();
+          if (prediagnosticos && prediagnosticos.length > 0) {
+            const primerPrediagnostico = prediagnosticos[0]; // Tomar el más reciente
+            console.log('Pre-llenando formulario de pre-diagnóstico con datos existentes:', primerPrediagnostico);
+            
+            setFormData(prev => ({
+              ...prev,
+              nombre: primerPrediagnostico.nombre || session?.user?.nombre || "",
+              apellido: primerPrediagnostico.apellido || session?.user?.apellido || "",
+              nivelEstudios: primerPrediagnostico.nivelEstudios || "",
+              tipoEmpresa: primerPrediagnostico.tipoEmpresa || "",
+              nombreEmpresaProyecto: primerPrediagnostico.nombreEmpresaProyecto || "",
+              email: primerPrediagnostico.email || session?.user?.email || "",
+              telefono: (primerPrediagnostico.telefono || "").toString(),
+              giroActividad: primerPrediagnostico.giroActividad || "",
+              descripcionActividad: primerPrediagnostico.descripcionActividad || "",
+              tieneEmpleados: primerPrediagnostico.tieneEmpleados || "",
+              numeroEmpleados: primerPrediagnostico.numeroEmpleados || "",
+              ventasAnualesEstimadas: primerPrediagnostico.ventasAnualesEstimadas || "",
+              mayorObstaculo: primerPrediagnostico.mayorObstaculo || "",
+              gestionDificultades: primerPrediagnostico.gestionDificultades || "",
+              buenResultadoMetrica: primerPrediagnostico.buenResultadoMetrica || "",
+              objetivosAcciones: primerPrediagnostico.objetivosAcciones || "",
+              tipoAyuda: primerPrediagnostico.tipoAyuda || "",
+              disponibleInvertir: primerPrediagnostico.disponibleInvertir || "",
+              genero: primerPrediagnostico.genero || ""
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error al cargar datos del pre-diagnóstico:', error);
+      }
+    };
+    
+    loadPrediagnosticoData();
   }, [session, router]);
 
   const filterOnlyLetters = (value) => {
@@ -88,9 +129,9 @@ export default function FormDiagnostico({ onClose }) {
         newErrors.email = "Por favor, ingrese un email válido";
       }
       
-      if (!formData.telefono.trim()) {
+      if (!formData.telefono || !formData.telefono.toString().trim()) {
         newErrors.telefono = "El teléfono es requerido";
-      } else if (!/^[0-9]{10}$/.test(formData.telefono.replace(/\D/g, ""))) {
+      } else if (!/^[0-9]{10}$/.test(formData.telefono.toString().replace(/\D/g, ""))) {
         newErrors.telefono = "El teléfono debe tener 10 dígitos numéricos";
       }
 
@@ -211,6 +252,13 @@ export default function FormDiagnostico({ onClose }) {
           ...prev,
           [name]: filterOnlyLetters(value)
         };
+      } else if (name === 'telefono') {
+        // Only allow numbers and limit to 10 digits
+        const numericValue = value.replace(/\D/g, '').slice(0, 10);
+        return {
+          ...prev,
+          [name]: numericValue
+        };
       } else if (name === 'numeroEmpleados' || name === 'ventasAnualesEstimadas') {
          // Ensure number fields are treated as numbers
         return {
@@ -255,8 +303,8 @@ export default function FormDiagnostico({ onClose }) {
       </h2>
 
       <div className="text-sm text-gray-600 mb-6 space-y-2">
-        <p>1. Es importante que tus respuestas sean lo mas claras y precisas posibles, entre mas información tengamos, mejor ayuda seremos capaces de brindarte.</p>
-        <p>2. Recuerda que nuestros eventos y programas se fondean en parte con fondos públicos que nos ayudan a hacerlos tan accesibles, tus datos no tienen ningún uso comercial mas allá de ofrecerte programas, talleres y experiencias que puedan ser de tu interés en nuestro ecosistema, así como con fines estadísticos para el estado.</p>
+        <p>Nota:</p>
+        <p>Es fundamental que tus respuestas sean lo más claras y específicas posibles. Esto nos ayuda a entender tu problema de manera más efectiva y, por ende, a darte una mejor solución.</p>
       </div>
 
       {/* Primera sección: Información General */}
@@ -415,15 +463,16 @@ export default function FormDiagnostico({ onClose }) {
               htmlFor="telefono"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Phone <span className="text-red-500">*</span>
+              Teléfono <span className="text-red-500">*</span>
             </label>
             <input
               id="telefono"
               className={`mt-1 block w-full rounded-md border-2 ${errors.telefono ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="telefono"
               required
-              type="Number"
-              placeholder="Ej: 55 1234 5678"
+              type="text"
+              maxLength="10"
+              placeholder="Ej: 5512345678"
               value={formData.telefono}
               onChange={handleChange}
             />
@@ -555,7 +604,7 @@ export default function FormDiagnostico({ onClose }) {
               htmlFor="mayorObstaculo"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Imagina que mañana pudieras eliminar el o los mayores obstáculos que hoy le impide a tu empresa alcanzar lo que ustedes llaman un "buen resultado" <span className="text-red-500">*</span>
+              ¿Cuál es el mayor obstáculo que estás enfrentando y cómo afecta tu negocio/proyecto en términos de tiempo, dinero, y oportunidades? <span className="text-red-500">*</span>
             </label>
             <textarea
               id="mayorObstaculo"
@@ -563,7 +612,7 @@ export default function FormDiagnostico({ onClose }) {
               name="mayorObstaculo"
               required
               rows="4"
-              placeholder="¿Cuál es ese obstáculo? ¿Por qué duele tanto (tiempo, dinero, reputación, oportunidades perdidas)? ¿Qué tan urgente es para ti resolverlo ?"
+              placeholder="¿Qué obstáculo principal está impidiendo que tu empresa alcance los resultados esperados? ¿Cómo impacta este problema en tiempo, dinero, reputación y oportunidades? ¿Qué tan urgente es para ti solucionarlo?"
               value={formData.mayorObstaculo}
               onChange={handleChange}
             />
@@ -575,7 +624,7 @@ export default function FormDiagnostico({ onClose }) {
               htmlFor="gestionDificultades"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              En los procesos donde están enfrentando mayores dificultades, ¿cómo los están gestionando actualmente, qué soluciones han probado hasta ahora y qué los lleva a considerar qué es momento de hacer un cambio? <span className="text-red-500">*</span>
+              ¿Qué has intentado hacer para resolver este problema y qué resultados has obtenido hasta ahora? <span className="text-red-500">*</span>
             </label>
             <textarea
               id="gestionDificultades"
@@ -583,6 +632,7 @@ export default function FormDiagnostico({ onClose }) {
               name="gestionDificultades"
               required
               rows="4"
+              placeholder="Cuéntanos qué soluciones o acciones ya probaste, qué funcionó o no, y qué aprendiste de eso. Esto nos ayudará a no proponer lo que ya intentaste sin éxito."
               value={formData.gestionDificultades}
               onChange={handleChange}
             />
@@ -594,7 +644,7 @@ export default function FormDiagnostico({ onClose }) {
               htmlFor="buenResultadoMetrica"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              En una sola respuesta, cuéntanos: (a) qué considera tu empresa un "buen resultado" hoy, (b) qué métrica(s) usan para comprobarlo y (c) qué dato o señal evidencia que, hasta ahora, no lo están logrando. <span className="text-red-500">*</span>
+              ¿Cómo te diste cuenta que ese "algo" no estaba funcionando como debería? ¿Qué señales o datos te muestran que hay que hacer un cambio pronto? <span className="text-red-500">*</span>
             </label>
             <textarea
               id="buenResultadoMetrica"
@@ -602,6 +652,7 @@ export default function FormDiagnostico({ onClose }) {
               name="buenResultadoMetrica"
               required
               rows="4"
+              placeholder="Queremos entender qué te hace darte cuenta de que algo no va bien: ¿bajan las ventas?, ¿clientes insatisfechos?, ¿el equipo está frustrado?, ¿procesos lentos?"
               value={formData.buenResultadoMetrica}
               onChange={handleChange}
             />
@@ -613,7 +664,7 @@ export default function FormDiagnostico({ onClose }) {
               htmlFor="objetivosAcciones"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              ¿Qué objetivos concretos quiere alcanzar la empresa en los próximos 6 meses y qué acciones se están llevando a cabo actualmente para lograrlos? <span className="text-red-500">*</span>
+              Imagina que tu problema se resolviera el dia de mañana ¿En que te fijarías para poder decir que está resuelto? ¿Cúal sería el indicador de éxito? ¿En cuanto tiempo? <span className="text-red-500">*</span>
             </label>
             <textarea
               id="objetivosAcciones"
@@ -621,6 +672,7 @@ export default function FormDiagnostico({ onClose }) {
               name="objetivosAcciones"
               required
               rows="4"
+              placeholder="Trata de imaginar el escenario ideal, que sería lo que te guastaría que pasara con tu problema, que llamarías un 'buen resultado'"
               value={formData.objetivosAcciones}
               onChange={handleChange}
             />

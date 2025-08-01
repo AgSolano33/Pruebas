@@ -190,8 +190,9 @@ export default function PrediagnosticoList() {
                               situacionActual["Diagnóstico general de necesidades y retos principales"];
 
     if (!diagnosticoGeneral) return "Sin nombre de empresa";
-
-    const match = diagnosticoGeneral.match(/La empresa ['"]([^'"]+)['"]/);
+    const texto = Array.isArray(diagnosticoGeneral) ? diagnosticoGeneral[0] : diagnosticoGeneral;
+    if (!texto) return "Sin nombre de empresa";
+    const match = texto.match(/La empresa ['"]([^'"]+)['"]/);
     return match ? match[1] : "Sin nombre de empresa";
   };
 

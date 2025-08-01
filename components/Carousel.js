@@ -5,9 +5,9 @@ import { useState, useEffect } from "react";
 const slides = [
   {
     id: 1,
-    title: "Diagnóstico Empresarial",
-    description: "Analiza y mejora tu empresa con nuestras herramientas",
-    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    title: "Dinos qué te duele. Nosotros te decimos quién puede ayudarte.",
+    description: "Encuentra el Match perfecto para las necesidades de tu empresa.",
+    image: "https://images.unsplash.com/photo-1622084730216-39187f8bb9de?q=80&w=1030&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
   },
   {
     id: 2,
@@ -54,7 +54,7 @@ export default function Carousel({ onOpenModal }) {
                   onClick={onOpenModal}
                   className="btn btn-primary bg-[#1A3D7C] hover:bg-[#0f2a5a] border-none"
                 >
-                  Realizar Prediagnóstico
+                  ¡Genera tu diagnostico gratis!
                 </button>
               </div>
             </div>

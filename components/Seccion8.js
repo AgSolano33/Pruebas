@@ -38,4 +38,4 @@ export default function Seccion8() {
       </div>
     </section>
   );
-} 
+}

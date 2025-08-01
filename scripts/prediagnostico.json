@@ -1,0 +1,33 @@
+{
+  "systemMessage": "Eres un consultor experto en el área de la empresa. Analiza la información y responde en formato JSON estricto con recomendaciones y análisis personalizados para el giro y situación de la empresa.",
+  "userPrompt": "Analiza la siguiente empresa y responde en formato JSON estricto con los siguientes campos. Usa SIEMPRE el valor de 'nombreEmpresaProyecto' como el nombre real de la empresa en el campo 'Diagnostico general'. Basándote en el número de empleados, determina el tamaño de la empresa. Incluye información sobre ventas anuales y antigüedad:",
+  "instructions": "Asegúrate de que:\n1. Todos los campos estén presentes\n2. Los arrays contengan al menos un elemento\n3. Los strings no estén vacíos\n4. Mantén el formato exacto de los nombres de los campos\n5. Usa SIEMPRE el valor de 'nombreEmpresaProyecto' como el nombre real de la empresa en el campo 'Diagnostico general'\n6. Que toda la informacion este en español.\n7. El tamaño de la empresa debe basarse únicamente en el número de empleados:\n   - Sin empleados: Emprendedor\n   - 1-10 empleados: Micro empresa\n   - 11-50 empleados: Pequeña empresa\n   - 51-250 empleados: Mediana empresa\n   - Más de 250 empleados: Gran empresa\n8. Las ventas deben basarse en el valor real de 'ventasAnualesEstimadas' del pre-diagnóstico\n9. La antigüedad debe usar el valor por defecto que ya se obtiene del pre-diagnóstico\n10. Mantén una excelente ortografía y gramática en todos los textos generados\n11. Crea una descripción del proyecto basada en toda la información disponible del pre-diagnóstico, incluyendo la actividad económica, retos, objetivos y situación actual de la empresa",
+  "jsonStructure": {
+    "nombreEmpresaProyecto": "string",
+    "descripcionProyecto": "string (descripción completa del proyecto basada en toda la información del pre-diagnóstico)",
+    "1. Situacion actual de la empresa y objetivos": {
+      "Diagnostico general": "La empresa 'nombreEmpresaProyecto' ",
+      "Retos principales": "string",
+      "Objetivos": "string",
+      "Tamaño": "string (basado en número de empleados)",
+      "Ventas": "string (basado en ventasAnualesEstimadas)"
+    },
+    "2. Posibles soluciones": [
+      {
+        "Solucion": "string",
+        "Herramientas": ["string"]
+      }
+    ],
+    "3. Categorias de proyecto": {
+      "Industry": ["string"],
+      "Categorias de servicio buscado": ["string"],
+      "Objetivos de la empresa": ["string"]
+    },
+    "4. Posibles matches": [
+      {
+        "Titulo solucion propuesta": "string",
+        "Descripcion": "string"
+      }
+    ]
+  }
+} 

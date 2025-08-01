@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaChartLine, FaBuilding, FaUsers, FaShoppingCart, FaLightbulb, FaUserFriends, FaShieldAlt } from 'react-icons/fa';
 
-const MetricCard = ({ title, value, icon: Icon, color, onClick }) => {
+const MetricCard = ({ title, value, icon: Icon, color, onViewDetails }) => {
   const getLevelColor = (value) => {
     if (value >= 80) return 'text-green-600';
     if (value >= 60) return 'text-blue-600';
@@ -23,10 +23,7 @@ const MetricCard = ({ title, value, icon: Icon, color, onClick }) => {
   };
 
   return (
-    <div 
-      className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-      onClick={onClick}
-    >
+    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow relative">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-full ${color}`}>
           <Icon className="text-white text-xl" />
@@ -36,88 +33,37 @@ const MetricCard = ({ title, value, icon: Icon, color, onClick }) => {
         </span>
       </div>
       <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
-      <div className="flex items-baseline">
+      <div className="flex items-baseline mb-4">
         <span className="text-3xl font-bold text-gray-900">{value}%</span>
       </div>
+      <button
+        className="px-4 py-2 bg-[#1A3D7C] text-white rounded-md hover:bg-[#00AEEF] focus:outline-none focus:ring-2 focus:ring-[#1A3D7C] focus:ring-offset-2 w-full transition-colors"
+        onClick={onViewDetails}
+      >
+        Ver detalles
+      </button>
     </div>
   );
 };
 
-const MetricsCards = () => {
+const MetricsCards = ({ analysisData, isLoading }) => {
   const { data: session } = useSession();
   const router = useRouter();
-  const [analysis, setAnalysis] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    const fetchAnalysis = async () => {
-      if (!session?.user?.id) {
-        setError('No se encontró el ID del usuario');
-        setLoading(false);
-        return;
-      }
+  // Usar los datos pasados como props
+  const analysis = analysisData;
+  const loading = isLoading;
+  const error = null;
+  const hasDiagnosticoCentral = !!analysisData;
+  const isAnalyzing = false; // Ya no necesitamos este estado aquí
 
-      try {
-        // Primero verificar si tiene diagnóstico central
-        const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
-        if (responseCentral.ok) {
-          const dataCentral = await responseCentral.json();
-          const hasCentral = dataCentral && Object.keys(dataCentral).length > 0;
-          setHasDiagnosticoCentral(hasCentral);
-          
-          
-          // Si tiene diagnóstico central, verificar si fue creado recientemente
-          if (hasCentral && dataCentral.createdAt) {
-            const createdAt = new Date(dataCentral.createdAt);
-            const now = new Date();
-            const timeDiff = now - createdAt;
-            const minutesDiff = timeDiff / (1000 * 60);
-            
-            // Si el diagnóstico fue creado en los últimos 10 minutos, mostrar análisis en progreso
-            if (minutesDiff < 10) {
-              setIsAnalyzing(true);
-            }
-          }
-        }
 
-        // Luego buscar el análisis
-        const response = await fetch(`/api/analysis_results?userId=${session.user.id}`);
-        console.log('Response URL:', `/api/analysis_results?userId=${session.user.id}`);
-        const result = await response.json();
-        console.log('API Response:', result);
-
-        if (result.success && result.data) {
-          console.log('metricasPorcentuales:', JSON.stringify(result.data.metricasPorcentuales, null, 2));
-          setAnalysis(result.data);
-          setIsAnalyzing(false); // Si hay análisis, no está analizando
-        } else if (result.success && !result.data) {
-          // No hay análisis disponible aún
-          
-          setAnalysis(null);
-          // Si tiene diagnóstico central pero no análisis, está analizando
-          if (hasDiagnosticoCentral) {
-            setIsAnalyzing(true);
-          }
-        } else {
-          setError(result.error || 'Error al cargar el análisis');
-        }
-      } catch (error) {
-        console.error('Error fetching analysis:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAnalysis();
-  }, [session]);
 
   const handleViewDetails = (metricKey) => {
     router.push(`/metric-details/${metricKey}?userId=${session.user.id}`);
   };
+
+
 
   
 
@@ -180,78 +126,89 @@ const MetricsCards = () => {
     );
   }
 
+  // Check if metricasPorcentuales exists
+  if (!analysis.metricasPorcentuales) {
+    return (
+      <div className="text-center text-gray-500 p-4">
+        <span className="text-[#1A3D7C] font-semibold">Los datos de métricas no están disponibles. Por favor, complete el diagnóstico central.</span>
+      </div>
+    );
+  }
+
   const metrics = [
     {
       key: 'madurezDigital',
       title: 'Madurez Digital',
       icon: FaChartLine,
       color: 'bg-blue-500',
-      value: analysis.metricasPorcentuales.madurezDigital
+      value: analysis.metricasPorcentuales.madurezDigital || 0
     },
     {
       key: 'saludFinanciera',
       title: 'Salud Financiera',
       icon: FaBuilding,
       color: 'bg-green-500',
-      value: analysis.metricasPorcentuales.saludFinanciera
+      value: analysis.metricasPorcentuales.saludFinanciera || 0
     },
     {
       key: 'eficienciaOperativa',
       title: 'Eficiencia Operativa',
       icon: FaUsers,
       color: 'bg-purple-500',
-      value: analysis.metricasPorcentuales.eficienciaOperativa
+      value: analysis.metricasPorcentuales.eficienciaOperativa || 0
     },
     {
       key: 'recursosHumanos',
       title: 'Recursos Humanos',
       icon: FaUserFriends,
       color: 'bg-yellow-500',
-      value: analysis.metricasPorcentuales.recursosHumanos
+      value: analysis.metricasPorcentuales.recursosHumanos || 0
     },
     {
       key: 'marketingVentas',
       title: 'Marketing y Ventas',
       icon: FaShoppingCart,
       color: 'bg-red-500',
-      value: analysis.metricasPorcentuales.marketingVentas
+      value: analysis.metricasPorcentuales.marketingVentas || 0
     },
     {
       key: 'innovacionDesarrollo',
       title: 'Innovación y Desarrollo',
       icon: FaLightbulb,
       color: 'bg-indigo-500',
-      value: analysis.metricasPorcentuales.innovacionDesarrollo
+      value: analysis.metricasPorcentuales.innovacionDesarrollo || 0
     },
     {
       key: 'experienciaCliente',
       title: 'Experiencia del Cliente',
       icon: FaUsers,
       color: 'bg-pink-500',
-      value: analysis.metricasPorcentuales.experienciaCliente
+      value: analysis.metricasPorcentuales.experienciaCliente || 0
     },
     {
       key: 'gestionRiesgos',
       title: 'Gestión de Riesgos',
       icon: FaShieldAlt,
       color: 'bg-gray-500',
-      value: analysis.metricasPorcentuales.gestionRiesgos
+      value: analysis.metricasPorcentuales.gestionRiesgos || 0
     }
   ];
 
+
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {metrics.map((metric) => (
-        <MetricCard
-          key={metric.key}
-          title={metric.title}
-          value={metric.value}
-          icon={metric.icon}
-          color={metric.color}
-          onClick={() => handleViewDetails(metric.key)}
-        />
-      ))}
-    </div>
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.key}
+            title={metric.title}
+            value={metric.value}
+            icon={metric.icon}
+            color={metric.color}
+            onViewDetails={() => handleViewDetails(metric.key)}
+          />
+        ))}
+      </div>
   );
 };
 

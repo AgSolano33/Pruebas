@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { connectToDatabase } from "@/libs/mongodb";
+import { sanitizeObject } from "@/libs/sanitize";
 import promptConfig from "@/scripts/centralDiagnosticPrompt.json";
 
 // Verificar API key
@@ -45,6 +46,8 @@ function calcularMetricasPorcentuales(evaluacionAreas) {
   return metricas;
 }
 
+
+
 export async function analyzeCentralDiagnostic(diagnosticData, userId) {
   console.log('1. Iniciando análisis del diagnóstico central...');
   console.log('Datos del diagnóstico:', diagnosticData);
@@ -56,29 +59,32 @@ export async function analyzeCentralDiagnostic(diagnosticData, userId) {
     mongoose = await connectToDatabase();
     console.log('2. Conexión a MongoDB establecida');
 
+    // Sanitizar los datos antes del análisis
+    const sanitizedData = sanitizeObject(diagnosticData);
+
     // Preparar los datos para el análisis
     const dataForAnalysis = {
       empresa: {
-        nombre: diagnosticData.informacionEmpresa?.nombreEmpresa || '',
-        sector: diagnosticData.informacionEmpresa?.sector || '',
-        ubicacion: diagnosticData.informacionEmpresa?.ubicacion || '',
-        descripcion: diagnosticData.informacionEmpresa?.descripcionActividad || '',
-        numeroEmpleados: diagnosticData.informacionEmpresa?.numeroEmpleados || '',
-        ventas: diagnosticData.informacionEmpresa?.ventas || ''
+        nombre: sanitizedData.informacionEmpresa?.nombreEmpresa || '',
+        sector: sanitizedData.informacionEmpresa?.sector || '',
+        ubicacion: sanitizedData.informacionEmpresa?.ubicacion || '',
+        descripcion: sanitizedData.informacionEmpresa?.descripcionActividad || '',
+        numeroEmpleados: sanitizedData.informacionEmpresa?.numeroEmpleados || '',
+        ventas: sanitizedData.informacionEmpresa?.ventas || ''
       },
       resumenEmpresa: {
-        descripcion: diagnosticData.informacionEmpresa?.descripcionActividad || '',
-        fortalezas: diagnosticData.informacionEmpresa?.fortalezas || [],
-        debilidades: diagnosticData.informacionEmpresa?.debilidades || [],
-        oportunidades: diagnosticData.informacionEmpresa?.oportunidades || []
+        descripcion: sanitizedData.informacionEmpresa?.descripcionActividad || '',
+        fortalezas: sanitizedData.informacionEmpresa?.fortalezas || [],
+        debilidades: sanitizedData.informacionEmpresa?.debilidades || [],
+        oportunidades: sanitizedData.informacionEmpresa?.oportunidades || []
       },
       analisisObjetivos: {
-        situacionActual: diagnosticData.proyectoObjetivos?.descripcionProyecto || '',
-        viabilidad: diagnosticData.proyectoObjetivos?.objetivoConsultoria || '',
-        recomendaciones: diagnosticData.proyectoObjetivos?.recomendaciones || []
+        situacionActual: sanitizedData.proyectoObjetivos?.descripcionProyecto || '',
+        viabilidad: sanitizedData.proyectoObjetivos?.objetivoConsultoria || '',
+        recomendaciones: sanitizedData.proyectoObjetivos?.recomendaciones || []
       },
-      evaluacionAreas: diagnosticData.evaluacionAreas || {},
-      metricasPorcentuales: calcularMetricasPorcentuales(diagnosticData.evaluacionAreas)
+      evaluacionAreas: sanitizedData.evaluacionAreas || {},
+      metricasPorcentuales: calcularMetricasPorcentuales(sanitizedData.evaluacionAreas)
     };
 
     console.log('Métricas calculadas:', dataForAnalysis.metricasPorcentuales);

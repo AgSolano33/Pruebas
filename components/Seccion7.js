@@ -16,4 +16,4 @@ export default function Seccion7() {
       />
     </section>
   );
-} 
+}

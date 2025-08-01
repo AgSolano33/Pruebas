@@ -30,4 +30,4 @@ export default function Seccion6() {
       </div>
     </section>
   );
-} 
+}

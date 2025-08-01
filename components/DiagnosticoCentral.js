@@ -20,6 +20,140 @@ const inputStyles = "mt-1 block w-full rounded-lg shadow-sm focus:ring-2 focus:r
 const normalInputStyles = "border-2 border-gray-300 hover:border-gray-400";
 const errorInputStyles = "border-2 border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500";
 
+// 1. Lista de sectores/industrias completa
+const sectoresIndustria = [
+  "Aerospace",
+  "Automotive",
+  "Semiconductors",
+  "Circuit Boards Assembly",
+  "Medical Devices",
+  "Industrial Automation",
+  "Logistics, freight and transport",
+  "Agriculture industry",
+  "Food & Beverages",
+  "Health Services",
+  "Pharmacy",
+  "Beauty and personal care",
+  "Mining & Extraction",
+  "Metallurgy",
+  "Metal mechanic",
+  "E- commerce",
+  "Digital marketing & branding",
+  "ClimateTech & Sustainability",
+  "Construction & Infrastructure",
+  "Entrepreneurship & Innovation",
+  "Retail",
+  "Politics & Public Policy",
+  "Education & STEM",
+  "Safety, Security & Defense",
+  "TI",
+  "Software and Tech Development",
+  "Artificial Intelligence and Big Data",
+  "Process automation",
+  "Tourism and hospitality",
+  "Cultural Heritage Preservation",
+  "Creative Industry & arts",
+  "Livestock & fishing",
+  "Oil and gas",
+  "Toys and Entertainment",
+  "Textile",
+  "Plastics and Polymers",
+  "Banking and Financial Services",
+  "Insurance and Reinsurance",
+  "Non-Profit Organizations (NGOs)",
+  "Biotechnology and Life Sciences",
+  "Otro: Especificar"
+];
+
+// 2. Lista de países mundial (ISO 3166, solo nombres)
+const paisesMundo = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"
+];
+
+// Diccionario de títulos y descripciones para cada área y subárea
+const evaluacionAreasLabels = {
+  madurezDigital: {
+    title: "Madurez Digital y Tecnología",
+    subareas: [
+      "Nuestra empresa tiene una estrategia digital claramente definida y alineada con nuestros objetivos de negocio.",
+      "Utilizamos tecnologías digitales para mejorar nuestros procesos internos y la eficiencia operativa.",
+      "Nuestros empleados cuentan con las habilidades digitales necesarias para desempeñar sus funciones.",
+      "Aprovechamos el análisis de datos para tomar decisiones estratégicas.",
+      "Estamos actualizados en cuanto a las tendencias y tecnologías emergentes relevantes para nuestro sector (por ejemplo, inteligencia artificial, Internet de las Cosas, blockchain)."
+    ]
+  },
+  saludFinanciera: {
+    title: "Gestión Financiera y Salud Financiera",
+    subareas: [
+      "Nuestra empresa mantiene un flujo de efectivo estable y sin problemas frecuentes.",
+      "Nuestros márgenes de rentabilidad están alineados o por encima del promedio de la industria.",
+      "Nuestra empresa gestiona eficientemente sus costos operativos.",
+      "Nuestra empresa puede acceder fácilmente a financiamiento externo cuando lo necesita.",
+      "Nuestra empresa cuenta con un presupuesto anual formal y realiza un seguimiento financiero regular."
+    ]
+  },
+  eficienciaOperativa: {
+    title: "Eficiencia Operativa y Procesos",
+    subareas: [
+      "Nuestros procesos operativos están mayormente automatizados y son altamente eficientes.",
+      "Nuestras operaciones fluyen sin retrasos ni cuellos de botella significativos.",
+      "La calidad de nuestros productos/servicios es consistente y confiable.",
+      "Contamos con un programa de mejora continua implementado y en operación.",
+      "Utilizamos herramientas de automatización y sistemas ERP para gestionar eficientemente nuestros procesos."
+    ]
+  },
+  recursosHumanos: {
+    title: "Recursos Humanos y Cultura Organizacional",
+    subareas: [
+      "Nuestra empresa mantiene una baja rotación de personal y alta estabilidad laboral.",
+      "Nuestra empresa ofrece amplias oportunidades de formación y desarrollo a los empleados.",
+      "El clima laboral en nuestra empresa es positivo y satisfactorio.",
+      "Nuestros empleados están claramente alineados con los objetivos estratégicos de la empresa.",
+      "Contamos con un sistema formal de evaluación y gestión del desempeño."
+    ]
+  },
+  marketingVentas: {
+    title: "Marketing y Ventas",
+    subareas: [
+      "Contamos con una estrategia de marketing bien definida y actualizada.",
+      "Conocemos bien las necesidades y preferencias de nuestros clientes.",
+      "Utilizamos una amplia variedad de canales de venta para llegar a nuestros clientes.",
+      "Nuestra empresa tiene una diferenciación clara en el mercado respecto a la competencia.",
+      "Utilizamos activamente herramientas digitales (como redes sociales, SEO, SEM) para promocionar nuestros productos/servicios."
+    ]
+  },
+  innovacionDesarrollo: {
+    title: "Innovación y Desarrollo de Productos/Servicios",
+    subareas: [
+      "Hemos lanzado nuevos productos o servicios en los últimos dos años.",
+      "La innovación es una parte integral de nuestra cultura organizacional.",
+      "Invertimos constantemente en investigación y desarrollo.",
+      "Nos adaptamos rápidamente a los cambios del mercado.",
+      "Colaboramos activamente con terceros (universidades, startups) en proyectos de innovación."
+    ]
+  },
+  experienciaCliente: {
+    title: "Experiencia y Satisfacción del Cliente",
+    subareas: [
+      "Recopilamos regularmente feedback de nuestros clientes para mejorar nuestros servicios.",
+      "Nuestros clientes están satisfechos con nuestro servicio de atención.",
+      "Ofrecemos experiencias personalizadas a nuestros clientes.",
+      "Mantenemos una alta tasa de retención de clientes a largo plazo.",
+      "Utilizamos herramientas CRM o ERP para gestionar eficientemente las relaciones con nuestros clientes."
+    ]
+  },
+  gestionRiesgos: {
+    title: "Gestión de Riesgos y Cumplimiento Normativo",
+    subareas: [
+      "Contamos con procesos establecidos para identificar y gestionar riesgos.",
+      "Nos mantenemos al día con las regulaciones y normativas aplicables.",
+      "Contamos con políticas y procedimientos documentados en áreas clave.",
+      "Realizamos auditorías internas de manera regular.",
+      "Capacitamos regularmente a nuestros empleados en cumplimiento y ética empresarial."
+    ]
+  }
+};
+
 export default function DiagnosticoCentral() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -129,7 +263,7 @@ export default function DiagnosticoCentral() {
     }
   });
 
-  // Manejar la sesión del usuario
+  // Manejar la sesión del usuario y pre-llenar con datos del primer pre-diagnóstico
   useEffect(() => {
     if (status === "authenticated" && session?.user?.id) {
       setUserId(session.user.id);
@@ -137,6 +271,48 @@ export default function DiagnosticoCentral() {
         ...prev,
         userId: session.user.id
       }));
+      
+      // Pre-llenar con datos del primer pre-diagnóstico si existe
+      const loadPrediagnosticoData = async () => {
+        try {
+          const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+          if (response.ok) {
+            const prediagnosticos = await response.json();
+            if (prediagnosticos && prediagnosticos.length > 0) {
+              const primerPrediagnostico = prediagnosticos[0]; // Tomar el más reciente
+              console.log('Pre-llenando formulario con datos del primer pre-diagnóstico:', primerPrediagnostico);
+              
+              setFormData(prev => ({
+                ...prev,
+                userId: session.user.id,
+                informacionPersonal: {
+                  ...prev.informacionPersonal,
+                  nombre: primerPrediagnostico.nombre || "",
+                  apellido: primerPrediagnostico.apellido || "",
+                  email: primerPrediagnostico.email || session?.user?.email || "",
+                  telefono: primerPrediagnostico.telefono || "",
+                  nivelEstudios: primerPrediagnostico.nivelEstudios || "",
+                  genero: primerPrediagnostico.genero || ""
+                },
+                informacionEmpresa: {
+                  ...prev.informacionEmpresa,
+                  tipoEmpresa: primerPrediagnostico.tipoEmpresa || "",
+                  nombreEmpresaProyecto: primerPrediagnostico.nombreEmpresaProyecto || "",
+                  giroActividad: primerPrediagnostico.giroActividad || "",
+                  descripcionActividad: primerPrediagnostico.descripcionActividad || "",
+                  tieneEmpleados: primerPrediagnostico.tieneEmpleados === "si" ? true : false,
+                  numeroEmpleados: primerPrediagnostico.numeroEmpleados || "",
+                  ventasAnuales: primerPrediagnostico.ventasAnualesEstimadas || ""
+                }
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error al cargar datos del pre-diagnóstico:', error);
+        }
+      };
+      
+      loadPrediagnosticoData();
     } else if (status === "unauthenticated") {
       router.push('/login');
     }
@@ -351,6 +527,8 @@ export default function DiagnosticoCentral() {
     if (Object.keys(stepErrors).length === 0) {
       if (currentStep < 4) {
         setCurrentStep(prev => prev + 1);
+        // Scroll to top when changing to next step
+        window.scrollTo(0, 0);
       }
     } else {
       setErrors(stepErrors);
@@ -374,12 +552,24 @@ export default function DiagnosticoCentral() {
       return;
     }
 
+    // Scroll to top when submitting
+    window.scrollTo(0, 0);
+
     // Debug: mostrar el estado actual del formulario
     console.log('Submitting form data:', formData);
+    console.log('User ID:', userId);
+    console.log('Session:', session);
 
     // Asegurarnos de que el email esté presente y sea válido
     if (!formData.informacionPersonal.email) {
       toast.error('El email es requerido');
+      return;
+    }
+
+    // Asegurarnos de que el userId esté presente
+    if (!formData.userId) {
+      console.error('No userId found in formData');
+      toast.error('Error: No se encontró el ID del usuario');
       return;
     }
 
@@ -392,10 +582,12 @@ export default function DiagnosticoCentral() {
         body: JSON.stringify(formData)
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al guardar el diagnóstico');
+        throw new Error(data.error || data.message || 'Error al guardar el diagnóstico');
       }
 
       toast.success('Diagnóstico guardado exitosamente. El análisis de su empresa está en progreso.');
@@ -419,7 +611,7 @@ export default function DiagnosticoCentral() {
         break;
       case 2:
         if (!formData.informacionEmpresa.sector) newErrors.sector = "El sector es requerido";
-        if (!formData.informacionEmpresa.nombreEmpresa) newErrors.nombreEmpresa = "El nombre de la empresa es requerido";
+        // if (!formData.informacionEmpresa.nombreEmpresa) newErrors.nombreEmpresa = "El nombre de la empresa es requerido";
         if (!formData.informacionEmpresa.ubicacion) newErrors.ubicacion = "La ubicación es requerida";
         if (!formData.informacionEmpresa.codigoPostal) newErrors.codigoPostal = "El código postal es requerido";
         if (!formData.informacionEmpresa.ciudad) newErrors.ciudad = "La ciudad es requerida";
@@ -433,8 +625,8 @@ export default function DiagnosticoCentral() {
         if (!formData.informacionEmpresa.antiguedad) newErrors.antiguedad = "La antigüedad es requerida";
         break;
       case 3:
-        if (!formData.proyectoObjetivos.descripcionProyecto) newErrors.descripcionProyecto = "La descripción del proyecto es requerida";
-        if (!formData.proyectoObjetivos.objetivoConsultoria) newErrors.objetivoConsultoria = "El objetivo de la consultoría es requerido";
+        // if (!formData.proyectoObjetivos.descripcionProyecto) newErrors.descripcionProyecto = "La descripción del proyecto es requerida";
+        // if (!formData.proyectoObjetivos.objetivoConsultoria) newErrors.objetivoConsultoria = "El objetivo de la consultoría es requerido";
         break;
       case 4:
         // Validación de evaluación de áreas
@@ -588,13 +780,13 @@ export default function DiagnosticoCentral() {
         {Object.entries(categorias).map(([categoria, subareas]) => (
           <div key={categoria} className="space-y-4">
             <h3 className="text-lg font-medium">
-              {categoria.charAt(0).toUpperCase() + categoria.slice(1).replace(/([A-Z])/g, ' $1')}
+              {evaluacionAreasLabels[categoria]?.title || categoria.charAt(0).toUpperCase() + categoria.slice(1).replace(/([A-Z])/g, ' $1')}
             </h3>
             <div className="space-y-4">
-              {subareas.map(subarea => (
+              {subareas.map((subarea, idx) => (
                 <div key={subarea} className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">
-                    {subarea.charAt(0).toUpperCase() + subarea.slice(1).replace(/([A-Z])/g, ' $1')}
+                    {evaluacionAreasLabels[categoria]?.subareas?.[idx] || subarea.charAt(0).toUpperCase() + subarea.slice(1).replace(/([A-Z])/g, ' $1')}
                   </label>
                   <div className={barStyles.container} style={{ position: 'relative', height: '44px' }}>
                     <div
@@ -913,20 +1105,16 @@ export default function DiagnosticoCentral() {
                     required
                   >
                     <option value="">Seleccione un sector</option>
-                    <option value="tecnologia">Tecnología</option>
-                    <option value="servicios">Servicios</option>
-                    <option value="comercio">Comercio</option>
-                    <option value="manufactura">Manufactura</option>
-                    <option value="salud">Salud</option>
-                    <option value="agricultura">Agricultura</option>
-                    <option value="otro">Otro</option>
+                    {sectoresIndustria.map(sector => (
+                      <option key={sector} value={sector}>{sector}</option>
+                    ))}
                   </select>
                   {errors.sector && (
                     <p className="mt-1 text-sm text-red-600">{errors.sector}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Nombre de la Empresa</label>
                   <input
                     type="text"
@@ -938,17 +1126,21 @@ export default function DiagnosticoCentral() {
                   {errors.nombreEmpresa && (
                     <p className="mt-1 text-sm text-red-600">{errors.nombreEmpresa}</p>
                   )}
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Ubicación</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.informacionEmpresa.ubicacion}
                     onChange={(e) => handleInputChange('informacionEmpresa', 'ubicacion', e.target.value)}
                     className={`${inputStyles} ${errors.ubicacion ? errorInputStyles : normalInputStyles}`}
                     required
-                  />
+                  >
+                    <option value="">Seleccione un país</option>
+                    {paisesMundo.map(pais => (
+                      <option key={pais} value={pais}>{pais}</option>
+                    ))}
+                  </select>
                   {errors.ubicacion && (
                     <p className="mt-1 text-sm text-red-600">{errors.ubicacion}</p>
                   )}
@@ -1005,12 +1197,12 @@ export default function DiagnosticoCentral() {
             </div>
           )}
 
-          {/* Step 3: Proyecto y Objetivos */}
+          {/* Step 3: Importancia de Áreas */}
           {currentStep === 3 && (
             <div className="space-y-6 bg-white rounded-lg p-6 shadow-sm">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-800">Proyecto y Objetivos</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-800">Importancia de Áreas</h2>
               <div className="space-y-8">
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700">Descripción del Proyecto</label>
                   <textarea
                     value={formData.proyectoObjetivos.descripcionProyecto}
@@ -1029,17 +1221,14 @@ export default function DiagnosticoCentral() {
                   <textarea
                     value={formData.proyectoObjetivos.objetivoConsultoria}
                     onChange={(e) => handleNestedInputChange('proyectoObjetivos', 'objetivoConsultoria', e.target.value)}
-                    className={`${inputStyles} ${errors.objetivoConsultoria ? errorInputStyles : normalInputStyles}`}
-                    rows={4}
                     required
                   />
                   {errors.objetivoConsultoria && (
                     <p className="mt-1 text-sm text-red-600">{errors.objetivoConsultoria}</p>
                   )}
-                </div>
+                </div> */}
 
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Importancia de Áreas</h3>
                   <div className="space-y-4">
                     {Object.entries(formData.proyectoObjetivos.importanciaAreas).map(([area, value]) => (
                       <div key={area} className="space-y-2">
