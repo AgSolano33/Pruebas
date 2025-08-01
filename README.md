@@ -1,4 +1,4 @@
-# ShipFast — Javascript push 1
+# ShipFast — Javascript push 2
 
 Hey maker 👋 it's Marc from [ShipFast](https://shipfa.st/docs). Let's get your startup off the ground, FAST ⚡️
 
