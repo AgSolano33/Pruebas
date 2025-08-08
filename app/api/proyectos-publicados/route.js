@@ -171,18 +171,23 @@ export async function GET(request) {
     // Construir filtros
     const filtros = {};
     
-    // Si es un proveedor (userType=provider) o se solicita allProjects, mostrar todos los proyectos
+    // Obtener userType del usuario de la sesión
+    const sessionUserType = session.user.userType;
+    
+    // Si es un proveedor (userType incluye "provider") o se solicita allProjects, mostrar todos los proyectos
     // Si es un cliente, solo mostrar sus propios proyectos
-    if (userType !== "provider" && !allProjects) {
-      filtros.userId = session.user.id;
+    if (!sessionUserType || !sessionUserType.includes("provider")) {
+      if (!allProjects) {
+        filtros.userId = session.user.id;
+      }
     }
     
     // Para proveedores, solo mostrar proyectos publicados
-    if (userType === "provider") {
+    if (sessionUserType && sessionUserType.includes("provider")) {
       filtros.estado = "publicado";
     }
     
-    if (estado && userType !== "provider") filtros.estado = estado;
+    if (estado && (!sessionUserType || !sessionUserType.includes("provider"))) filtros.estado = estado;
     if (industria) filtros.industria = { $regex: industria, $options: 'i' };
     
     console.log("Applied filters:", filtros);

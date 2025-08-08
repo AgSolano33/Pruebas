@@ -8,7 +8,7 @@ import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import ProyectosTablero from "@/components/ProyectosTablero";
 import ExpertosAplicaciones from "@/components/ExpertosAplicaciones";
-import ProviderProfile from "@/components/ProviderProfile";
+import ExpertosD from "@/components/ExpertosD";
 import ProviderServices from "@/components/ProviderServices";
 import ProviderProjects from "@/components/ProviderProjects";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -37,7 +37,7 @@ export default function Dashboard() {
   const [isExisting, setIsExisting] = useState(false);
   const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userType, setUserType] = useState(null);
+  const [activeUserType, setActiveUserType] = useState("client"); // Por defecto cliente
   const [providerHasProfile, setProviderHasProfile] = useState(false);
   const [isLoadingProviderProfile, setIsLoadingProviderProfile] = useState(true);
   const [expertosSugeridos, setExpertosSugeridos] = useState([]);
@@ -62,17 +62,42 @@ export default function Dashboard() {
     const checkData = async () => {
       if (!session?.user?.id) return;
 
-      // Verificar si el usuario tiene userType establecido
-      if (!session.user.userType) {
-        // Redirigir al selector de tipo de usuario
-        router.push("/user-type-selector");
-        return;
+      // Debug: mostrar información del usuario
+      console.log("🔍 DEBUG - Usuario en /dashboard:", {
+        email: session.user.email,
+        userType: session.user.userType,
+        userTypeType: typeof session.user.userType,
+        isArray: Array.isArray(session.user.userType)
+      });
+
+      // Determinar el tipo de usuario activo
+      if (session.user.userType) {
+        if (Array.isArray(session.user.userType)) {
+          // Si tiene ambos tipos, usar el primero como predeterminado
+          if (session.user.userType.includes("client") && session.user.userType.includes("provider")) {
+            // Usar el tipo guardado en localStorage o cliente por defecto
+            const savedType = localStorage.getItem("activeUserType");
+            if (savedType && session.user.userType.includes(savedType)) {
+              setActiveUserType(savedType);
+            } else {
+              setActiveUserType("client");
+            }
+          } else if (session.user.userType.includes("client")) {
+            setActiveUserType("client");
+          } else if (session.user.userType.includes("provider")) {
+            setActiveUserType("provider");
+          }
+        } else {
+          // Compatibilidad hacia atrás con string
+          setActiveUserType(session.user.userType);
+        }
       }
 
-      setUserType(session.user.userType);
-
-      // Si es proveedor, verificar si tiene perfil
-      if (session.user.userType === "provider") {
+      // Verificar si tiene perfil de proveedor (si tiene ambos tipos)
+      if (session.user.userType && 
+          (Array.isArray(session.user.userType) 
+            ? session.user.userType.includes("provider") 
+            : session.user.userType === "provider")) {
         try {
           const response = await fetch("/api/expertos?checkProfile=true");
           if (response.ok) {
@@ -84,7 +109,6 @@ export default function Dashboard() {
         } finally {
           setIsLoadingProviderProfile(false);
         }
-        return;
       }
 
       // Si es cliente, continuar con el flujo normal
@@ -202,6 +226,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+
 
   if (showDiagnosticoCentral) {
     return <DiagnosticoCentral />;
@@ -330,7 +356,7 @@ export default function Dashboard() {
   ];
 
   // Si es proveedor y está cargando, mostrar loading
-  if (userType === "provider" && isLoadingProviderProfile) {
+        if (activeUserType === "provider" && isLoadingProviderProfile) {
     return (
       <div className="min-h-screen bg-gray-50 flex justify-center items-center">
         <div className="text-center">
@@ -342,17 +368,23 @@ export default function Dashboard() {
   }
 
   // Si es proveedor, mostrar dashboard de proveedor
-  if (userType === "provider") {
+        if (activeUserType === "provider") {
     return (
       <main className="min-h-screen bg-gray-50">
         <div className="max-w-screen-2xl mx-auto p-8">
           {/* Header del Proveedor */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Proveedor</h1>
-            <h2 className="text-xl text-gray-600 mt-2">Tu Perfil Profesional</h2>
-            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mt-2">
-              <span>🏠</span>
-              <span>Proveedor</span>
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Dashboard Proveedor</h1>
+                <h2 className="text-xl text-gray-600 mt-2">Tu Perfil Profesional</h2>
+                <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mt-2">
+                  <span>🏠</span>
+                  <span>Proveedor</span>
+                </div>
+              </div>
+              
+              
             </div>
           </div>
 
@@ -453,9 +485,7 @@ export default function Dashboard() {
 
           {activeTab === "profile" && (
             <div className="bg-white rounded-lg shadow-md p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Mi Perfil Profesional</h3>
-              {/* Aquí iría el componente ProviderProfile */}
-              <ProviderProfile />
+              <ExpertosD/>
             </div>
           )}
 
@@ -483,8 +513,14 @@ export default function Dashboard() {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <h2 className="text-xl text-gray-600">{companyName}</h2>
+            <div className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium mt-2">
+              <span>👤</span>
+              <span>Cliente</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
+            
+            
             {isLoading ? (
               <div className="animate-pulse bg-gray-200 h-10 w-40 rounded-md"></div>
             ) : !hasDiagnosticoCentral && (
