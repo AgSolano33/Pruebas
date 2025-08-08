@@ -28,6 +28,7 @@
     "nextjs-toploader": "^3.8.16",
     "openai": "^5.3.0",
     "postcss": "^8.4.35",
+    "prettier": "^3.6.2",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",

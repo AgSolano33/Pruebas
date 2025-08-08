@@ -151,6 +151,7 @@ export async function GET(request) {
     await connectToDatabase();
     
     const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
     const estado = searchParams.get("estado");
     const industria = searchParams.get("industria");
     const limit = parseInt(searchParams.get("limit")) || 10;
@@ -159,6 +160,7 @@ export async function GET(request) {
     const userType = searchParams.get("userType");
     
     console.log("GET /api/proyectos-publicados - Params:", {
+      id,
       estado,
       industria,
       limit,
@@ -168,7 +170,34 @@ export async function GET(request) {
       sessionUserId: session.user.id
     });
     
-    // Construir filtros
+    // Si se proporciona un ID específico, obtener ese proyecto
+    if (id) {
+      const proyecto = await ProyectoPublicado.findById(id)
+        .populate("userId", "name email image")
+        .lean();
+      
+      if (!proyecto) {
+        return NextResponse.json(
+          { success: false, error: "Proyecto no encontrado" },
+          { status: 404 }
+        );
+      }
+      
+      // Verificar que el usuario tenga acceso al proyecto
+      if (proyecto.userId._id.toString() !== session.user.id && userType !== "provider") {
+        return NextResponse.json(
+          { success: false, error: "No autorizado para acceder a este proyecto" },
+          { status: 403 }
+        );
+      }
+      
+      return NextResponse.json({
+        success: true,
+        data: proyecto,
+      });
+    }
+    
+    // Construir filtros para lista de proyectos
     const filtros = {};
     
     // Si es un proveedor (userType=provider) o se solicita allProjects, mostrar todos los proyectos

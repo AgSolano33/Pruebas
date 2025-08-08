@@ -63,11 +63,11 @@ export default function Dashboard() {
       if (!session?.user?.id) return;
 
       // Verificar si el usuario tiene userType establecido
-      if (!session.user.userType) {
-        // Redirigir al selector de tipo de usuario
-        router.push("/user-type-selector");
-        return;
-      }
+      // if (!session.user.userType) {
+      //   // Redirigir al selector de tipo de usuario
+      //   router.push("/user-type-selector");
+      //   return;
+      // }
 
       setUserType(session.user.userType);
 
@@ -800,34 +800,40 @@ export default function Dashboard() {
 
         {activeTab === "proyectos" && (
           <section>
-                    <div className="mb-4">
-          <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
-          <button
-            onClick={() => {
-              // Debug temporal
-              if (typeof window !== 'undefined') {
-                const store = require('@/libs/postulacionesStore').default;
-                store.debugStore();
-              }
-            }}
-            className="ml-4 px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
-          >
-            Debug Store
-          </button>
-          <button
-            onClick={() => {
-              // Limpiar store temporal
-              if (typeof window !== 'undefined') {
-                const store = require('@/libs/postulacionesStore').default;
-                store.limpiarPostulaciones();
-                window.location.reload();
-              }
-            }}
-            className="ml-2 px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-          >
-            Limpiar Store
-          </button>
-        </div>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    if (confirm("¿Estás seguro de que quieres eliminar TODOS los proyectos? Esta acción no se puede deshacer.")) {
+                      try {
+                        const response = await fetch("/api/clean-projects", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          alert(`¡Proyectos eliminados! Se eliminaron ${result.data.eliminados} proyectos exitosamente.`);
+                          window.location.reload();
+                        } else {
+                          alert("Error al eliminar proyectos: " + result.error);
+                        }
+                      } catch (error) {
+                        console.error("Error:", error);
+                        alert("Error al limpiar proyectos");
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Eliminar Proyectos
+                </button>
+              </div>
+            </div>
             <div className="w-full">
               <ProyectosTablero />
             </div>

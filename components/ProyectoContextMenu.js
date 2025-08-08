@@ -53,15 +53,15 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
   const calculateMatches = () => {
     setLoading(true);
     
-    // Simular cálculo de matches usando los datos mock
-    const expertos = expertosData.expertos_formulario || [];
+    // Calcular matches usando los datos del JSON unificado
+    const expertos = expertosData || [];
     const matchesCalculados = expertos.map(experto => {
       // Algoritmo mejorado de matching basado en categorías y experiencia
       let puntuacion = 0;
       
       // Matching por categorías (más preciso)
-      if (experto.categoria && proyecto.categoriasServicioBuscado) {
-        const categoriasExperto = experto.categoria.split(',').map(cat => cat.trim().toLowerCase());
+      if (experto.categorias && proyecto.categoriasServicioBuscado) {
+        const categoriasExperto = experto.categorias.split(',').map(cat => cat.trim().toLowerCase());
         const categoriasProyecto = proyecto.categoriasServicioBuscado.map(cat => cat.toLowerCase());
         
         // Buscar coincidencias exactas y parciales
@@ -106,12 +106,12 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
       }
       
       // Matching por industria (más flexible)
-      if (experto.categoria && proyecto.industria) {
-        const categoriasExperto = experto.categoria.toLowerCase();
+      if (experto.industrias && proyecto.industria) {
+        const industriasExperto = experto.industrias.map(ind => ind.toLowerCase());
         const industriaProyecto = proyecto.industria.toLowerCase();
         
         // Coincidencias directas
-        if (categoriasExperto.includes(industriaProyecto) || industriaProyecto.includes(categoriasExperto)) {
+        if (industriasExperto.includes(industriaProyecto)) {
           puntuacion += 25;
         }
         
@@ -125,7 +125,9 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
         
         Object.entries(sectores).forEach(([sector, palabras]) => {
           if (palabras.some(palabra => industriaProyecto.includes(palabra))) {
-            if (palabras.some(palabra => categoriasExperto.includes(palabra))) {
+            if (industriasExperto.some(industria => 
+              palabras.some(palabra => industria.includes(palabra))
+            )) {
               puntuacion += 15;
             }
           }
@@ -133,8 +135,8 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
       }
       
       // Matching por experiencia y objetivo (más flexible)
-      if (experto.experiencia_experto && proyecto.objetivoEmpresa) {
-        const experienciaLower = experto.experiencia_experto.toLowerCase();
+      if (experto.descripcion && proyecto.objetivoEmpresa) {
+        const experienciaLower = experto.descripcion.toLowerCase();
         const objetivoLower = proyecto.objetivoEmpresa.toLowerCase();
         
         // Palabras clave expandidas
@@ -151,23 +153,24 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
         puntuacion += (matches.length / palabrasClave.length) * 25;
       }
       
-      // Bonus por nivel de estudios
-      if (experto.estudios_expertos) {
-        const estudios = experto.estudios_expertos.toLowerCase();
-        if (estudios.includes('doctorado')) puntuacion += 10;
-        else if (estudios.includes('maestría')) puntuacion += 8;
-        else if (estudios.includes('licenciatura')) puntuacion += 5;
+      // Bonus por grado de experiencia
+      if (experto.gradoExperiencia) {
+        const grado = experto.gradoExperiencia.toLowerCase();
+        if (grado === 'expert') puntuacion += 15;
+        else if (grado === 'senior') puntuacion += 12;
+        else if (grado === 'mid-level') puntuacion += 8;
+        else if (grado === 'junior') puntuacion += 5;
       }
       
-      // Bonus por experiencia específica mencionada
-      if (experto.experiencia_experto && proyecto.objetivoEmpresa) {
-        const experienciaLower = experto.experiencia_experto.toLowerCase();
+      // Bonus por servicios específicos mencionados
+      if (experto.servicios && proyecto.objetivoEmpresa) {
+        const serviciosLower = experto.servicios.toLowerCase();
         const objetivoLower = proyecto.objetivoEmpresa.toLowerCase();
         
         // Contar palabras específicas que coinciden
         const palabrasEspecificas = ['proyecto', 'empresa', 'cliente', 'implementación', 'solución'];
         const matchesEspecificos = palabrasEspecificas.filter(palabra => 
-          experienciaLower.includes(palabra) && objetivoLower.includes(palabra)
+          serviciosLower.includes(palabra) && objetivoLower.includes(palabra)
         );
         
         puntuacion += matchesEspecificos.length * 2;
@@ -209,7 +212,7 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
 
   const handleContactarExperto = (experto) => {
     // Verificar si ya hay una solicitud pendiente
-    if (meetingRequests[experto.ID]?.status === 'pending') {
+    if (meetingRequests[experto._id]?.status === 'pending') {
       alert('Ya tienes una solicitud de reunión pendiente con este experto. Espera su confirmación.');
       return;
     }
@@ -224,7 +227,7 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
     // Crear solicitud de reunión
     const meetingRequest = {
       id: Date.now(),
-      expertoId: selectedExpert.ID,
+      expertoId: selectedExpert._id,
       proyectoId: proyecto.id || proyecto._id,
       date: meetingForm.date,
       time: meetingForm.time,
@@ -237,7 +240,7 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
     // Actualizar estado de solicitudes
     setMeetingRequests(prev => ({
       ...prev,
-      [selectedExpert.ID]: meetingRequest
+      [selectedExpert._id]: meetingRequest
     }));
     
     // Simular cambio de estado del proyecto de "en_espera" a "en_proceso"
@@ -415,13 +418,13 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
             ) : (
               <div>
                 {matches.map((match, index) => {
-                  const meetingStatus = getMeetingStatus(match.experto.ID);
+                  const meetingStatus = getMeetingStatus(match.experto._id);
                   const statusInfo = meetingStatus ? getStatusIcon(meetingStatus.status) : null;
                   const StatusIcon = statusInfo?.icon;
                   
                   return (
                     <div
-                      key={match.experto.ID}
+                      key={match.experto._id}
                       className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50 mb-4"
                     >
                       <div className="flex justify-between items-start mb-3">
@@ -434,10 +437,10 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
                               Experto #{index + 1}
                             </h4>
                             <div className="flex items-center gap-2 text-sm text-gray-600">
-                              {match.experto.estudios_expertos && (
+                              {match.experto.gradoExperiencia && (
                                 <div className="flex items-center gap-1">
                                   <FaGraduationCap className="text-gray-400" />
-                                  <span>{match.experto.estudios_expertos}</span>
+                                  <span>{match.experto.gradoExperiencia}</span>
                                 </div>
                               )}
                               <div className="flex items-center gap-1">
@@ -463,7 +466,7 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
                       <div className="mb-3">
                         <p className="text-sm text-gray-600 mb-1">Especialidades</p>
                         <div className="flex flex-wrap gap-1">
-                          {match.experto.categoria && match.experto.categoria.split(',').map((cat, idx) => (
+                          {match.experto.categorias && match.experto.categorias.split(',').map((cat, idx) => (
                             <span
                               key={idx}
                               className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
@@ -474,14 +477,14 @@ export default function ProyectoContextMenu({ proyecto, isOpen, onClose, experto
                         </div>
                       </div>
 
-                      {match.experto.experiencia_experto && (
+                      {match.experto.descripcion && (
                         <div className="mb-4">
                           <p className="text-sm text-gray-600 mb-1">Perfil Profesional</p>
-                                                      <p className="text-sm text-gray-700 leading-relaxed">
-                              {match.experto.experiencia_experto && match.experto.experiencia_experto.length > 200 
-                                ? `${match.experto.experiencia_experto.substring(0, 200)}...` 
-                                : match.experto.experiencia_experto || 'Sin experiencia especificada'}
-                            </p>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {match.experto.descripcion && match.experto.descripcion.length > 200 
+                              ? `${match.experto.descripcion.substring(0, 200)}...` 
+                              : match.experto.descripcion || 'Sin descripción especificada'}
+                          </p>
                         </div>
                       )}
 

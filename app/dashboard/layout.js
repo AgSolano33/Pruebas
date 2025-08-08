@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/libs/next-auth";
 import config from "@/config";
 import Header from "@/components/Header";
+import ConditionalHeader from "@/components/ConditionalHeader";
 
 // This is a server-side component to ensure the user is logged in.
 // If not, it will redirect to the login page.
@@ -18,7 +19,7 @@ export default async function LayoutPrivate({ children }) {
 
   return (
     <>
-      <Header />
+      <ConditionalHeader />
       {children}
     </>
   );

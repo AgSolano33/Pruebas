@@ -58,52 +58,54 @@ const ExpertosPage = () => {
         const data = await response.json();
         setExpertosData(data);
         
-        // Simular que el usuario actual es "Pedro" (primer experto de la lista)
-        if (data.expertos_formulario && data.expertos_formulario.length > 0) {
-          const pedro = data.expertos_formulario[0];
-          // Crear un perfil de experto simulado basado en Pedro
-          const perfilPedro = {
-            _id: pedro.ID,
-            nombre: pedro.nombre_experto,
-            semblanza: "Experto en servicios digitales y transformación empresarial",
-            industrias: ["Tecnología", "Consultoría", "Digital"],
-            categorias: pedro.categoria,
-            gradoExperiencia: "Senior",
-            experienciaProfesional: pedro.experiencia_experto,
-            serviciosPropuestos: "Consultoría digital, Implementación de sistemas, Optimización de procesos",
+        // Simular que el usuario actual es el primer experto de la lista
+        if (data && data.length > 0) {
+          const primerExperto = data[0];
+          // Crear un perfil de experto simulado basado en el primer experto
+          const perfilExperto = {
+            _id: primerExperto._id,
+            nombre: primerExperto.semblanza,
+            semblanza: primerExperto.semblanza,
+            industrias: primerExperto.industrias,
+            categorias: primerExperto.categorias,
+            gradoExperiencia: primerExperto.gradoExperiencia,
+            experienciaProfesional: primerExperto.descripcion,
+            serviciosPropuestos: primerExperto.servicios,
             estado: "aprobado"
           };
-          setExperto(perfilPedro);
+          setExperto(perfilExperto);
         }
       } catch (error) {
         console.error('Error al cargar datos de expertos:', error);
-        // Datos mock de respaldo para Pedro
-        const perfilPedro = {
-          _id: "pedro_001",
-          nombre: "Pedro García",
-          semblanza: "Experto en servicios digitales y transformación empresarial",
-          industrias: ["Tecnología", "Consultoría", "Digital"],
-          categorias: "Servicios Digitales,Negocios,STEAM",
-          gradoExperiencia: "Senior",
-          experienciaProfesional: "Más de 15 años en transformación digital y desarrollo de software.",
-          serviciosPropuestos: "Consultoría digital, Implementación de sistemas, Optimización de procesos",
+        // Datos mock de respaldo
+        const perfilExperto = {
+          _id: "expert1",
+          nombre: "Carlos Rodríguez",
+          semblanza: "Carlos Rodríguez",
+          industrias: ["Tecnología", "E-commerce"],
+          categorias: "Desarrollo Web, Optimización SEO",
+          gradoExperiencia: "senior",
+          experienciaProfesional: "Desarrollador web senior con más de 8 años de experiencia en tecnologías modernas.",
+          serviciosPropuestos: "Desarrollo de aplicaciones web, Optimización de sitios web para SEO, Consultoría en tecnología",
           estado: "aprobado"
         };
-        setExperto(perfilPedro);
-        setExpertosData({
-          expertos_formulario: [
-            {
-              ID: "pedro_001",
-              nombre_experto: "Pedro García",
-              categoria: "Servicios Digitales,Negocios,STEAM",
-              estudios_expertos: "Doctorado",
-              experiencia_experto: "Más de 15 años en transformación digital y desarrollo de software.",
-              email_experto: "pedro.garcia@digitalexpert.com",
-              telefono_experto: "+525512345678",
-              tipo_usuario: "Experto gestor"
-            }
-          ]
-        });
+        setExperto(perfilExperto);
+        setExpertosData([
+          {
+            _id: "expert1",
+            semblanza: "Carlos Rodríguez",
+            gradoExperiencia: "senior",
+            industrias: ["Tecnología", "E-commerce"],
+            categorias: "Desarrollo Web, Optimización SEO",
+            servicios: "Desarrollo de aplicaciones web, Optimización de sitios web para SEO, Consultoría en tecnología",
+            descripcion: "Desarrollador web senior con más de 8 años de experiencia en tecnologías modernas. Especializado en React, Node.js y optimización SEO.",
+            email: "carlos.rodriguez@email.com",
+            telefono: "+1 555 123 4567",
+            ubicacion: "Madrid, España",
+            linkedin: "https://linkedin.com/in/carlos-rodriguez",
+            website: "https://carlosrodriguez.dev"
+          }
+        ]);
       }
     };
     fetchExpertosData();
