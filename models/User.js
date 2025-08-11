@@ -20,9 +20,15 @@ const userSchema = mongoose.Schema(
       required: false, // No requerido porque usuarios de Google no tienen contraseña
     },
     userType: {
-      type: String,
-      enum: ["provider", "client"],
-      required: false, // Se puede establecer después del registro
+      type: [String],
+      validate: {
+        validator: function(v) {
+          return v.every(type => ["provider", "client"].includes(type));
+        },
+        message: 'userType debe contener solo "provider" y/o "client"'
+      },
+      default: ["client", "provider"], // Por defecto, todos los usuarios tienen ambos tipos
+      required: false,
     },
     image: {
       type: String,
@@ -56,4 +62,9 @@ const userSchema = mongoose.Schema(
 // add plugin that converts mongoose to json
 userSchema.plugin(toJSON);
 
-export default mongoose.models.User || mongoose.model("User", userSchema);
+// Clear any existing model to force recompilation with new schema
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
+
+export default mongoose.model("User", userSchema);

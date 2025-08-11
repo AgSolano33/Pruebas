@@ -24,6 +24,7 @@ export async function POST(request) {
       );
     }
 
+    // Validar userType si se proporciona (para compatibilidad hacia atrás)
     if (userType && !["provider", "client"].includes(userType)) {
       return NextResponse.json(
         { error: "Tipo de usuario inválido" },
@@ -43,12 +44,13 @@ export async function POST(request) {
     // Encriptar contraseña con bcrypt (cost factor 12 para producción)
     const hashedPassword = await bcrypt.hash(password, 12);
     
-    // Crear usuario
+    // Crear usuario con ambos tipos por defecto
     const user = await User.create({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
-      userType: userType || null,
+      // Si se proporciona userType específico, usarlo; si no, usar ambos por defecto
+      userType: userType ? [userType] : ["client", "provider"],
     });
     
     return NextResponse.json(

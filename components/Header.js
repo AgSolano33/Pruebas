@@ -46,6 +46,7 @@ const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [selectedUserType, setSelectedUserType] = useState(null);
+  const [activeUserType, setActiveUserType] = useState("client");
 
   // setIsOpen(false) when the route changes
   useEffect(() => {
@@ -94,6 +95,27 @@ const Header = () => {
     setAuthMode("register");
     // Mantener el userType seleccionado cuando se cambia a registro
   };
+
+  // Función para manejar clic en enlace Cliente/Proveedor
+  const handleNavLinkClick = (userType) => {
+    // Si el usuario tiene ambos tipos, cambiar el tipo activo
+    if (session?.user?.userType && Array.isArray(session.user.userType) && 
+        session.user.userType.includes("client") && session.user.userType.includes("provider")) {
+      setActiveUserType(userType);
+      localStorage.setItem("activeUserType", userType);
+    }
+    // La navegación se maneja automáticamente por el Link
+  };
+
+  // Cargar el tipo activo desde localStorage al montar el componente
+  useEffect(() => {
+    if (session?.user?.userType) {
+      const savedType = localStorage.getItem("activeUserType");
+      if (savedType && ["client", "provider"].includes(savedType)) {
+        setActiveUserType(savedType);
+      }
+    }
+  }, [session]);
 
   return (
     <header className="bg-base-200">
@@ -196,18 +218,33 @@ const Header = () => {
             )}
             {session && (
               <>
-                <Link 
-                  href="/dashboard" 
-                  className="link link-hover text-base-content/80 hover:text-base-content ml-8"
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  href="/expertos" 
-                  className="link link-hover text-base-content/80 hover:text-base-content"
-                >
-                  Expertos
-                </Link>
+                                    {/* Mostrar enlace Cliente solo si el usuario tiene tipo client */}
+                    {session.user?.userType && 
+                      (Array.isArray(session.user.userType) 
+                        ? session.user.userType.includes("client") 
+                        : session.user.userType === "client") && (
+                      <Link 
+                        href="/dashboard" 
+                        className="link link-hover text-base-content/80 hover:text-base-content ml-8"
+                        onClick={() => handleNavLinkClick("client")}
+                      >
+                        Cliente
+                      </Link>
+                    )}
+                    {/* Mostrar enlace Proveedor solo si el usuario tiene tipo provider */}
+                    {session.user?.userType && 
+                      (Array.isArray(session.user.userType) 
+                        ? session.user.userType.includes("provider") 
+                        : session.user.userType === "provider") && (
+                      <Link 
+                        href="/dashboard" 
+                        className="link link-hover text-base-content/80 hover:text-base-content"
+                        onClick={() => handleNavLinkClick("provider")}
+                      >
+                        Proveedor
+                      </Link>
+                    )}
+                    
                 <Link 
                   href="/adminPanel" 
                   className="link link-hover text-base-content/80 hover:text-base-content"
@@ -311,18 +348,39 @@ const Header = () => {
                   )}
                   {session && (
                     <>
-                      <Link 
-                        href="/dashboard" 
-                        className="link link-hover text-base-content/80 hover:text-base-content"
-                      >
-                        Dashboard
-                      </Link>
-                      <Link 
-                        href="/expertos" 
-                        className="link link-hover text-base-content/80 hover:text-base-content"
-                      >
-                        Expertos
-                      </Link>
+                                    {/* Mostrar enlace Cliente solo si el usuario tiene tipo client */}
+              {session.user?.userType && 
+                (Array.isArray(session.user.userType) 
+                  ? session.user.userType.includes("client") 
+                  : session.user.userType === "client") && (
+                <Link 
+                  href="/dashboard" 
+                  className="link link-hover text-base-content/80 hover:text-base-content"
+                  onClick={() => {
+                    handleNavLinkClick("client");
+                    setIsOpen(false);
+                  }}
+                >
+                  Cliente
+                </Link>
+              )}
+              {/* Mostrar enlace Proveedor solo si el usuario tiene tipo provider */}
+              {session.user?.userType && 
+                (Array.isArray(session.user.userType) 
+                  ? session.user.userType.includes("provider") 
+                  : session.user.userType === "provider") && (
+                <Link 
+                  href="/dashboard" 
+                  className="link link-hover text-base-content/80 hover:text-base-content"
+                  onClick={() => {
+                    handleNavLinkClick("provider");
+                    setIsOpen(false);
+                  }}
+                >
+                  Proveedor
+                </Link>
+              )}
+              
                       <Link 
                         href="/adminPanel" 
                         className="link link-hover text-base-content/80 hover:text-base-content"

@@ -20,15 +20,7 @@ const ButtonSignin = ({ text = "Get started", extraStyle }) => {
   const [registeredEmail, setRegisteredEmail] = useState(""); // Para pre-llenar el login
 
   const handleGoogleSignIn = () => {
-    // Obtener userType de la URL si existe
-    const urlParams = new URLSearchParams(window.location.search);
-    const userType = urlParams.get('userType');
-    
-    if (userType) {
-      signIn("google", { callbackUrl: `${config.auth.callbackUrl}?userType=${userType}` });
-    } else {
-      signIn("google", { callbackUrl: config.auth.callbackUrl });
-    }
+    signIn("google", { callbackUrl: config.auth.callbackUrl });
   };
 
   const handleAuthSuccess = () => {
@@ -110,7 +102,6 @@ const ButtonSignin = ({ text = "Get started", extraStyle }) => {
                 onSuccess={handleAuthSuccess}
                 onCancel={() => setShowAuthModal(false)}
                 onSwitchToLogin={switchToLogin}
-                userType="client" // Por defecto cliente para el ButtonSignin
               />
             )}
             
