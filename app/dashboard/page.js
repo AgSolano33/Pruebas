@@ -50,6 +50,18 @@ export default function Dashboard() {
   // Estado para las pestañas
   const [activeTab, setActiveTab] = useState("overview");
 
+//Redirigir a la pestaña de diagnosticos
+    useEffect(() => {
+    if (status === "authenticated") {
+      const tab = searchParams.get("tab");
+      if (!tab) {
+        router.push("/dashboard?tab=diagnosticos");
+      } else {
+        setActiveTab(tab);
+      }
+    }
+  }, [status, router, searchParams]);
+
   useEffect(() => {
     // Obtener la pestaña activa de los parámetros de URL
     const tab = searchParams.get("tab");
@@ -342,14 +354,14 @@ export default function Dashboard() {
   );
 
   const tabs = [
-    { id: "overview", name: "Resumen", icon: FaChartBar },
+    // { id: "overview", name: "Resumen", icon: FaChartBar },
     { id: "proyectos", name: "Proyectos", icon: FaRocket },
     { id: "diagnosticos", name: "Diagnósticos", icon: FaClipboardList },
     { id: "configuracion", name: "Perfil", icon: FaUsers },
   ];
 
   const providerTabs = [
-    { id: "overview", name: "Resumen", icon: FaChartBar },
+    // { id: "overview", name: "Resumen", icon: FaChartBar },
     { id: "profile", name: "Mi Perfil", icon: FaUsers },
     { id: "services", name: "Mis Servicios", icon: FaClipboardList },
     { id: "projects", name: "Proyectos Disponibles", icon: FaRocket },
@@ -521,7 +533,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             
             
-            {isLoading ? (
+            {/* {isLoading ? (
               <div className="animate-pulse bg-gray-200 h-10 w-40 rounded-md"></div>
             ) : !hasDiagnosticoCentral && (
               <button
@@ -530,7 +542,7 @@ export default function Dashboard() {
               >
                 Diagnóstico Central
               </button>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -836,10 +848,13 @@ export default function Dashboard() {
 
         {activeTab === "proyectos" && (
           <section>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Proyectos Publicados</h2>
+            <div className="flex gap-2">
+
+              <h2 className="text-2xl font-bold">Proyectos</h2>
+              <h3 className="text-gray-600">En este dashboard podrás encontrar los proyectos que has dado de alta, así como filtrarlos por estatus, revisar sus detalles y ver las postulaciones de expertos interesados en los mismos.</h3>
+
               <div className="flex gap-2">
-                <button
+                {/* <button
                   onClick={async () => {
                     if (confirm("¿Estás seguro de que quieres eliminar TODOS los proyectos? Esta acción no se puede deshacer.")) {
                       try {
@@ -867,7 +882,7 @@ export default function Dashboard() {
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
                 >
                   Eliminar Proyectos
-                </button>
+                </button> */}
               </div>
             </div>
             <div className="w-full">
@@ -880,7 +895,7 @@ export default function Dashboard() {
           <>
             {/* Projects Section */}
             <section>
-              <h2 className="text-2xl font-bold mb-4">Diagnósticos y Proyectos</h2>
+              <h2 className="text-2xl font-bold mb-4">Diagnósticos y Propuestas</h2>
               <div className="w-full">
                 <PrediagnosticoList />
               </div>

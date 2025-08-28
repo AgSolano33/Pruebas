@@ -43,7 +43,7 @@ export default function UiFormDiagnostico({ onClose }) {
     // Pre-llenar con datos del primer pre-diagnóstico si existe
     const loadPrediagnosticoData = async () => {
       try {
-        const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+        const response = await fetch(`/api/prediagnostico/${session.user.id}`);
         if (response.ok) {
           const prediagnosticos = await response.json();
           if (prediagnosticos && prediagnosticos.length > 0) {
@@ -193,7 +193,7 @@ export default function UiFormDiagnostico({ onClose }) {
     try {
       console.log('1. Enviando pre-diagnóstico a la API...');
       // 1. Guardar el pre-diagnóstico
-      const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`, {
+      const response = await fetch(`/api/prediagnostico/${session.user.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

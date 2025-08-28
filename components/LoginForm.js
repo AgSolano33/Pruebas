@@ -30,8 +30,12 @@ export default function LoginForm({ onSuccess, onCancel, prefillEmail = "", user
       });
 
       if (result?.error) {
-        toast.error("Email o contraseña incorrectos");
-      } else {
+  if (result.error === "Debes verificar tu correo antes de iniciar sesión") {
+    toast.error("Debes verificar tu correo antes de iniciar sesión.");
+  } else {
+    toast.error("Email o contraseña incorrectos");
+  }
+}else {
         toast.success("¡Inicio de sesión exitoso!");
         if (onSuccess) {
           onSuccess();

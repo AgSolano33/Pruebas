@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuthModal } from "@/hooks/useAuthModal"; // importamos el hook
+import LoginForm from "./LoginForm";
+import RegisterForm from "./RegisterForm";
 
 const slides = [
   {
@@ -23,8 +26,21 @@ const slides = [
   }
 ];
 
-export default function Carousel({ onOpenModal }) {
+export default function Carousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Hook del modal de login
+  const {
+    showAuthModal,
+    openModal,
+    closeModal,
+    authMode,
+    registeredEmail,
+    handleGoogleSignIn,
+    handleAuthSuccess,
+    switchToLogin,
+    switchToRegister
+  } = useAuthModal();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -51,16 +67,17 @@ export default function Carousel({ onOpenModal }) {
                 <h2 className="text-4xl font-bold mb-4 text-[#1A3D7C]">{slide.title}</h2>
                 <p className="text-xl mb-8 text-gray-700">{slide.description}</p>
                 <button 
-                  onClick={onOpenModal}
+                  onClick={openModal} // abrimos el modal del hook
                   className="btn btn-primary bg-[#1A3D7C] hover:bg-[#0f2a5a] border-none"
                 >
-                  ¡Genera tu diagnostico gratis!
+                  ¡Genera tu diagnóstico gratis!
                 </button>
               </div>
             </div>
           </div>
         </div>
       ))}
+
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
         {slides.map((_, index) => (
           <button
@@ -72,6 +89,50 @@ export default function Carousel({ onOpenModal }) {
           />
         ))}
       </div>
+
+      {/* Modal de login */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">{authMode === "login" ? "Iniciar Sesión" : "Crear Cuenta"}</h2>
+              <button onClick={closeModal} className="btn btn-ghost btn-sm btn-circle">✕</button>
+            </div>
+
+            {authMode === "login" ? (
+              <LoginForm
+                onSuccess={handleAuthSuccess}
+                onCancel={closeModal}
+                prefillEmail={registeredEmail}
+              />
+            ) : (
+              <RegisterForm
+                onSuccess={handleAuthSuccess}
+                onCancel={closeModal}
+                onSwitchToLogin={switchToLogin}
+              />
+            )}
+
+            <div className="divider">O</div>
+
+            <button onClick={handleGoogleSignIn} className="btn btn-outline w-full mb-4">
+              Continuar con Google
+            </button>
+
+            <div className="text-center">
+              {authMode === "login" ? (
+                <button onClick={switchToRegister} className="btn btn-link">
+                  ¿No tienes cuenta? Regístrate
+                </button>
+              ) : (
+                <button onClick={() => switchToLogin()} className="btn btn-link">
+                  ¿Ya tienes cuenta? Inicia sesión
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

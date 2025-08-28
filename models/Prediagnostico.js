@@ -1,97 +1,62 @@
 import mongoose from "mongoose";
 
-const prediagnosticoSchema = new mongoose.Schema(
+const preDiagnosticoSchema = new mongoose.Schema(
   {
+    // Usuario que responde el prediagnóstico
     userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    // Preguntas del prediagnóstico
+    preguntaObstaculo: {
       type: String,
-      required: true,
-      index: true
+      trim: true,
+      default: "",
     },
-    nombre: {
+    preguntaIntentos: {
       type: String,
-      required: true,
+      trim: true,
+      default: "",
     },
-    apellido: {
+    preguntaSeñales: {
       type: String,
-      required: true,
+      trim: true,
+      default: "",
     },
-    genero: {
+    preguntasKpis: {
       type: String,
-      required: true,
+      trim: true,
+      default: "",
     },
-    nivelEstudios: {
+    preguntaTipoAyuda: {
       type: String,
-      required: true,
+      trim: true,
+      default: "",
     },
-    tipoEmpresa: {
+    preguntaInversion: {
       type: String,
-      required: true,
-    },
-    nombreEmpresaProyecto: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-    },
-    telefono: {
-      type: Number,
-      required: true,
-    },
-    giroActividad: {
-      type: String,
-      required: true,
-    },
-    descripcionActividad: {
-      type: String,
-      required: true,
-    },
-    tieneEmpleados: {
-      type: String,
-      required: true,
-      enum: ["si", "no"],
-    },
-    numeroEmpleados: {
-      type: Number,
-      required: function () {
-        return this.tieneEmpleados === "si";
-      },
-    },
-    ventasAnualesEstimadas: {
-      type: Number,
-      required: true,
-    },
-    mayorObstaculo: {
-      type: String,
-      required: true,
-    },
-    gestionDificultades: {
-      type: String,
-      required: true,
-    },
-    buenResultadoMetrica: {
-      type: String,
-      required: true,
-    },
-    objetivosAcciones: {
-      type: String,
-      required: true,
-    },
-    tipoAyuda: {
-      type: String,
-      required: true,
-    },
-    disponibleInvertir: {
-      type: String,
-      required: true,
+      trim: true,
+      default: "",
     },
   },
   {
-    timestamps: true,
+    timestamps: true, 
   }
 );
 
-const Prediagnostico = mongoose.models.Prediagnostico || mongoose.model("Prediagnostico", prediagnosticoSchema);
+// Middleware para actualizar fechaActualizacion
+preDiagnosticoSchema.pre("save", function (next) {
+  this.fechaActualizacion = new Date();
+  next();
+});
 
-export default Prediagnostico; 
+// Índices
+preDiagnosticoSchema.index({ userId: 1 });
+
+const PreDiagnostico = mongoose.models.PreDiagnostico || mongoose.model("PreDiagnostico", preDiagnosticoSchema, "preDiagnostico");
+
+export default PreDiagnostico;
+
+

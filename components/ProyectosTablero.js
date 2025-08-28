@@ -586,9 +586,9 @@ export default function ProyectosTablero() {
                     <p className="text-xs text-gray-700 mb-2">
                       {proyecto.analisisOpenAI.match}
                     </p>
-                    <button className="w-full text-xs bg-blue-600 text-white py-1 px-2 rounded hover:bg-blue-700 transition-colors">
+                    {/* <button className="w-full text-xs bg-blue-600 text-white py-1 px-2 rounded hover:bg-blue-700 transition-colors">
                       Ver propuestas
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 
@@ -633,7 +633,7 @@ export default function ProyectosTablero() {
                     )}
                   </div>
                   
-                  {proyecto.estado === "publicado" || proyecto.estado === "en_espera" ? (
+                  {/* {proyecto.estado === "publicado" || proyecto.estado === "en_espera" ? (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -644,7 +644,7 @@ export default function ProyectosTablero() {
                       <FaUserPlus />
                       Ver Postulaciones
                     </button>
-                  ) : null}
+                  ) : null} */}
                   
                   {proyecto.estado === "en_proceso" && (
                     <button

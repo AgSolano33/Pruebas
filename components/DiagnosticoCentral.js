@@ -275,7 +275,7 @@ export default function DiagnosticoCentral() {
       // Pre-llenar con datos del primer pre-diagnóstico si existe
       const loadPrediagnosticoData = async () => {
         try {
-          const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+          const response = await fetch(`/api/prediagnostico/${session.user.id}`);
           if (response.ok) {
             const prediagnosticos = await response.json();
             if (prediagnosticos && prediagnosticos.length > 0) {

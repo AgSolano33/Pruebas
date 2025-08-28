@@ -12,14 +12,16 @@ export default function FormDiagnostico({ onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState({});
+
   const [formData, setFormData] = useState({
-    nombre: session?.user?.nombre || "",
-    apellido: session?.user?.apellido || "",
+    nombre: "",
+    apellido: "",
+    email: "",
     nivelEstudios: "",
+    genero: "",
+    telefono: "",
     tipoEmpresa: "",
     nombreEmpresaProyecto: "",
-    email: session?.user?.email || "",
-    telefono: "",
     giroActividad: "",
     descripcionActividad: "",
     tieneEmpleados: "",
@@ -30,8 +32,7 @@ export default function FormDiagnostico({ onClose }) {
     buenResultadoMetrica: "",
     objetivosAcciones: "",
     tipoAyuda: "",
-    disponibleInvertir: "",
-    genero: "",
+    disponibleInvertir: ""
   });
 
   useEffect(() => {
@@ -39,268 +40,238 @@ export default function FormDiagnostico({ onClose }) {
       router.push(config.auth.callbackUrl);
       return;
     }
-    
-    // Pre-llenar con datos del primer pre-diagnóstico si existe
+
     const loadPrediagnosticoData = async () => {
       try {
-        const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
-        if (response.ok) {
-          const prediagnosticos = await response.json();
+        // 1️⃣ Obtener prediagnóstico existente
+        const preResponse = await fetch(`/api/prediagnostico/${session.user.id}`);
+        if (preResponse.ok) {
+          const prediagnosticos = await preResponse.json();
           if (prediagnosticos && prediagnosticos.length > 0) {
             const primerPrediagnostico = prediagnosticos[0]; // Tomar el más reciente
-            console.log('Pre-llenando formulario de pre-diagnóstico con datos existentes:', primerPrediagnostico);
-            
             setFormData(prev => ({
               ...prev,
               nombre: primerPrediagnostico.nombre || session?.user?.nombre || "",
               apellido: primerPrediagnostico.apellido || session?.user?.apellido || "",
+              email: primerPrediagnostico.email || session?.user?.email || "",
               nivelEstudios: primerPrediagnostico.nivelEstudios || "",
+              genero: primerPrediagnostico.genero || "",
+              telefono: (primerPrediagnostico.telefono || "").toString(),
               tipoEmpresa: primerPrediagnostico.tipoEmpresa || "",
               nombreEmpresaProyecto: primerPrediagnostico.nombreEmpresaProyecto || "",
-              email: primerPrediagnostico.email || session?.user?.email || "",
-              telefono: (primerPrediagnostico.telefono || "").toString(),
               giroActividad: primerPrediagnostico.giroActividad || "",
               descripcionActividad: primerPrediagnostico.descripcionActividad || "",
               tieneEmpleados: primerPrediagnostico.tieneEmpleados || "",
               numeroEmpleados: primerPrediagnostico.numeroEmpleados || "",
               ventasAnualesEstimadas: primerPrediagnostico.ventasAnualesEstimadas || "",
-              mayorObstaculo: primerPrediagnostico.mayorObstaculo || "",
-              gestionDificultades: primerPrediagnostico.gestionDificultades || "",
-              buenResultadoMetrica: primerPrediagnostico.buenResultadoMetrica || "",
-              objetivosAcciones: primerPrediagnostico.objetivosAcciones || "",
-              tipoAyuda: primerPrediagnostico.tipoAyuda || "",
-              disponibleInvertir: primerPrediagnostico.disponibleInvertir || "",
-              genero: primerPrediagnostico.genero || ""
+              mayorObstaculo: primerPrediagnostico.preguntaObstaculo || "",
+              gestionDificultades: primerPrediagnostico.preguntaIntentos || "",
+              buenResultadoMetrica: primerPrediagnostico.preguntaSeñales || "",
+              objetivosAcciones: primerPrediagnostico.preguntasKpis || "",
+              tipoAyuda: primerPrediagnostico.preguntaTipoAyuda || "",
+              disponibleInvertir: primerPrediagnostico.preguntaInversion || ""
             }));
           }
         }
+
+        // Obtener datos del usuario
+        const userRes = await fetch(`/api/user/${session.user.id}`);
+        if (userRes.ok) {
+          const user = await userRes.json();
+          const [nombre, ...rest] = user.name.split(" ");
+          const apellido = rest.join(" ");
+          setFormData(prev => ({
+            ...prev,
+            nombre: prev.nombre || nombre,
+            apellido: prev.apellido || apellido,
+            email: prev.email || user.email,
+            nivelEstudios: prev.nivelEstudios || user.nivelEstudios || "",
+            genero: prev.genero || user.genero || "",
+            telefono: prev.telefono || user.telefono || ""
+          }));
+        }
+
       } catch (error) {
-        console.error('Error al cargar datos del pre-diagnóstico:', error);
+        console.error('Error al cargar datos del pre-diagnóstico', error);
       }
     };
-    
+
     loadPrediagnosticoData();
   }, [session, router]);
 
-  const filterOnlyLetters = (value) => {
-    return value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
-  };
+  const filterOnlyLetters = (value) => value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const validateStep = () => {
     const newErrors = {};
-    
+
     if (currentStep === 1) {
-      if (!formData.nombre.trim()) {
-        newErrors.nombre = "El nombre es requerido";
-      } else if (/\d/.test(formData.nombre)) {
-        newErrors.nombre = "El nombre no puede contener números";
-      } else if (formData.nombre.trim().length < 2) {
-        newErrors.nombre = "El nombre debe tener al menos 2 caracteres";
-      }
-      
-      if (!formData.apellido.trim()) {
-        newErrors.apellido = "El apellido es requerido";
-      } else if (/\d/.test(formData.apellido)) {
-        newErrors.apellido = "El apellido no puede contener números";
-      } else if (formData.apellido.trim().length < 2) {
-        newErrors.apellido = "El apellido debe tener al menos 2 caracteres";
-      }
-      
-      if (!formData.nivelEstudios) {
-        newErrors.nivelEstudios = "Debes seleccionar un nivel de estudios";
-      }
+      if (!formData.nombre.trim()) newErrors.nombre = "El nombre es requerido";
+      else if (/\d/.test(formData.nombre)) newErrors.nombre = "El nombre no puede contener números";
+      else if (formData.nombre.trim().length < 2) newErrors.nombre = "El nombre debe tener al menos 2 caracteres";
 
-      if (!formData.tipoEmpresa) {
-        newErrors.tipoEmpresa = "Debes seleccionar si eres empresa o emprendedor";
-      }
+      if (!formData.apellido.trim()) newErrors.apellido = "El apellido es requerido";
+      else if (/\d/.test(formData.apellido)) newErrors.apellido = "El apellido no puede contener números";
+      else if (formData.apellido.trim().length < 2) newErrors.apellido = "El apellido debe tener al menos 2 caracteres";
 
-      if (!formData.nombreEmpresaProyecto.trim()) {
-        newErrors.nombreEmpresaProyecto = "El nombre de empresa o proyecto es requerido";
-      }
-      
-      if (!formData.email.trim()) {
-        newErrors.email = "El email es requerido";
-      } else if (!validateEmail(formData.email)) {
-        newErrors.email = "Por favor, ingrese un email válido";
-      }
-      
-      if (!formData.telefono || !formData.telefono.toString().trim()) {
-        newErrors.telefono = "El teléfono es requerido";
-      } else if (!/^[0-9]{10}$/.test(formData.telefono.toString().replace(/\D/g, ""))) {
+      if (!formData.nivelEstudios) newErrors.nivelEstudios = "Debes seleccionar un nivel de estudios";
+      if (!formData.tipoEmpresa) newErrors.tipoEmpresa = "Debes seleccionar si eres empresa o emprendedor";
+      if (!formData.nombreEmpresaProyecto.trim()) newErrors.nombreEmpresaProyecto = "El nombre de empresa o proyecto es requerido";
+
+      if (!formData.email.trim()) newErrors.email = "El email es requerido";
+      else if (!validateEmail(formData.email)) newErrors.email = "Por favor, ingrese un email válido";
+
+      if (!formData.telefono || !formData.telefono.toString().trim()) newErrors.telefono = "El teléfono es requerido";
+      else if (!/^[0-9]{10}$/.test(formData.telefono.toString().replace(/\D/g, "")))
         newErrors.telefono = "El teléfono debe tener 10 dígitos numéricos";
-      }
 
-      if (!formData.giroActividad.trim()) {
-        newErrors.giroActividad = "El giro de actividad es requerido";
-      }
+      if (!formData.giroActividad.trim()) newErrors.giroActividad = "El giro de actividad es requerido";
+      if (!formData.descripcionActividad.trim()) newErrors.descripcionActividad = "La descripción de actividad es requerida";
 
-      if (!formData.descripcionActividad.trim()) {
-        newErrors.descripcionActividad = "La descripción de actividad es requerida";
-      }
-      
-      if (!formData.tieneEmpleados) {
-        newErrors.tieneEmpleados = "Este campo es requerido";
-      }
-      
-      if (formData.tieneEmpleados === "si" && (!formData.numeroEmpleados || formData.numeroEmpleados <= 0)) {
+      if (!formData.tieneEmpleados) newErrors.tieneEmpleados = "Este campo es requerido";
+      if (formData.tieneEmpleados === "si" && (!formData.numeroEmpleados || formData.numeroEmpleados <= 0))
         newErrors.numeroEmpleados = "Debes especificar el número de empleados y debe ser mayor a 0";
-      }
-      
-      if (!formData.ventasAnualesEstimadas || formData.ventasAnualesEstimadas < 0) {
+
+      if (!formData.ventasAnualesEstimadas || formData.ventasAnualesEstimadas < 0)
         newErrors.ventasAnualesEstimadas = "Las ventas anuales estimadas son requeridas y no pueden ser negativas";
-      }
     }
-    
+
     if (currentStep === 2) {
-      if (!formData.mayorObstaculo.trim()) {
-        newErrors.mayorObstaculo = "Este campo es requerido";
-      }
-      if (!formData.gestionDificultades.trim()) {
-        newErrors.gestionDificultades = "Este campo es requerido";
-      }
-      if (!formData.buenResultadoMetrica.trim()) {
-        newErrors.buenResultadoMetrica = "Este campo es requerido";
-      }
-      if (!formData.objetivosAcciones.trim()) {
-        newErrors.objetivosAcciones = "Este campo es requerido";
-      }
-      if (!formData.tipoAyuda) {
-        newErrors.tipoAyuda = "Debes seleccionar un tipo de ayuda";
-      }
-      if (!formData.disponibleInvertir) {
-        newErrors.disponibleInvertir = "Debes seleccionar tu disposición a invertir";
-      }
+      if (!formData.mayorObstaculo.trim()) newErrors.mayorObstaculo = "Este campo es requerido";
+      if (!formData.gestionDificultades.trim()) newErrors.gestionDificultades = "Este campo es requerido";
+      if (!formData.buenResultadoMetrica.trim()) newErrors.buenResultadoMetrica = "Este campo es requerido";
+      if (!formData.objetivosAcciones.trim()) newErrors.objetivosAcciones = "Este campo es requerido";
+      if (!formData.tipoAyuda) newErrors.tipoAyuda = "Debes seleccionar un tipo de ayuda";
+      if (!formData.disponibleInvertir) newErrors.disponibleInvertir = "Debes seleccionar tu disposición a invertir";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!session) {
-      router.push(config.auth.callbackUrl);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log('1. Enviando pre-diagnóstico a la API...');
-      // 1. Guardar el pre-diagnóstico
-      const response = await fetch(`/api/prediagnostico?userId=${session.user.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error al guardar pre-diagnóstico:', errorData);
-        throw new Error(errorData.error || "Error al guardar el pre-diagnóstico");
-      }
-
-      const savedPrediagnostico = await response.json();
-      console.log('2. Pre-diagnóstico guardado:', savedPrediagnostico);
-
-      // 2. Enviar a ChatGPT para análisis
-      console.log('3. Enviando pre-diagnóstico a ChatGPT para análisis...');
-      const chatGPTResponse = await fetch('/api/chatgp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...savedPrediagnostico,
-          userId: session.user.id
-        }),
-      });
-
-      if (!chatGPTResponse.ok) {
-        const errorData = await chatGPTResponse.json();
-        console.error('Error en análisis de ChatGPT:', errorData);
-        throw new Error(errorData.error || "Error al procesar el análisis con ChatGPT");
-      }
-
-      const analysisResult = await chatGPTResponse.json();
-      console.log('4. Análisis de ChatGPT completado:', analysisResult);
-
-      toast.success("Pre-diagnóstico creado y analizado exitosamente");
-      onClose();
-    } catch (error) {
-      console.error("Error:", error);
-      toast.error(error.message || "Error al procesar el pre-diagnóstico");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     setFormData(prev => {
-      // Handle specific filtering if needed, like filterOnlyLetters for name/apellido
-      if (name === 'nombre' || name === 'apellido') {
-        return {
-          ...prev,
-          [name]: filterOnlyLetters(value)
-        };
-      } else if (name === 'telefono') {
-        // Only allow numbers and limit to 10 digits
-        const numericValue = value.replace(/\D/g, '').slice(0, 10);
-        return {
-          ...prev,
-          [name]: numericValue
-        };
-      } else if (name === 'numeroEmpleados' || name === 'ventasAnualesEstimadas') {
-         // Ensure number fields are treated as numbers
-        return {
-           ...prev,
-           [name]: value === '' ? '' : Number(value) // Store empty string or number
-         };
-      }
-      
-      return {
-        ...prev,
-        [name]: value
-      };
+      if (name === 'nombre' || name === 'apellido') return { ...prev, [name]: filterOnlyLetters(value) };
+      if (name === 'telefono') return { ...prev, [name]: value.replace(/\D/g, '').slice(0, 10) };
+      if (name === 'numeroEmpleados' || name === 'ventasAnualesEstimadas')
+        return { ...prev, [name]: value === '' ? '' : Number(value) };
+
+      return { ...prev, [name]: value };
     });
-    
-    // Clear the error for the field being changed
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  const handleNextStep = () => {
-    if (validateStep()) {
-      setCurrentStep((prev) => prev + 1);
-    } else {
-       // Optional: show a toast notification if validation fails on next
-       toast.error("Por favor, completa los campos requeridos antes de continuar.");
-    }
-  };
+  const handleNextStep = () => { if (validateStep()) setCurrentStep(prev => prev + 1); else toast.error("Por favor, completa los campos requeridos antes de continuar."); };
+  const handlePreviousStep = () => { setCurrentStep(prev => prev - 1); setErrors({}); };
 
-  const handlePreviousStep = () => {
-    setCurrentStep((prev) => prev - 1);
-    setErrors({}); // Clear errors when going back a step
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!session) { router.push(config.auth.callbackUrl); return; }
+  if (!validateStep()) { toast.error("Por favor, completa los campos requeridos antes de continuar."); return; }
+
+  setIsLoading(true);
+  try {
+    // 1️⃣ Actualizar usuario
+    const userUpdate = await fetch(`/api/user/${session.user.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nivelEstudios: formData.nivelEstudios,
+        genero: formData.genero,
+        telefono: formData.telefono
+      })
+    });
+    if (!userUpdate.ok) throw new Error("Error al actualizar usuario");
+
+    // 2️⃣ Actualizar InfoEmpresa
+    const empresaUpdate = await fetch(`/api/infoEmpresa/${session.user.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tipoNegocio: formData.tipoEmpresa,
+        name: formData.nombreEmpresaProyecto,
+        actividad: formData.giroActividad,
+        descripcionActividad: formData.descripcionActividad,
+        numEmpleados: formData.numeroEmpleados,
+        ventasAnuales: formData.ventasAnualesEstimadas
+      })
+    });
+    if (!empresaUpdate.ok) throw new Error("Error al actualizar InfoEmpresa");
+
+    // 3️⃣ Crear Prediagnóstico
+    const preResponse = await fetch(`/api/prediagnostico/${session.user.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: session.user.id,
+        preguntaObstaculo: formData.mayorObstaculo,
+        preguntaIntentos: formData.gestionDificultades,
+        preguntaSeñales: formData.buenResultadoMetrica,
+        preguntasKpis: formData.objetivosAcciones,
+        preguntaTipoAyuda: formData.tipoAyuda,
+        preguntaInversion: formData.disponibleInvertir
+      })
+    });
+    if (!preResponse.ok) throw new Error("Error al guardar prediagnóstico");
+
+    // 🆕 4️⃣ Llamar al asistente PrediagnosticoGeneral
+    const infoEmpresaRes = await fetch(`/api/infoEmpresa/${session.user.id}`);
+    const prediagnosticoRes = await fetch(`/api/prediagnostico/${session.user.id}`);
+
+    const infoEmpresaData = await infoEmpresaRes.json();
+    const prediagnosticoData = await prediagnosticoRes.json();
+
+    const aiResponse = await fetch("/api/assistant/PrediagnosticoGeneral", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        infoEmpresa: infoEmpresaData,
+        prediagnostico: prediagnosticoData
+      })
+    });
+
+    if (!aiResponse.ok) throw new Error("Error al invocar al asistente PrediagnosticoGeneral");
+
+    const aiData = await aiResponse.json();
+
+    // 🆕 5️⃣ Guardar la respuesta del asistente en prediagnosticoAST
+    const astSave = await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: session.user.id,
+        resultadoAsistente: aiData.output // <- Aquí guardas lo que respondió el asistente
+      })
+    });
+    if (!astSave.ok) throw new Error("Error al guardar en prediagnosticoAST");
+
+    toast.success("Pre-diagnóstico creado y procesado exitosamente");
+    onClose();
+
+  } catch (error) {
+    console.error(error);
+    toast.error(error.message || "Error al procesar el pre-diagnóstico");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <h2 className="text-2xl font-bold text-left mb-6" style={{ color: '#00AEEF' }}>
-     Pre-diagnóstico
-      </h2>
+<div className="mb-6 flex flex-col">
+  <h2 className="text-2xl font-bold text-left" style={{ color: '#00AEEF' }}>
+    Pre-diagnóstico
+  </h2>
+  <p className="text-gray-700 mt-2">
+    Este formulario nos permitirá recabar información detallada sobre los retos y necesidades del negocio, incluyendo obstáculos actuales, señales de alerta, objetivos a cumplir y sobre todo, las propuestas de solución que te ayudarán a lograrlos mediante la conexión con profesionales.
+  </p>
+</div>
+
 
       <div className="text-sm text-gray-600 mb-6 space-y-2">
         <p>Nota:</p>
@@ -322,11 +293,8 @@ export default function FormDiagnostico({ onClose }) {
               id="nombre"
               className={`mt-1 block w-full rounded-md border-2 ${errors.nombre ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="nombre"
-              required
-              type="text"
-              placeholder="Nombre"
               value={formData.nombre}
-              onChange={handleChange}
+              readOnly
             />
              {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
           </div>
@@ -342,12 +310,9 @@ export default function FormDiagnostico({ onClose }) {
               id="apellido"
               className={`mt-1 block w-full rounded-md border-2 ${errors.apellido ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="apellido"
-              required
-              type="text"
-              placeholder="Apellido"
               value={formData.apellido}
-              onChange={handleChange}
-            />
+              readOnly
+/>
             {errors.apellido && <p className="text-red-500 text-sm mt-1">{errors.apellido}</p>}
           </div>
 
@@ -430,11 +395,8 @@ export default function FormDiagnostico({ onClose }) {
               id="email"
               className={`mt-1 block w-full rounded-md border-2 ${errors.email ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="email"
-              required
-              type="email"
-              placeholder="Ej: contacto@miempresa.com"
+              readOnly
               value={formData.email}
-              onChange={handleChange}
             />
              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
           </div>

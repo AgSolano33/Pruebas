@@ -12,49 +12,43 @@ const userSchema = mongoose.Schema(
       type: String,
       trim: true,
       lowercase: true,
-      private: true,
+    },
+    telefono: {
+      type: String,
+      trim: true,
+    },
+    studies: {
+      type: String,
     },
     password: {
       type: String,
       private: true, // No se incluye en las respuestas JSON
-      required: false, // No requerido porque usuarios de Google no tienen contraseña
+      required: false, // Opcional para usuarios de Google
     },
-    userType: {
-      type: [String],
-      validate: {
-        validator: function(v) {
-          return v.every(type => ["provider", "client"].includes(type));
-        },
-        message: 'userType debe contener solo "provider" y/o "client"'
+    roles: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role", // Relación con colección Roles
       },
-      default: ["client", "provider"], // Por defecto, todos los usuarios tienen ambos tipos
-      required: false,
-    },
+    ],
     image: {
       type: String,
     },
-    // Used in the Stripe webhook to identify the user in Stripe and later create Customer Portal or prefill user credit card details
-    customerId: {
-      type: String,
-      validate(value) {
-        return value.includes("cus_");
-      },
-    },
-    // Used in the Stripe webhook. should match a plan in config.js file.
-    priceId: {
-      type: String,
-      validate(value) {
-        return value.includes("price_");
-      },
-    },
-    // Used to determine if the user has access to the product—it's turn on/off by the Stripe webhook
     hasAccess: {
       type: Boolean,
       default: false,
     },
+    verified: {
+  type: Boolean,
+  default: false
+},
+verificationToken: {
+  type: String
+}
+
   },
   {
-    timestamps: true,
+    timestamps: true, // Esto ya agrega createdAt y updatedAt
     toJSON: { virtuals: true },
   }
 );

@@ -571,9 +571,9 @@ export default function DiagnosisDetails({ params }) {
                         <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
                           Rechazar
                         </button>
-                        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                        {/* <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
                           Contactar
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>

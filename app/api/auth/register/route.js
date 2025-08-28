@@ -1,75 +1,57 @@
-import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/libs/mongodb";
 import User from "@/models/User";
+import Role from "@/models/Role";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/libs/mailer"; 
 
-export async function POST(request) {
+export async function POST(req) {
   try {
-    await connectToDatabase();
-    
-    const { name, email, password, userType } = await request.json();
-    
-    // Validaciones
+    const { name, email, password, roleName } = await req.json();
+
     if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: "Todos los campos son requeridos" },
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Todos los campos son obligatorios" }), { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "La contraseña debe tener al menos 6 caracteres" },
-        { status: 400 }
-      );
-    }
+    await connectToDatabase();
 
-    // Validar userType si se proporciona (para compatibilidad hacia atrás)
-    if (userType && !["provider", "client"].includes(userType)) {
-      return NextResponse.json(
-        { error: "Tipo de usuario inválido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar si el usuario ya existe
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Ya existe una cuenta con este email" },
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Usuario ya registrado" }), { status: 400 });
     }
-    
-    // Encriptar contraseña con bcrypt (cost factor 12 para producción)
-    const hashedPassword = await bcrypt.hash(password, 12);
-    
-    // Crear usuario con ambos tipos por defecto
-    const user = await User.create({
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const role = await Role.findOne({ name: roleName || "cliente" });
+    if (!role) {
+      return new Response(JSON.stringify({ error: "Rol no encontrado" }), { status: 400 });
+    }
+
+    // Generar token de verificación
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    const newUser = await User.create({
       name,
-      email: email.toLowerCase(),
+      email,
       password: hashedPassword,
-      // Si se proporciona userType específico, usarlo; si no, usar ambos por defecto
-      userType: userType ? [userType] : ["client", "provider"],
+      roles: [role._id],
+      hasAccess: true,
+      verificationToken, // guardamos el token
+      verified: false,   // por defecto no verificado
     });
-    
-    return NextResponse.json(
-      { 
-        message: "Usuario creado exitosamente",
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          userType: user.userType
-        }
-      },
-      { status: 201 }
-    );
+
+    // Enviar correo de verificación
+    await sendVerificationEmail(email, name, verificationToken);
+
+    const populatedUser = await newUser.populate("roles", "name");
+
+    return new Response(JSON.stringify({ 
+      message: "Usuario creado correctamente. Revisa tu correo para verificar tu cuenta.", 
+      user: populatedUser 
+    }), { status: 201 });
+
   } catch (error) {
-    console.error("Error al crear usuario:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    );
+    console.error("Error en register:", error);
+    return new Response(JSON.stringify({ error: "Error al crear el usuario" }), { status: 500 });
   }
-} 
+}
