@@ -8,7 +8,7 @@ export async function POST(request, { params }) {
     if (!userId) {
       return NextResponse.json({ error: "Falta userId en la URL" }, { status: 400 });
     }
-
+    console.log(params)
     await connectToDatabase();
     const body = await request.json();
 
