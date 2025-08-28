@@ -1,9 +1,12 @@
 import { connectToDatabase } from "@/libs/mongodb";
 import User from "@/models/User";
 
-export async function GET(req) {
+// 👇 Forzar a que la ruta no intente prerenderse
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const token = searchParams.get("token");
 
     if (!token) {
@@ -12,19 +15,16 @@ export async function GET(req) {
 
     await connectToDatabase();
 
-    // Buscar usuario con el token
     const user = await User.findOne({ verificationToken: token });
     if (!user) {
       return new Response(JSON.stringify({ error: "Token inválido o expirado" }), { status: 400 });
     }
 
-    // Marcar como verificado
     user.verified = true;
-    user.verificationToken = null; // eliminar el token
+    user.verificationToken = null;
     await user.save();
 
     return new Response(JSON.stringify({ message: "Correo verificado correctamente" }), { status: 200 });
-
   } catch (error) {
     console.error("Error en verify:", error);
     return new Response(JSON.stringify({ error: "Error al verificar el usuario" }), { status: 500 });
