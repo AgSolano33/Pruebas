@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/libs/mongodb';
 import mongoose from 'mongoose';
-export const dynamic = "force-dynamic"; // evita SSG/ISR
-export const revalidate = 0;            // (opcional) no caches
+export const dynamic = "force-dynamic";
 
 export async function GET(request) {
   try {
