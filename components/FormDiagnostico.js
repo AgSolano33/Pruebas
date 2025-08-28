@@ -244,7 +244,7 @@ await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     userId: session.user.id,
-    resultadoIA: aiData.output, // aquí va el JSON puro del asistente
+    resultado: aiData.output, // aquí va el JSON puro del asistente
   }),
 });
 
@@ -309,9 +309,11 @@ await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
               id="apellido"
               className={`mt-1 block w-full rounded-md border-2 ${errors.apellido ? 'border-red-500' : 'border-gray-300'} shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2`}
               name="apellido"
+              type="text"
+              placeholder="Apellido"
               value={formData.apellido}
-              readOnly
-/>
+              onChange={handleChange}
+            />
             {errors.apellido && <p className="text-red-500 text-sm mt-1">{errors.apellido}</p>}
           </div>
 

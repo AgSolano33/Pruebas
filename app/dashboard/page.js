@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import PrediagnosticoList from "@/components/PrediagnosticoList";
 import DiagnosticoInfo from "@/components/DiagnosticoInfo";
-import DiagnosticoCentral from "@/components/DiagnosticoCentral";
+// import DiagnosticoCentral from "@/components/DiagnosticoCentral"; // DEACTIVATED
 import Conclusions from "@/components/Conclusions";
 import MetricsCards from "@/components/MetricsCards";
 import ProyectosTablero from "@/components/ProyectosTablero";
@@ -29,13 +29,13 @@ export default function Dashboard() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [companyName, setCompanyName] = useState("Nombre de la Empresa");
-  const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false);
+  // const [hasDiagnosticoCentral, setHasDiagnosticoCentral] = useState(false); // DEACTIVATED
   const [hasPrediagnosticos, setHasPrediagnosticos] = useState(false);
   const [diagnosisData, setDiagnosisData] = useState(null);
   const [metrics, setMetrics] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isExisting, setIsExisting] = useState(false);
-  const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false);
+  // const [showDiagnosticoCentral, setShowDiagnosticoCentral] = useState(false); // DEACTIVATED
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeUserType, setActiveUserType] = useState("client"); // Por defecto cliente
   const [providerHasProfile, setProviderHasProfile] = useState(false);
@@ -124,24 +124,24 @@ export default function Dashboard() {
       }
 
       // Si es cliente, continuar con el flujo normal
-      let userHasDiagnosticoCentral = false;
+      // let userHasDiagnosticoCentral = false; // DEACTIVATED
       let userHasPrediagnosticos = false;
 
       try {
         setIsLoading(true);
         
-        // Verificar Diagnóstico Central
-        const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
-        
-        if (responseCentral.ok) {
-          const dataCentral = await responseCentral.json();
-          userHasDiagnosticoCentral = dataCentral && Object.keys(dataCentral).length > 0;
-          
-          if (dataCentral && Object.keys(dataCentral).length > 0) {
-            setDiagnosisData(dataCentral);
-            setCompanyName(dataCentral.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
-          }
-        }
+        // DEACTIVATED: Verificar Diagnóstico Central
+        // const responseCentral = await fetch(`/api/diagnostico-central?userId=${session.user.id}`);
+        // 
+        // if (responseCentral.ok) {
+        //   const dataCentral = await responseCentral.json();
+        //   userHasDiagnosticoCentral = dataCentral && Object.keys(dataCentral).length > 0;
+        //   
+        //   if (dataCentral && Object.keys(dataCentral).length > 0) {
+        //     setDiagnosisData(dataCentral);
+        //     setCompanyName(dataCentral.informacionEmpresa?.nombreEmpresa || "Nombre de la Empresa");
+        //   }
+        // }
 
         // Verificar Prediagnósticos
         const responsePrediagnosticos = await fetch(`/api/prediagnostico/${session.user.id}`);
@@ -150,21 +150,22 @@ export default function Dashboard() {
           userHasPrediagnosticos = dataPrediagnosticos && dataPrediagnosticos.length > 0;
         }
 
-        // Cargar análisis si tiene diagnóstico central
-        if (userHasDiagnosticoCentral) {
-          try {
-            const responseAnalysis = await fetch(`/api/analysis_results?userId=${session.user.id}`);
-            
-            if (responseAnalysis.ok) {
-              const analysisResult = await responseAnalysis.json();
-              
-              if (analysisResult.success && analysisResult.data) {
-                setAnalysisData(analysisResult.data);
-              }
-            }
-          } catch (error) {
-            console.error('Error loading analysis:', error);
-          }
+        // DEACTIVATED: Cargar análisis si tiene diagnóstico central
+        // if (userHasDiagnosticoCentral) {
+        //   try {
+        //     const responseAnalysis = await fetch(`/api/analysis_results?userId=${session.user.id}`);
+        //     
+        //     if (responseAnalysis.ok) {
+        //       const analysisResult = await responseAnalysis.json();
+        //       
+        //       if (analysisResult.success && analysisResult.data) {
+        //         setAnalysisData(analysisResult.data);
+        //       }
+        //     }
+        //   } catch (error) {
+        //     console.error('Error loading analysis:', error);
+        //   }
+        // }
 
           // Cargar análisis de métricas
           try {
@@ -207,15 +208,14 @@ export default function Dashboard() {
           } catch (error) {
             console.error('Error loading general analysis experts:', error);
           }
-        }
 
         // Pequeño delay para asegurar que el loading se muestre
         await new Promise(resolve => setTimeout(resolve, 1000));
 
       } catch (error) {
         console.error('Error in checkData:', error);
-              } finally {
-          setHasDiagnosticoCentral(userHasDiagnosticoCentral);
+      } finally {
+          // setHasDiagnosticoCentral(userHasDiagnosticoCentral); // DEACTIVATED
           setHasPrediagnosticos(userHasPrediagnosticos);
           setIsLoading(false);
 
@@ -241,9 +241,10 @@ export default function Dashboard() {
 
 
 
-  if (showDiagnosticoCentral) {
-    return <DiagnosticoCentral />;
-  }
+  // DEACTIVATED: DiagnosticoCentral functionality
+  // if (showDiagnosticoCentral) {
+  //   return <DiagnosticoCentral />;
+  // }
 
 
 
@@ -713,10 +714,10 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <button
-                    onClick={() => setShowDiagnosticoCentral(true)}
+                    onClick={() => {}} // DEACTIVATED: setShowDiagnosticoCentral(true)
                     className="px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors font-semibold"
                   >
-                    🚀 Comenzar Diagnóstico
+                    🚀 Diagnóstico Desactivado
                   </button>
                 </div>
               </div>
@@ -918,5 +919,4 @@ export default function Dashboard() {
     </main>
   );
 }
-
 
