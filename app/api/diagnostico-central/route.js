@@ -46,6 +46,12 @@ export async function GET(request) {
 
 
 export async function POST(request) {
+  // DEACTIVATED: Central diagnostico functionality is temporarily disabled
+  return NextResponse.json(
+    { error: 'El diagnóstico central está temporalmente desactivado' },
+    { status: 503 }
+  );
+  
   try {
     // Conectar a la base de datos
     await connectToDatabase();
