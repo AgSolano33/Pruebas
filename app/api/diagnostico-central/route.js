@@ -4,6 +4,8 @@ import DiagnosticoCentral from '@/models/DiagnosticoCentral';
 import mongoose from 'mongoose';
 import { analyzeCentralDiagnostic } from '@/services/centralDiagnosticService';
 import { sanitizeObject } from '@/libs/sanitize';
+export const dynamic = "force-dynamic"; // evita SSG/ISR
+export const revalidate = 0;            // (opcional) no caches
 
 export async function GET(request) {
   try {
