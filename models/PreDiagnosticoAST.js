@@ -1,25 +1,13 @@
+// models/PrediagnosticoAST.js
 import mongoose from "mongoose";
-// Si ya tienes un plugin toJSON, descomenta y ajusta la ruta:
-// import toJSON from "./plugins/toJSON";
 
-const { Schema } = mongoose;
-
-const prediagnosticoAstSchema = new Schema(
+const PrediagnosticoASTSchema = new mongoose.Schema(
   {
-    userId: { type: String, index: true, required: true },
-    threadId: { type: String, default: null },
-    runId: { type: String, default: null },
-    resultado: { type: Schema.Types.Mixed, required: true }, // ← JSON arbitrario
+    userId: { type: String, required: true },
+    respuesta: { type: Object, required: true }, // aquí guardas el JSON completo del asistente
   },
-  {
-    timestamps: true,
-    toJSON: { virtuals: true },
-  }
+  { timestamps: true }
 );
 
-// Si usas tu plugin, descomenta:
-// prediagnosticoAstSchema.plugin(toJSON);
-
-// Hot-reload safe
-export default mongoose.models.PrediagnosticoAST
-  || mongoose.model("PrediagnosticoAST", prediagnosticoAstSchema, "preDiagnosticoAST");
+export default mongoose.models.PrediagnosticoAST ||
+  mongoose.model("PrediagnosticoAST", PrediagnosticoASTSchema);

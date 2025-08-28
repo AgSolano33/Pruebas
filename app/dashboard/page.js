@@ -144,7 +144,7 @@ export default function Dashboard() {
         }
 
         // Verificar Prediagnósticos
-        const responsePrediagnosticos = await fetch(`/api/prediagnostico?userId=${session.user.id}`);
+        const responsePrediagnosticos = await fetch(`/api/prediagnostico/${session.user.id}`);
         if (responsePrediagnosticos.ok) {
           const dataPrediagnosticos = await responsePrediagnosticos.json();
           userHasPrediagnosticos = dataPrediagnosticos && dataPrediagnosticos.length > 0;

@@ -218,36 +218,35 @@ export default function FormDiagnostico({ onClose }) {
     });
     if (!preResponse.ok) throw new Error("Error al guardar prediagnóstico");
 
-    // 🆕 4️⃣ Llamar al asistente PrediagnosticoGeneral
-    const infoEmpresaRes = await fetch(`/api/infoEmpresa/${session.user.id}`);
-    const prediagnosticoRes = await fetch(`/api/prediagnostico/${session.user.id}`);
+ // 🆕 4️⃣ Llamar al asistente con infoEmpresa + prediagnostico
+const infoEmpresaRes = await fetch(`/api/infoEmpresa/${session.user.id}`);
+const prediagnosticoRes = await fetch(`/api/prediagnostico/${session.user.id}`);
 
-    const infoEmpresaData = await infoEmpresaRes.json();
-    const prediagnosticoData = await prediagnosticoRes.json();
+const infoEmpresaData =  await infoEmpresaRes.json();
+const prediagnosticoData = await prediagnosticoRes.json();
 
-    const aiResponse = await fetch("/api/assistant/PrediagnosticoGeneral", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        infoEmpresa: infoEmpresaData,
-        prediagnostico: prediagnosticoData
-      })
-    });
+const aiResponse = await fetch("/api/assistant/PrediagnosticoGeneral", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    infoEmpresa: infoEmpresaData,
+    prediagnostico: prediagnosticoData,
+  }),
+});
 
-    if (!aiResponse.ok) throw new Error("Error al invocar al asistente PrediagnosticoGeneral");
+if (!aiResponse.ok) throw new Error("Error al invocar al asistente");
 
-    const aiData = await aiResponse.json();
+const aiData = await aiResponse.json();
 
-    // 🆕 5️⃣ Guardar la respuesta del asistente en prediagnosticoAST
-    const astSave = await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: session.user.id,
-        resultadoAsistente: aiData.output // <- Aquí guardas lo que respondió el asistente
-      })
-    });
-    if (!astSave.ok) throw new Error("Error al guardar en prediagnosticoAST");
+// 🗂️ Guardar la respuesta en la tabla prediagnosticoAST
+await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    userId: session.user.id,
+    resultadoIA: aiData.output, // aquí va el JSON puro del asistente
+  }),
+});
 
     toast.success("Pre-diagnóstico creado y procesado exitosamente");
     onClose();

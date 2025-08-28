@@ -1,4 +1,4 @@
-// Fuerza Node.js runtime (no Edge) y evita caché
+ // Fuerza Node.js runtime (no Edge) y evita caché
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
