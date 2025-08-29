@@ -34,28 +34,38 @@ export default function PrediagnosticoList() {
     }
   }, [session]);
 
-  // Fetch prediagnósticos filtrados por usuario
-  const fetchPrediagnosticos = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/api/prediagnostico/${session.user.id}`);
-      const data = await response.json();
-      console.log("Prediagnósticos recibidos:", data);
+const fetchPrediagnosticos = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await fetch(`/api/prediagnostico/${session.user.id}`);
+    const data = await response.json();
 
-      if (Array.isArray(data)) {
-        setDiagnoses(data);
-        setIsModalOpen(data.length === 0); // Abrir modal solo si no hay prediagnóstico
-      } else {
-        setError(data.error || "Error al cargar prediagnósticos");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Error al cargar prediagnósticos");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const toArray = (d) => Array.isArray(d) ? d :
+      Array.isArray(d?.data) ? d.data :
+      Array.isArray(d?.prediagnosticos) ? d.prediagnosticos :
+      Array.isArray(d?.data?.prediagnosticos) ? d.data.prediagnosticos :
+      (d && typeof d === "object") ? [d] : [];
+
+    const items = toArray(data);
+
+    const enriched = await Promise.all(
+      items.map(async (diag) => {
+        const nombre = diag.nombreEmpresa || await fetchEmpresaInfo(diag.userId); // 👈 aquí el cambio
+        return { ...diag, nombreEmpresa: nombre };
+      })
+    );
+
+    setDiagnoses(enriched);
+    setIsModalOpen(enriched.length === 0);
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Error al cargar prediagnósticos");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Fetch proyectos publicados
   const fetchPublishedProjects = async () => {
@@ -75,17 +85,21 @@ export default function PrediagnosticoList() {
     }
   };
 
-  // Obtener nombre de empresa desde infoEmpresa
-  const fetchEmpresaInfo = async (empresaId) => {
-    try {
-      const res = await fetch(`/api/empresa/${empresaId}`);
-      const data = await res.json();
-      return data.nombre || "Sin nombre de empresa";
-    } catch (err) {
-      console.error("Error al cargar infoEmpresa:", err);
-      return "Sin nombre de empresa";
-    }
-  };
+// Usa el userId del diagnóstico
+const fetchEmpresaInfo = async (userId) => {
+  if (!userId) return "Sin nombre de empresa";
+  try {
+    const res = await fetch(`/api/infoEmpresa/${userId}`);
+    if (!res.ok) return "Sin nombre de empresa";
+    const data = await res.json();
+    // Tu modelo guarda el nombre como `name`
+    return data?.name || "Sin nombre de empresa";
+  } catch (err) {
+    console.error("Error al cargar infoEmpresa:", err);
+    return "Sin nombre de empresa";
+  }
+};
+
 
   // Eliminar diagnóstico
   const handleDelete = async (id) => {

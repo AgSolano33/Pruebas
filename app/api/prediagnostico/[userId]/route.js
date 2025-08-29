@@ -30,17 +30,19 @@ export async function POST(request, { params }) {
   }
 }
 
-export async function GET(request, { params }) {
+export async function GET(_req, { params }) {
   try {
-    const { userId } = params;
-    if (!userId) return NextResponse.json({ error: "Falta userId" }, { status: 400 });
-
     await connectToDatabase();
-    const datos = await Prediagnostico.find({ userId }).sort({ createdAt: -1 });
+    const { userId } = params;
+    if (!userId) {
+      return NextResponse.json({ error: "ID de usuario no proporcionado" }, { status: 400 });
+    }
 
-    return NextResponse.json({ success: true, data: datos });
-  } catch (error) {
-    console.error("Error GET /prediagnostico:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const docs = await Prediagnostico.find({ userId }).sort({ createdAt: -1 });
+    // 👇 Devolver SIEMPRE un arreglo
+    return NextResponse.json(docs, { status: 200 });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Error al obtener prediagnósticos" }, { status: 500 });
   }
 }
