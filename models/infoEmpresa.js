@@ -4,7 +4,7 @@ import toJSON from "./plugins/toJSON";
 const infoEmpresaSchema = new mongoose.Schema(
   {
     name: { type: String },
-    sector: { type: String },
+    sector: { type: String }, // no se llena con el form
     id_users: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
@@ -12,11 +12,11 @@ const infoEmpresaSchema = new mongoose.Schema(
     ubicacion: { type: String },
     CP: { type: String },
     numEmpleados: { type: String },
-    actividad: { type: String }, 
+    actividad: { type: String },  //giro actividad
     descripcionActividad: { type: String },
     ventasAnuales: { type: String },
     antiguedad: { type: String },
-    tipoNegocio: {type: String}
+    tipoNegocio: {type: String} // emprendedor o empresa
   },
   {
     timestamps: true, // createdAt y updatedAt automáticos

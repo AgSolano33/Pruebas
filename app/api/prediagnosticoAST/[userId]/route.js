@@ -1,7 +1,6 @@
-// app/api/prediagnostico/[userId]/route.js
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/libs/mongodb";
-import PrediagnosticoAST from "@/models/PreDiagnosticoAST";
+import PreDiagnosticoAST from "@/models/PreDiagnosticoAST"; 
 
 export async function POST(request, { params }) {
   try {
@@ -12,33 +11,36 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Falta userId" }, { status: 400 });
     }
 
-    // El body puede venir del asistente o de Postman
     const body = await request.json();
 
-    const nuevoPrediagnostico = await PrediagnosticoAST.create({
+    const nuevo = await PreDiagnosticoAST.create({
       userId,
+      prediagnosticoId: body.prediagnosticoId,
       threadId: body.threadId || null,
       runId: body.runId || null,
-      resultado: body.resultado, // ← aquí va el JSON arbitrario del asistente
+      resultado: body.resultado, // JSON del asistente
     });
 
-    return NextResponse.json(nuevoPrediagnostico, { status: 201 });
+    return NextResponse.json(nuevo, { status: 201 });
   } catch (error) {
     console.error("Error en POST /prediagnostico:", error);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
 }
 
-export async function GET(request, { params }) {
+
+export async function GET(_req, { params }) {
   try {
     await connectToDatabase();
 
-    const { userId } = params;
-    const docs = await PrediagnosticoAST.find({ userId });
+    const { userId } = params; // 👈 no params.id
+    const docs = await PreDiagnosticoAST.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json(docs, { status: 200 });
-  } catch (error) {
-    console.error("Error en GET /prediagnostico:", error);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+  } catch (e) {
+    console.error("Error en GET /prediagnostico:", e);
+    return NextResponse.json({ error: "Error del servidor" }, { status: 500 });
   }
 }

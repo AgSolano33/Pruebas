@@ -32,7 +32,8 @@ export default function FormDiagnostico({ onClose }) {
     buenResultadoMetrica: "",
     objetivosAcciones: "",
     tipoAyuda: "",
-    disponibleInvertir: ""
+    disponibleInvertir: "",
+    sector: ""
   });
 
   useEffect(() => {
@@ -175,7 +176,7 @@ export default function FormDiagnostico({ onClose }) {
 
   setIsLoading(true);
   try {
-    // 1️⃣ Actualizar usuario
+    // Actualizar usuario
     const userUpdate = await fetch(`/api/user/${session.user.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -187,7 +188,7 @@ export default function FormDiagnostico({ onClose }) {
     });
     if (!userUpdate.ok) throw new Error("Error al actualizar usuario");
 
-    // 2️⃣ Actualizar InfoEmpresa
+    // Actualizar InfoEmpresa
     const empresaUpdate = await fetch(`/api/infoEmpresa/${session.user.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -202,7 +203,7 @@ export default function FormDiagnostico({ onClose }) {
     });
     if (!empresaUpdate.ok) throw new Error("Error al actualizar InfoEmpresa");
 
-    // 3️⃣ Crear Prediagnóstico
+    // Crear Prediagnóstico
     const preResponse = await fetch(`/api/prediagnostico/${session.user.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -218,7 +219,10 @@ export default function FormDiagnostico({ onClose }) {
     });
     if (!preResponse.ok) throw new Error("Error al guardar prediagnóstico");
 
- // 🆕 4️⃣ Llamar al asistente con infoEmpresa + prediagnostico
+const preData = await preResponse.json();
+const prediagnosticoId = (preData?.data?._id) || preData?._id;  // según como responda tu API
+
+ // Llamar al asistente con infoEmpresa + prediagnostico
 const infoEmpresaRes = await fetch(`/api/infoEmpresa/${session.user.id}`);
 const prediagnosticoRes = await fetch(`/api/prediagnostico/${session.user.id}`);
 
@@ -238,12 +242,13 @@ if (!aiResponse.ok) throw new Error("Error al invocar al asistente");
 
 const aiData = await aiResponse.json();
 
-// 🗂️ Guardar la respuesta en la tabla prediagnosticoAST
+// Guardar la respuesta en la tabla prediagnosticoAST
 await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     userId: session.user.id,
+    prediagnosticoId,
     resultado: aiData.output, // aquí va el JSON puro del asistente
   }),
 });
@@ -456,7 +461,7 @@ await fetch(`/api/prediagnosticoAST/${session.user.id}`, {
               required
               type="text"
               placeholder="Ej: Tecnología y Desarrollo de Software"
-              value={formData.giroActividad}
+              value={formData.actividad}
               onChange={handleChange}
             />
              {errors.giroActividad && <p className="text-red-500 text-sm mt-1">{errors.giroActividad}</p>}

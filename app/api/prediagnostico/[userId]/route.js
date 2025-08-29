@@ -46,3 +46,5 @@ export async function GET(_req, { params }) {
     return NextResponse.json({ error: "Error al obtener prediagnósticos" }, { status: 500 });
   }
 }
+
+

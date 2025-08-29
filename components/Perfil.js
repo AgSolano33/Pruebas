@@ -58,7 +58,7 @@ export default function Perfil() {
           informacionempresa: {
             _id: empresaData?._id || "",
             nombreEmpresa: empresaData?.name || "",
-            sector: empresaData?.tipoNegocio || "",
+            sector: empresaData?.sector || "",
             ubicacion: empresaData?.ubicacion || "",
             codigoPostal: empresaData?.codigoPostal || "",
             descripcionActividad: empresaData?.descripcionActividad || "",
@@ -99,9 +99,6 @@ export default function Perfil() {
         apellido: perfil.informacionpersonal.apellido,
         telefono: perfil.informacionpersonal.telefono,
         puesto: perfil.informacionpersonal.puesto,
-        // Si tu backend necesita más campos como nivelEstudios o studies:
-        // nivelEstudios: perfil.informacionpersonal.nivelEstudios,
-        // studies: perfil.informacionpersonal.studies,
       })
     });
 
@@ -110,16 +107,16 @@ export default function Perfil() {
       throw new Error(err.error || "Error al actualizar usuario");
     }
 
-    // 2️⃣ Actualizar info empresa (infoEmpresa)
+    // Actualizar info empresa (infoEmpresa)
     const empresaResponse = await fetch(`/api/infoEmpresa/${session.user.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        tipoNegocio: perfil.informacionempresa.sector,
+        tipoNegocio: perfil.informacionempresa.tipoNegocio,
         name: perfil.informacionempresa.nombreEmpresa,
         sector: perfil.informacionempresa.sector,
         ubicacion: perfil.informacionempresa.ubicacion,
-        actividad: perfil.informacionempresa.descripcionActividad,
+        actividad: perfil.informacionempresa.actividad,
         descripcionActividad: perfil.informacionempresa.descripcionActividad,
         numEmpleados: perfil.informacionempresa.numeroEmpleados,
         ventasAnuales: perfil.informacionempresa.ventasAnuales,
