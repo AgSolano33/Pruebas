@@ -31,6 +31,7 @@ export default function VerifyClient() {
 
         if (res.ok) {
           setStatus("success");
+          setMessage("Correo verificado")
         } else {
           setStatus("error");
         }

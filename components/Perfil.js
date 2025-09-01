@@ -91,7 +91,7 @@ export default function Perfil() {
   setMensaje("");
 
   try {
-    // 1️⃣ Actualizar info personal (users)
+    // Actualizar info personal (users)
     const userUpdateResponse = await fetch(`/api/user/${session.user.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

@@ -188,20 +188,24 @@ export default function FormDiagnostico({ onClose }) {
     });
     if (!userUpdate.ok) throw new Error("Error al actualizar usuario");
 
-    // Actualizar InfoEmpresa
-    const empresaUpdate = await fetch(`/api/infoEmpresa/${session.user.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tipoNegocio: formData.tipoEmpresa,
-        name: formData.nombreEmpresaProyecto,
-        actividad: formData.giroActividad,
-        descripcionActividad: formData.descripcionActividad,
-        numEmpleados: formData.numeroEmpleados,
-        ventasAnuales: formData.ventasAnualesEstimadas
-      })
-    });
-    if (!empresaUpdate.ok) throw new Error("Error al actualizar InfoEmpresa");
+// Actualizar o crear
+await fetch(`/api/infoEmpresa/${session.user.id}`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    tipoNegocio: formData.tipoEmpresa,
+    name: formData.nombreEmpresaProyecto,
+    actividad: formData.giroActividad,
+    descripcionActividad: formData.descripcionActividad,
+    numEmpleados: formData.numeroEmpleados,
+    ventasAnuales: formData.ventasAnualesEstimadas,
+    ubicacion: formData.ubicacion,
+    sector: formData.sector,
+  }),
+});
+
+// Obtener
+await fetch(`/api/infoEmpresa/${session.user.id}`);
 
     // Crear Prediagnóstico
     const preResponse = await fetch(`/api/prediagnostico/${session.user.id}`, {

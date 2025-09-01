@@ -1,27 +1,22 @@
-// app/api/infoEmpresa/[userId]/route.js
+// app/api/infoEmpresa/[id]/route.js
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/libs/mongodb";
 import InfoEmpresa from "@/models/infoEmpresa";
 
-export async function GET(request, { params }) {
+export async function GET(_req, { params }) {
   try {
     await connectToDatabase();
-    const { userId } = params;
-
-    const empresa = await InfoEmpresa.findOne({
-      $or: [
-        { id_users: userId },          
-        { id_users: { $in: [userId] } } 
-      ]
-    }).lean();
-
-    if (!empresa) {
-      return NextResponse.json({ error: "InfoEmpresa no encontrada" }, { status: 404 });
+    const { id } = params; // 👈 es params.id, no userId
+    if (!id) {
+      return NextResponse.json({ error: "id requerido en la ruta" }, { status: 400 });
     }
 
+    const empresa = await InfoEmpresa.findOne({ id_users: id }).lean();
+    if (!empresa) return NextResponse.json({ error: "InfoEmpresa no encontrada" }, { status: 404 });
+
     return NextResponse.json(empresa, { status: 200 });
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: "Error al obtener InfoEmpresa" }, { status: 500 });
   }
 }
@@ -29,51 +24,54 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     await connectToDatabase();
-    const { userId } = params;
+    const { id } = params; // 👈 igual aquí
+    if (!id) {
+      return NextResponse.json({ error: "id requerido en la ruta" }, { status: 400 });
+    }
+
     const body = await request.json();
 
-    let empresa = await InfoEmpresa.findOne({
-      $or: [
-        { id_users: userId },
-        { id_users: { $in: [userId] } }
-      ]
-    });
+    let empresa = await InfoEmpresa.findOne({ id_users: id });
 
     if (empresa) {
-      // Actualiza solo campos provistos, mantiene el resto
-      empresa.tipoNegocio = body.tipoNegocio ?? empresa.tipoNegocio;
-      empresa.name = body.name ?? empresa.name;
-      empresa.actividad = body.actividad ?? empresa.actividad;
-      empresa.descripcionActividad = body.descripcionActividad ?? empresa.descripcionActividad;
-      empresa.ubicacion = body.ubicacion ?? empresa.ubicacion;
-      empresa.sector = body.actividad ?? empresa.sector;
+      // actualizar
+      if (body.tipoNegocio !== undefined) empresa.tipoNegocio = body.tipoNegocio;
+      if (body.name !== undefined) empresa.name = body.name;
+      if (body.actividad !== undefined) empresa.actividad = body.actividad;
+      if (body.descripcionActividad !== undefined) empresa.descripcionActividad = body.descripcionActividad;
+      if (body.ubicacion !== undefined) empresa.ubicacion = body.ubicacion;
+      if (body.sector !== undefined) empresa.sector = body.sector;
+      if (body.numEmpleados !== undefined) empresa.numEmpleados = String(body.numEmpleados);
+      if (body.ventasAnuales !== undefined) empresa.ventasAnuales = String(body.ventasAnuales);
+      if (body.CP !== undefined) empresa.CP = body.CP;
+      if (body.antiguedad !== undefined) empresa.antiguedad = body.antiguedad;
 
-
-      // Asegura tipos numéricos
-      if (body.numEmpleados !== undefined && body.numEmpleados !== null && body.numEmpleados !== "") {
-        empresa.numEmpleados = Number(body.numEmpleados);
-      }
-      if (body.ventasAnuales !== undefined && body.ventasAnuales !== null && body.ventasAnuales !== "") {
-        empresa.ventasAnuales = Number(body.ventasAnuales);
+      if (!Array.isArray(empresa.id_users)) empresa.id_users = [];
+      if (!empresa.id_users.find((x) => String(x) === String(id))) {
+        empresa.id_users.push(id);
       }
 
       await empresa.save();
     } else {
-      // Crea nuevo doc; si tu schema define id_users como array, guardamos como array
+      // crear
       empresa = await InfoEmpresa.create({
-        id_users: Array.isArray(body.id_users) ? body.id_users : [userId],
+        id_users: [id], 
         tipoNegocio: body.tipoNegocio ?? "",
         name: body.name ?? "",
         actividad: body.actividad ?? "",
         descripcionActividad: body.descripcionActividad ?? "",
-        numEmpleados: body.numEmpleados !== undefined && body.numEmpleados !== "" ? Number(body.numEmpleados) : 0,
-        ventasAnuales: body.ventasAnuales !== undefined && body.ventasAnuales !== "" ? Number(body.ventasAnuales) : 0,
+        ubicacion: body.ubicacion ?? "",
+        sector: body.sector ?? "",
+        numEmpleados: body.numEmpleados ? String(body.numEmpleados) : "0",
+        ventasAnuales: body.ventasAnuales ? String(body.ventasAnuales) : "0",
+        CP: body.CP ?? "",
+        antiguedad: body.antiguedad ?? "",
       });
     }
 
     return NextResponse.json(empresa, { status: 200 });
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     return NextResponse.json({ error: "Error al guardar InfoEmpresa" }, { status: 500 });
   }
 }
