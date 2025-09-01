@@ -103,8 +103,6 @@ export default function VerifyClient() {
               Continúa a CLA
             </Link>
           </div>
-
-          <p className="mt-4 text-sm text-gray-500">{message}</p>
         </section>
       </main>
     );
