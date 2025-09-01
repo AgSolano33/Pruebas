@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
 
 export async function sendVerificationEmail(to, nombre, token) {
   // Usa variable de entorno
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXTAUTH_URL || "https://pruebas-z15b.vercel.app/verify";
   // 👉 el link debe apuntar a /verify (página), no al endpoint /api/verify
   const verificationLink = `${baseUrl}/verify?token=${token}`;
 
