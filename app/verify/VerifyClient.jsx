@@ -22,7 +22,7 @@ export default function VerifyClient() {
 
     (async () => {
       try {
-        const res = await fetch(`/verify?token=${encodeURIComponent(token)}`, {
+        const res = await fetch(`/api/verify?token=${encodeURIComponent(token)}`, {
           method: "GET",
           cache: "no-store",
         });
