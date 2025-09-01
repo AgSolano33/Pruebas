@@ -11,7 +11,6 @@ const transporter = nodemailer.createTransport({
 export async function sendVerificationEmail(to, nombre, token) {
   // Usa variable de entorno
   const baseUrl = process.env.NEXTAUTH_URL || "https://pruebas-z15b.vercel.app";
-  // 👉 el link debe apuntar a /verify (página), no al endpoint /api/verify
   const verificationLink = `${baseUrl}/verify?token=${token}`;
 
   const mailOptions = {
@@ -25,6 +24,11 @@ export async function sendVerificationEmail(to, nombre, token) {
       <p>Valida tu correo electrónico <a href="${verificationLink}">aquí</a> para que puedas tener acceso a tus proyectos.</p>
       <p>Si tienes alguna duda durante el proceso, nuestro equipo estará encantado de apoyarte al +52 (614) 461 3032.</p>
       <p>Con entusiasmo,<br>El equipo de Community Lab</p>
+            <div style="margin-top:30px;">
+        <img src="https://pruebas-z15b.vercel.app/icon.png" 
+             alt="Community Lab Logo" 
+             style="max-height:80px;" />
+      </div>
     `,
   };
 

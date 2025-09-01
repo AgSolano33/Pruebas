@@ -31,15 +31,12 @@ export default function VerifyClient() {
 
         if (res.ok) {
           setStatus("success");
-          setMessage(data.message || "Correo verificado correctamente ✅");
         } else {
           setStatus("error");
-          setMessage(data.error || "Token inválido o expirado ❌");
         }
       } catch {
         if (!ignore) {
           setStatus("error");
-          setMessage("Error al conectar con el servidor ❌");
         }
       }
     })();
