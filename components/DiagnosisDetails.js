@@ -13,10 +13,15 @@ export default function DiagnosisDetails({ params }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
 
-  // Datos
+  // Datos base
   const [empresa, setEmpresa] = useState(null); // InfoEmpresa
   const [prediagnostico, setPrediagnostico] = useState(null); // Prediagnóstico elegido
   const [ast, setAst] = useState(null); // AST vinculado al prediagnóstico o más reciente del usuario
+
+  // Propuestas del asistente proyectosPreAST
+  const [proyectos, setProyectos] = useState([]);
+  const [loadingProyectos, setLoadingProyectos] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   // UI
   const [proposalName, setProposalName] = useState("Nombre de la propuesta");
@@ -95,7 +100,7 @@ export default function DiagnosisDetails({ params }) {
     const load = async () => {
       setIsLoading(true);
       try {
-        // 1) InfoEmpresa (tu endpoint regresa UN objeto)
+        // 1) InfoEmpresa
         try {
           const resEmp = await fetch(`/api/infoEmpresa/${session.user.id}`, { cache: "no-store" });
           if (resEmp.ok) {
@@ -225,24 +230,64 @@ export default function DiagnosisDetails({ params }) {
       []
   );
 
-  // ---------------- Acciones ----------------
-  const handlePublish = async () => {
+  // ---------------- Propuestas: fetch & generar ----------------
+  const fetchProyectos = async () => {
+    if (!session?.user?.id || !preId) return;
+    setLoadingProyectos(true);
     try {
-      // Conecta aquí tu endpoint real si aplica (ej. /api/propuesta/publicar)
-      toast.success("✅ Publicado");
-    } catch {
-      toast.error("No se pudo publicar");
+      const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
+      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "Error cargando propuestas");
+    } finally {
+      setLoadingProyectos(false);
     }
   };
 
-  const handleReject = async () => {
+  const handleGenerarPropuestas = async () => {
     try {
-      // Conecta aquí tu endpoint real si aplica
-      toast("Propuesta rechazada", { icon: "❌" });
-    } catch {
-      toast.error("No se pudo rechazar");
+      if (!ast) {
+        toast.error("Aún no hay AST para generar propuestas");
+        return;
+      }
+      setGenerating(true);
+
+      // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
+      const payload = {
+        ...ast,
+        userId: normalizeId(ast.userId) || session.user.id,
+        prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
+      };
+
+      const res = await fetch("/api/assistant/ProyectosPre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
+
+      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+      toast.success("Propuestas generadas ✅");
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "No se pudo generar");
+    } finally {
+      setGenerating(false);
     }
   };
+
+  // Cargar propuestas guardadas al tener session + preId
+  useEffect(() => {
+    if (session?.user?.id && preId) {
+      fetchProyectos();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, preId]);
 
   // ---------------- UI ----------------
   return (
@@ -319,62 +364,40 @@ export default function DiagnosisDetails({ params }) {
 
       {/* Sección 3: Propuestas de Solución */}
       <section className="bg-white border border-slate-200 rounded-xl p-4 mb-4">
-        <h2 className="text-base font-semibold mb-3">💡 Propuestas de Solución</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold">💡 Propuestas de Solución</h2>
 
-        <Block title="Nombre de la propuesta">
-          <input
-            className="w-full border rounded-md px-3 py-2 text-sm"
-            value={proposalName}
-            onChange={(e) => setProposalName(e.target.value)}
-            placeholder="Ingresa un nombre…"
-          />
-        </Block>
-
-        <p className="text-slate-600 text-sm leading-6 mb-3">
-          {astParsed?.propuesta?.resumen ||
-            astParsed?.proposal?.summary ||
-            "Resumen generado a partir de la información de la empresa y tu prediagnóstico."}
-        </p>
-
-        <div className="text-sm mb-3">
-          <strong>Industria: </strong>
-          <span>{industria}</span>
-          {presupuesto && <span className="ml-2 text-slate-500">· Presupuesto: {presupuesto}</span>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={fetchProyectos}
+              disabled={loadingProyectos}
+              className="px-3 py-1.5 text-sm rounded-md border hover:bg-slate-50 disabled:opacity-50"
+            >
+              {loadingProyectos ? "Cargando..." : "Refrescar"}
+            </button>
+            <button
+              type="button"
+              onClick={handleGenerarPropuestas}
+              disabled={generating || !ast}
+              className="px-3 py-1.5 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {generating ? "Generando..." : "Generar 3 propuestas"}
+            </button>
+          </div>
         </div>
 
-        <Block title="Objetivos Identificados :">
-          <List items={objetivosIdentificados} />
-        </Block>
-
-        <Block title="Servicios:">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {(servicios.length ? servicios : ["—"]).map((s, i) => (
-              <button
-                key={`${s}-${i}`}
-                type="button"
-                className="w-full border rounded-lg py-2 text-sm font-semibold bg-slate-50 hover:bg-slate-100"
-              >
-                {s}
-              </button>
-            ))}
+        {/* Grid de 3 propuestas del asistente (nombre, resumen, descripción) */}
+        {proyectos.length === 0 ? (
+          <div className="text-sm text-slate-600 mb-3">
+            No hay propuestas guardadas todavía. Da clic en <strong>“Generar 3 propuestas”</strong>.
           </div>
-        </Block>
+        ) : null}
 
-        <div className="flex justify-end gap-3 mt-4">
-          <button
-            onClick={handlePublish}
-            className="px-4 py-2 rounded-md text-white bg-emerald-600 hover:bg-emerald-700 text-sm"
-            type="button"
-          >
-            Publicar
-          </button>
-          <button
-            onClick={handleReject}
-            className="px-4 py-2 rounded-md text-white bg-rose-600 hover:bg-rose-700 text-sm"
-            type="button"
-          >
-            Rechazar
-          </button>
+        <div className="grid md:grid-cols-3 gap-4">
+          {proyectos.map((p, idx) => (
+            <ProposalCard key={p._id || idx} p={p} idx={idx} />
+          ))}
         </div>
       </section>
 
@@ -387,7 +410,6 @@ export default function DiagnosisDetails({ params }) {
   );
 }
 
-/* ---------------- Subcomponentes ---------------- */
 
 function InfoRow({ label, value }) {
   return (
@@ -416,6 +438,32 @@ function List({ items = [] }) {
           {t}
         </div>
       ))}
+    </div>
+  );
+}
+
+function ProposalCard({ p, idx }) {
+  return (
+    <div className="border rounded-xl p-4 bg-slate-50">
+      <div className="text-xs text-slate-500 mb-1">Propuesta {idx + 1}</div>
+
+      <div className="font-semibold text-slate-900 mb-2">
+        {p.nombreProyecto || "—"}
+      </div>
+
+      <div className="text-sm mb-2">
+        <div className="font-semibold">Resumen</div>
+        <p className="text-slate-700 leading-6">
+          {p.resumenProyecto || "—"}
+        </p>
+      </div>
+
+      <div className="text-sm">
+        <div className="font-semibold">Descripción</div>
+        <p className="text-slate-700 leading-6">
+          {p.descripcionProyecto || "—"}
+        </p>
+      </div>
     </div>
   );
 }
