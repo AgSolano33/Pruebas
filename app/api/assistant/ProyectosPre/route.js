@@ -80,15 +80,6 @@ export async function POST(req) {
     // Mensaje: mandamos TAL CUAL tu objeto (sin consultar DB)
     const userMessage =
 `
-Responde ÚNICAMENTE con JSON válido. SIN markdown, SIN listas, SIN explicaciones.
-Estructura exacta:
-{
-  "Propuestas": [
-    { "nombreProyecto": "...", "resumenProyecto": "...", "descripcionProyecto": "..." },
-    { "nombreProyecto": "...", "resumenProyecto": "...", "descripcionProyecto": "..." },
-    { "nombreProyecto": "...", "resumenProyecto": "...", "descripcionProyecto": "..." }
-  ]
-}
 ${JSON.stringify(payload)}
 `;
 

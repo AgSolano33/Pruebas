@@ -232,55 +232,64 @@ export default function DiagnosisDetails({ params }) {
   );
 
   // ---------------- Propuestas: fetch & generar ----------------
-  const fetchProyectos = async () => {
-    if (!session?.user?.id || !preId) return;
-    setLoadingProyectos(true);
-    try {
-      const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
-      const res = await fetch(url, { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
-      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
-    } catch (e) {
-      console.error(e);
-      toast.error(e.message || "Error cargando propuestas");
-    } finally {
-      setLoadingProyectos(false);
+const fetchProyectos = async () => {
+  if (!session?.user?.id || !preId) return;
+  setLoadingProyectos(true);
+  try {
+    const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
+    console.log("📤 [fetchProyectos] URL:", url); // 👈 log
+
+    const res = await fetch(url, { cache: "no-store" });
+    const data = await res.json();
+    console.log("📥 [fetchProyectos] Response:", data); // 👈 log
+
+    if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
+    setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+  } catch (e) {
+    console.error(e);
+    toast.error(e.message || "Error cargando propuestas");
+  } finally {
+    setLoadingProyectos(false);
+  }
+};
+
+const handleGenerarPropuestas = async () => {
+  try {
+    if (!ast) {
+      toast.error("Aún no hay AST para generar propuestas");
+      return;
     }
-  };
+    setGenerating(true);
 
-  const handleGenerarPropuestas = async () => {
-    try {
-      if (!ast) {
-        toast.error("Aún no hay AST para generar propuestas");
-        return;
-      }
-      setGenerating(true);
+    // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
+    const payload = {
+      ...ast,
+      userId: normalizeId(ast.userId) || session.user.id,
+      prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
+    };
 
-      // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
-      const payload = {
-        ...ast,
-        userId: normalizeId(ast.userId) || session.user.id,
-        prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
-      };
+    console.log("📤 [handleGenerarPropuestas] Payload enviado:", payload); // 👈 log
 
-      const res = await fetch("/api/assistant/ProyectosPre", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
+    const res = await fetch("/api/assistant/ProyectosPre", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
 
-      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
-      toast.success("Propuestas generadas ✅");
-    } catch (e) {
-      console.error(e);
-      toast.error(e.message || "No se pudo generar");
-    } finally {
-      setGenerating(false);
-    }
-  };
+    console.log("📥 [handleGenerarPropuestas] Response:", data); // 👈 log
+
+    if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
+
+    setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+    toast.success("Propuestas generadas ✅");
+  } catch (e) {
+    console.error(e);
+    toast.error(e.message || "No se pudo generar");
+  } finally {
+    setGenerating(false);
+  }
+};
 
   // Cargar propuestas guardadas al tener session + preId
   useEffect(() => {
