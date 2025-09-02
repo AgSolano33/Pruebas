@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import config from "@/config";
+import Image from "next/image";
 
 export default function DiagnosisDetails({ params }) {
   const router = useRouter();
@@ -301,12 +302,15 @@ export default function DiagnosisDetails({ params }) {
         >
           ← Volver al dashboard
         </button>
-        <div className="flex items-baseline gap-2">
-          <span className="px-2.5 py-1 rounded bg-slate-200 text-xs font-semibold">
-            COMMUNITY LAB
-          </span>
-          <span className="text-[11px] tracking-widest text-slate-500">ALLIANCE</span>
-        </div>
+<div className="flex items-center gap-2">
+  <Image
+    src="/icon.png"
+    alt="Community Lab Logo"
+    width={350}
+    height={350}
+    className="rounded"
+  />
+</div>
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 mb-3">Detalles del Diagnóstico</h1>
