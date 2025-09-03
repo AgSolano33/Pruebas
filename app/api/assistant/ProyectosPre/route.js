@@ -104,7 +104,7 @@ ${JSON.stringify(payload)}
       headers,
       body: JSON.stringify({
         assistant_id: assistantId,
-        // response_format: { type: "json_object" } // <- si tu cuenta lo permite
+        response_format: { type: "json_object" } // <- si tu cuenta lo permite
       }),
     });
 
