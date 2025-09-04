@@ -177,7 +177,15 @@ ${JSON.stringify(payload)}
     let inserted;
     try {
       inserted = await ProyectoPreAST.insertMany(
-        top3.map(p => ({ userId, prediagnosticoId, ...p })),
+        top3.map(p => ({ 
+          userId, 
+          prediagnosticoId, 
+          ...p,
+          estado: "aprobacion", // Estado inicial
+          publicado: false,
+          fechaPublicacion: new Date(),
+          fechaActualizacion: new Date()
+        })),
         { ordered: false }
       );
     } catch {
@@ -186,7 +194,16 @@ ${JSON.stringify(payload)}
       for (const d of top3) {
         const up = await ProyectoPreAST.findOneAndUpdate(
           { userId, prediagnosticoId, nombreProyecto: d.nombreProyecto },
-          { $set: { ...d, userId, prediagnosticoId } },
+          { 
+            $set: { 
+              ...d, 
+              userId, 
+              prediagnosticoId,
+              estado: "aprobacion",
+              publicado: false,
+              fechaActualizacion: new Date()
+            } 
+          },
           { upsert: true, new: true }
         );
         inserted.push(up);
@@ -215,23 +232,33 @@ ${JSON.stringify(payload)}
     catch { return NextResponse.json({ error: message }, { status: 500 }); }
   }
 }
-
-// ========== GET: trae lo guardado para mostrar en el front ==========
 export async function GET(req) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const prediagnosticoId = String(searchParams.get("prediagnosticoId") || "").trim();
-    const userId = String(searchParams.get("userId") || "").trim();
+  await connectToDatabase();
 
-    if (!prediagnosticoId || !userId) {
-      return NextResponse.json({ error: "userId y prediagnosticoId son requeridos" }, { status: 400 });
-    }
+  const { searchParams } = new URL(req.url);
+  const userId           = searchParams.get("userId");  // obligatorio
+  const prediagnosticoId = searchParams.get("prediagnosticoId");
+  const publicadoParam   = searchParams.get("publicado");
+  const estadoParam      = searchParams.get("estado");
+  const limitParam       = Number(searchParams.get("limit") || 0);
 
-    await connectToDatabase();
-    const items = await ProyectoPreAST.find({ userId, prediagnosticoId }).sort({ createdAt: -1 }).lean();
-
-    return NextResponse.json({ ok: true, count: items.length, proyectos: items });
-  } catch (e) {
-    return NextResponse.json({ error: e?.message || "Error desconocido" }, { status: 500 });
+  if (!userId) {
+    return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
   }
+
+  const filter = { userId };
+  if (prediagnosticoId) filter.prediagnosticoId = prediagnosticoId;
+  if (publicadoParam === "true") filter.publicado = true;
+  if (publicadoParam === "false") filter.publicado = false;
+  if (estadoParam) filter.estado = estadoParam;
+
+  let q = ProyectoPreAST.find(filter).sort({ fechaActualizacion: -1 });
+  if (limitParam > 0) q = q.limit(limitParam);
+
+  const proyectos = await q.lean();
+  return NextResponse.json({ 
+    success: true,
+    count: proyectos.length,
+    proyectos 
+  });
 }

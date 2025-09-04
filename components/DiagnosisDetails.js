@@ -24,6 +24,9 @@ export default function DiagnosisDetails({ params }) {
   const [loadingProyectos, setLoadingProyectos] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // Estado de publicación por tarjeta
+  const [publishing, setPublishing] = useState({}); // { [idNormalizado]: boolean }
+
   // UI
   const [proposalName, setProposalName] = useState("Nombre de la propuesta");
 
@@ -220,9 +223,7 @@ export default function DiagnosisDetails({ params }) {
       toArray(prediagnostico?.preguntasKpis)
   );
 
-  const industria = astParsed.Industria || empresa?.actividad || empresa?.giroActividad || "—";
   const tamanoAST = astParsed.Tamano || null;
-  const presupuesto = astParsed.Presupuesto || null;
 
   const servicios = cleanList(
     astParsed?.propuesta?.servicios ||
@@ -232,64 +233,91 @@ export default function DiagnosisDetails({ params }) {
   );
 
   // ---------------- Propuestas: fetch & generar ----------------
-const fetchProyectos = async () => {
-  if (!session?.user?.id || !preId) return;
-  setLoadingProyectos(true);
-  try {
-    const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
-    console.log("📤 [fetchProyectos] URL:", url); // 👈 log
+  const fetchProyectos = async () => {
+    if (!session?.user?.id || !preId) return;
+    setLoadingProyectos(true);
+    try {
+      const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
+      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "Error cargando propuestas");
+    } finally {
+      setLoadingProyectos(false);
+    }
+  };
 
-    const res = await fetch(url, { cache: "no-store" });
-    const data = await res.json();
-    console.log("📥 [fetchProyectos] Response:", data); // 👈 log
+  const handleGenerarPropuestas = async () => {
+    try {
+      if (!ast) {
+        toast.error("Aún no hay AST para generar propuestas");
+        return;
+      }
+      setGenerating(true);
 
-    if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
-    setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
-  } catch (e) {
-    console.error(e);
-    toast.error(e.message || "Error cargando propuestas");
-  } finally {
-    setLoadingProyectos(false);
-  }
-};
+      // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
+      const payload = {
+        ...ast,
+        userId: normalizeId(ast.userId) || session.user.id,
+        prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
+      };
 
-const handleGenerarPropuestas = async () => {
-  try {
-    if (!ast) {
-      toast.error("Aún no hay AST para generar propuestas");
+      const res = await fetch("/api/assistant/ProyectosPre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
+
+      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+      toast.success("Propuestas generadas ✅");
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "No se pudo generar");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // ---------------- Publicar propuesta (PATCH) ----------------
+  const handlePublicar = async (proj) => {
+    const id = normalizeId(proj?._id);
+    if (!id) {
+      toast.error("ID de proyecto inválido");
       return;
     }
-    setGenerating(true);
+    // Evitar clicks repetidos
+    setPublishing((s) => ({ ...s, [id]: true }));
+    try {
+      const res = await fetch("http://localhost:3000/api/assistant/ProyectosPre/publicado", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, publicado: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || "No se pudo publicar el proyecto");
+      }
 
-    // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
-    const payload = {
-      ...ast,
-      userId: normalizeId(ast.userId) || session.user.id,
-      prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
-    };
-
-    console.log("📤 [handleGenerarPropuestas] Payload enviado:", payload); // 👈 log
-
-    const res = await fetch("/api/assistant/ProyectosPre", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-
-    console.log("📥 [handleGenerarPropuestas] Response:", data); // 👈 log
-
-    if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
-
-    setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
-    toast.success("Propuestas generadas ✅");
-  } catch (e) {
-    console.error(e);
-    toast.error(e.message || "No se pudo generar");
-  } finally {
-    setGenerating(false);
-  }
-};
+      // Actualiza estado local
+      setProyectos((prev) =>
+        (prev || []).map((p) =>
+          normalizeId(p._id) === id ? { ...p, publicado: true, updatedAt: new Date().toISOString() } : p
+        )
+      );
+      toast.success("Proyecto publicado ✅");
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "Error al publicar");
+    } finally {
+      setPublishing((s) => ({ ...s, [id]: false }));
+    }
+  };
 
   // Cargar propuestas guardadas al tener session + preId
   useEffect(() => {
@@ -311,15 +339,15 @@ const handleGenerarPropuestas = async () => {
         >
           ← Volver al dashboard
         </button>
-<div className="flex items-center gap-2">
-  <Image
-    src="/icon.png"
-    alt="Community Lab Logo"
-    width={350}
-    height={350}
-    className="rounded"
-  />
-</div>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/icon.png"
+            alt="Community Lab Logo"
+            width={350}
+            height={350}
+            className="rounded"
+          />
+        </div>
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 mb-3">Detalles del Diagnóstico</h1>
@@ -400,7 +428,6 @@ const handleGenerarPropuestas = async () => {
           </div>
         </div>
 
-        {/* Grid de 3 propuestas del asistente (nombre, resumen, descripción) */}
         {proyectos.length === 0 ? (
           <div className="text-sm text-slate-600 mb-3">
             No hay propuestas guardadas todavía. Da clic en <strong>“Generar 3 propuestas”</strong>.
@@ -408,9 +435,19 @@ const handleGenerarPropuestas = async () => {
         ) : null}
 
         <div className="grid md:grid-cols-3 gap-4">
-          {proyectos.map((p, idx) => (
-            <ProposalCard key={p._id || idx} p={p} idx={idx} />
-          ))}
+          {proyectos.map((p, idx) => {
+            const id = normalizeId(p._id);
+            return (
+              <ProposalCard
+                key={id || idx}
+                p={p}
+                idx={idx}
+                isPublished={!!p.publicado}
+                isPublishing={!!publishing[id]}
+                onPublish={() => handlePublicar(p)}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -422,7 +459,6 @@ const handleGenerarPropuestas = async () => {
     </div>
   );
 }
-
 
 function InfoRow({ label, value }) {
   return (
@@ -455,10 +491,17 @@ function List({ items = [] }) {
   );
 }
 
-function ProposalCard({ p, idx }) {
+function ProposalCard({ p, idx, isPublished, isPublishing, onPublish }) {
   return (
-    <div className="border rounded-xl p-4 bg-slate-50">
-      <div className="text-xs text-slate-500 mb-1">Propuesta {idx + 1}</div>
+    <div className="border rounded-xl p-4 bg-slate-50 flex flex-col">
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-xs text-slate-500">Propuesta {idx + 1}</div>
+        {isPublished ? (
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-100 border border-green-200">
+            Publicado
+          </span>
+        ) : null}
+      </div>
 
       <div className="font-semibold text-slate-900 mb-2">
         {p.nombreProyecto || "—"}
@@ -471,12 +514,25 @@ function ProposalCard({ p, idx }) {
         </p>
       </div>
 
-      <div className="text-sm">
+      <div className="text-sm mb-4">
         <div className="font-semibold">Descripción</div>
         <p className="text-slate-700 leading-6">
           {p.descripcionProyecto || "—"}
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={onPublish}
+        disabled={isPublished || isPublishing}
+        className={`mt-auto px-3 py-2 text-sm rounded-md border ${
+          isPublished
+            ? "opacity-60 cursor-not-allowed"
+            : "bg-emerald-600 text-white hover:bg-emerald-700"
+        }`}
+      >
+        {isPublished ? "Publicado" : isPublishing ? "Publicando…" : "Publicar"}
+      </button>
     </div>
   );
 }
