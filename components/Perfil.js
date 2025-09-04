@@ -201,18 +201,41 @@ export default function Perfil() {
           </div>
           <div className="hidden md:block h-4 border-l border-gray-300"></div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-green-700">Teléfono:</span>
-            {editando ? (
-              <input
-                className="border rounded px-2 py-1"
-                value={perfil.informacionpersonal.telefono}
-                onChange={e => handleChange(e, 'informacionpersonal', 'telefono')}
-                placeholder="Teléfono"
-              />
-            ) : (
-              <span className="text-gray-800">{perfil.informacionpersonal.telefono}</span>
-            )}
-          </div>
+  <span className="font-semibold text-green-700">Teléfono:</span>
+  {editando ? (
+    <div className="flex flex-col">
+      <input
+        className="border rounded px-2 py-1"
+        type="text"
+        value={perfil.informacionpersonal.telefono}
+        maxLength={10}
+        onChange={(e) => {
+          const value = e.target.value;
+          // Permitir solo números
+          if (/^\d*$/.test(value)) {
+            handleChange(
+              { target: { value } },
+              "informacionpersonal",
+              "telefono"
+            );
+            setMensaje("");
+          } else {
+            setMensaje("⚠️ Solo se permiten números en el teléfono.");
+          }
+        }}
+        placeholder="Teléfono"
+      />
+      {mensaje.includes("Solo se permiten números") && (
+        <span className="text-red-600 text-sm mt-1">{mensaje}</span>
+      )}
+    </div>
+  ) : (
+    <span className="text-gray-800">
+      {perfil.informacionpersonal.telefono}
+    </span>
+  )}
+</div>
+
         </div>
 
         <div className="border-t pt-4">
