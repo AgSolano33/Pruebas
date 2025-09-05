@@ -39,7 +39,6 @@ export async function GET(_req, { params }) {
     }
 
     const docs = await Prediagnostico.find({ userId }).sort({ createdAt: -1 });
-    // 👇 Devolver SIEMPRE un arreglo
     return NextResponse.json(docs, { status: 200 });
   } catch (e) {
     console.error(e);

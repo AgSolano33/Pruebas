@@ -67,7 +67,6 @@ function executeToolCall(toolCall) {
 
   switch (name) {
     case "emit_prediagnostico":
-      // Si necesitas validar/normalizar el JSON, hazlo aquí antes de devolverlo
       return JSON.stringify(args);
 
     default:
@@ -75,7 +74,6 @@ function executeToolCall(toolCall) {
   }
 }
 
-// ---------- Handler principal ----------
 export async function POST(req) {
   try {
     const apiKey = (process.env.OPENAI_API_KEY || "").trim();
@@ -107,7 +105,7 @@ ${JSON.stringify(body.prediagnostico)}
     const headers = {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "OpenAI-Beta": "assistants=v2", // obligatorio para Assistants v2
+      "OpenAI-Beta": "assistants=v2", 
     };
 
     // 1) Crear thread
