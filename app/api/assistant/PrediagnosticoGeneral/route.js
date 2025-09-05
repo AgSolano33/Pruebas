@@ -1,8 +1,8 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
 import { NextResponse } from "next/server";
-
+import { connectToDatabase } from "@/libs/mongodb";
+import PrediagnosticoAST from "@/models/PreDiagnosticoAST";
 // ---------- Utils ----------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -220,6 +220,41 @@ ${JSON.stringify(body.prediagnostico)}
 
   } catch (err) {
     let message = err?.message || "Error desconocido";
+    try {
+      const parsed = JSON.parse(message);
+      return NextResponse.json({ error: parsed }, { status: 500 });
+    } catch {
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  }
+}
+
+export async function GET(req) {
+  try {
+    await connectToDatabase();
+
+    const { searchParams } = new URL(req.url);
+    const prediagnosticoId = searchParams.get("prediagnosticoId"); // OBLIGATORIO
+    const userId = searchParams.get("userId"); // opcional
+
+    if (!prediagnosticoId) {
+      return NextResponse.json(
+        { error: "prediagnosticoId es requerido" },
+        { status: 400 }
+      );
+    }
+
+    const filter = { prediagnosticoId };
+    if (userId) filter.userId = userId;
+
+    const doc = await PrediagnosticoAST
+      .findOne(filter)
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    return NextResponse.json({ prediagnostico: doc || null });
+  } catch (err) {
+    const message = err?.message || "Error desconocido";
     try {
       const parsed = JSON.parse(message);
       return NextResponse.json({ error: parsed }, { status: 500 });

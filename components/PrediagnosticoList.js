@@ -25,6 +25,9 @@ export default function PrediagnosticoList() {
   const [projectCounts, setProjectCounts] = useState({});
   const [projectsByPred, setProjectsByPred] = useState({});
 
+  // Cache de títulos por prediagnosticoId (NombreDiagnostico del endpoint)
+  const [tituloByPred, setTituloByPred] = useState({});
+
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
     title: "",
@@ -82,6 +85,38 @@ export default function PrediagnosticoList() {
   };
 
   // --- Fetchers ---
+
+  // Trae el NombreDiagnostico real desde /api/assistant/PrediagnosticoGeneral y lo cachea por prediagnosticoId
+  const fetchTituloForPred = useCallback(
+    async (prediagnosticoId) => {
+      if (!prediagnosticoId || !session?.user?.id) return;
+      if (tituloByPred[prediagnosticoId]) return; // ya cacheado
+
+      try {
+        const url = `/api/assistant/PrediagnosticoGeneral?prediagnosticoId=${encodeURIComponent(
+          prediagnosticoId
+        )}&userId=${encodeURIComponent(session.user.id)}`;
+
+        const res = await fetch(url, { cache: "no-store" });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || "No se pudo cargar el título");
+
+        const nombre =
+          json?.prediagnostico?.resultado?.NombreDiagnostico ||
+          json?.prediagnostico?.resultado?.nombreDiagnostico ||
+          null;
+
+        if (nombre) {
+          setTituloByPred((prev) => ({ ...prev, [prediagnosticoId]: String(nombre) }));
+        }
+      } catch (e) {
+        // silencioso: si falla, usamos el fallback ya presente en diagnosis.tituloDiagnostico
+        console.warn("No se pudo traer NombreDiagnostico para", prediagnosticoId);
+      }
+    },
+    [session?.user?.id, tituloByPred]
+  );
+
   const fetchPrediagnosticos = useCallback(async () => {
     if (!session?.user?.id) return;
     setLoading(true);
@@ -98,13 +133,16 @@ export default function PrediagnosticoList() {
 
       setDiagnoses(items);
       setIsModalOpen(items.length === 0);
+
+      // Precarga de títulos desde el endpoint (no bloquea UI)
+      Promise.allSettled(items.map((it) => fetchTituloForPred(it.prediagnosticoId)));
     } catch (err) {
       console.error(err);
       setError(err?.message || "Error al cargar prediagnósticos");
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, fetchTituloForPred]);
 
   const fetchUserProjects = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -224,6 +262,7 @@ export default function PrediagnosticoList() {
 
   const toggleCard = async (diagnosisId, prediagnosticoId) => {
     setExpandedCards((prev) => ({ ...prev, [diagnosisId]: !prev[diagnosisId] }));
+    // SIN cargar título al expandir (lo pedimos en la precarga)
     if (!projectsByPred[prediagnosticoId]) {
       await fetchProjectsForPred(prediagnosticoId); // lazy fetch si no está en cache
     }
@@ -271,7 +310,7 @@ export default function PrediagnosticoList() {
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-[#1A3D7C]">
-                    {diagnosis.tituloDiagnostico}
+                    {tituloByPred[pid] || diagnosis.tituloDiagnostico}
                   </h3>
                   <p className="text-sm text-gray-500">
                     {new Date(diagnosis.createdAt).toLocaleString("es-ES")}
