@@ -850,10 +850,10 @@ export default function Dashboard() {
         {activeTab === "proyectos" && (
           <section>
             <div className="flex gap-2">
-
+<div className="mb-6 flex flex-col">
               <h2 className="text-2xl font-bold">Proyectos</h2>
-              <h3 className="text-gray-600">En este dashboard podrás encontrar los proyectos que has dado de alta, así como filtrarlos por estatus, revisar sus detalles y ver las postulaciones de expertos interesados en los mismos.</h3>
-
+              <p className="text-gray-600 mt-2">En este dashboard podrás encontrar los proyectos que has dado de alta, así como filtrarlos por estatus, revisar sus detalles y ver las postulaciones de expertos interesados en los mismos.</p>
+</div>
               <div className="flex gap-2">
                 {/* <button
                   onClick={async () => {
