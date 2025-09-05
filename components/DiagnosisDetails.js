@@ -24,6 +24,9 @@ export default function DiagnosisDetails({ params }) {
   const [loadingProyectos, setLoadingProyectos] = useState(false);
   const [generating, setGenerating] = useState(false);
 
+  // Publicación
+  const [publishingId, setPublishingId] = useState(null);
+
   // UI
   const [proposalName, setProposalName] = useState("Nombre de la propuesta");
 
@@ -225,71 +228,109 @@ export default function DiagnosisDetails({ params }) {
   const presupuesto = astParsed.Presupuesto || null;
 
   const servicios = cleanList(
-    astParsed?.propuesta?.servicios ||
+    (astParsed?.propuesta?.servicios ||
       astParsed?.proposal?.services ||
       astParsed?.Servicios ||
-      []
+      [])
   );
 
   // ---------------- Propuestas: fetch & generar ----------------
-const fetchProyectos = async () => {
-  if (!session?.user?.id || !preId) return;
-  setLoadingProyectos(true);
-  try {
-    const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
-    console.log("📤 [fetchProyectos] URL:", url); // 👈 log
+  const fetchProyectos = async () => {
+    if (!session?.user?.id || !preId) return;
+    setLoadingProyectos(true);
+    try {
+      const url = `/api/assistant/ProyectosPre?userId=${session.user.id}&prediagnosticoId=${preId}`;
+      console.log("📤 [fetchProyectos] URL:", url); // log
 
-    const res = await fetch(url, { cache: "no-store" });
-    const data = await res.json();
-    console.log("📥 [fetchProyectos] Response:", data); // 👈 log
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+      console.log("📥 [fetchProyectos] Response:", data); // log
 
-    if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
-    setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
-  } catch (e) {
-    console.error(e);
-    toast.error(e.message || "Error cargando propuestas");
-  } finally {
-    setLoadingProyectos(false);
-  }
-};
-
-const handleGenerarPropuestas = async () => {
-  try {
-    if (!ast) {
-      toast.error("Aún no hay AST para generar propuestas");
-      return;
+      if (!res.ok) throw new Error(data?.error || "No se pudieron cargar las propuestas");
+      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "Error cargando propuestas");
+    } finally {
+      setLoadingProyectos(false);
     }
-    setGenerating(true);
+  };
 
-    // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
-    const payload = {
-      ...ast,
-      userId: normalizeId(ast.userId) || session.user.id,
-      prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
-    };
+  const handleGenerarPropuestas = async () => {
+    try {
+      if (!ast) {
+        toast.error("Aún no hay AST para generar propuestas");
+        return;
+      }
+      setGenerating(true);
 
-    console.log("📤 [handleGenerarPropuestas] Payload enviado:", payload); // 👈 log
+      // Payload: mandamos TODO el AST + userId/prediagnosticoId normalizados
+      const payload = {
+        ...ast,
+        userId: normalizeId(ast.userId) || session.user.id,
+        prediagnosticoId: normalizeId(ast.prediagnosticoId) || preId,
+      };
 
-    const res = await fetch("/api/assistant/ProyectosPre", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
+      console.log("📤 [handleGenerarPropuestas] Payload enviado:", payload); // log
 
-    console.log("📥 [handleGenerarPropuestas] Response:", data); // 👈 log
+      const res = await fetch("/api/assistant/ProyectosPre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
 
-    if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
+      console.log("📥 [handleGenerarPropuestas] Response:", data); // log
 
-    setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
-    toast.success("Propuestas generadas ✅");
-  } catch (e) {
-    console.error(e);
-    toast.error(e.message || "No se pudo generar");
-  } finally {
-    setGenerating(false);
+      if (!res.ok) throw new Error(data?.error || "Error generando propuestas");
+
+      setProyectos(Array.isArray(data?.proyectos) ? data.proyectos.slice(0, 3) : []);
+      toast.success("Propuestas generadas ✅");
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "No se pudo generar");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Publicar: PATCH -> estado: "publicado"
+  async function publicarProyecto(id) {
+    const _id = normalizeId(id);
+    if (!_id) return toast.error("ID inválido");
+
+    try {
+      setPublishingId(_id);
+      const res = await fetch("/api/assistant/ProyectosPre", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: _id, estado: "publicado" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "No se pudo publicar");
+
+      const actualizado = data?.proyectos?.[0];
+      setProyectos((prev) =>
+        prev.map((x) =>
+          normalizeId(x._id) === normalizeId(actualizado?._id)
+            ? {
+                ...x,
+                estado: actualizado?.estado || "publicado",
+                updatedAt: actualizado?.updatedAt || new Date().toISOString(),
+              }
+            : x
+        )
+      );
+      toast.success("Proyecto publicado ✅");
+      // Si quieres moverlo a otra pantalla:
+      // router.push("/proyectos");
+    } catch (e) {
+      console.error(e);
+      toast.error(e.message || "Error al publicar");
+    } finally {
+      setPublishingId(null);
+    }
   }
-};
 
   // Cargar propuestas guardadas al tener session + preId
   useEffect(() => {
@@ -311,15 +352,15 @@ const handleGenerarPropuestas = async () => {
         >
           ← Volver al dashboard
         </button>
-<div className="flex items-center gap-2">
-  <Image
-    src="/icon.png"
-    alt="Community Lab Logo"
-    width={350}
-    height={350}
-    className="rounded"
-  />
-</div>
+        <div className="flex items-center gap-2">
+          <Image
+            src="/icon.png"
+            alt="Community Lab Logo"
+            width={350}
+            height={350}
+            className="rounded"
+          />
+        </div>
       </div>
 
       <h1 className="text-2xl font-bold text-slate-900 mb-3">Detalles del Diagnóstico</h1>
@@ -409,7 +450,13 @@ const handleGenerarPropuestas = async () => {
 
         <div className="grid md:grid-cols-3 gap-4">
           {proyectos.map((p, idx) => (
-            <ProposalCard key={p._id || idx} p={p} idx={idx} />
+            <ProposalCard
+              key={p._id || idx}
+              p={p}
+              idx={idx}
+              onPublicar={() => publicarProyecto(p._id)}
+              isPublishing={publishingId === normalizeId(p._id)}
+            />
           ))}
         </div>
       </section>
@@ -422,7 +469,6 @@ const handleGenerarPropuestas = async () => {
     </div>
   );
 }
-
 
 function InfoRow({ label, value }) {
   return (
@@ -455,10 +501,29 @@ function List({ items = [] }) {
   );
 }
 
-function ProposalCard({ p, idx }) {
+function estadoPillClass(estado) {
+  switch (estado) {
+    case "publicado":   return "bg-green-100 text-green-700 border-green-200";
+    case "en_proceso":  return "bg-blue-100 text-blue-700 border-blue-200";
+    case "en_espera":   return "bg-amber-100 text-amber-700 border-amber-200";
+    case "completado":  return "bg-slate-200 text-slate-700 border-slate-300";
+    case "cancelado":   return "bg-rose-100 text-rose-700 border-rose-200";
+    case "aprobacion":  return "bg-purple-100 text-purple-700 border-purple-200";
+    default:            return "bg-slate-100 text-slate-600 border-slate-200";
+  }
+}
+
+function ProposalCard({ p, idx, onPublicar, isPublishing }) {
+  const publicado = String(p?.estado || "") === "publicado";
+
   return (
-    <div className="border rounded-xl p-4 bg-slate-50">
-      <div className="text-xs text-slate-500 mb-1">Propuesta {idx + 1}</div>
+    <div className="border rounded-xl p-4 bg-slate-50 flex flex-col">
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-xs text-slate-500">Propuesta {idx + 1}</div>
+        <span className={`text-xs px-2 py-0.5 rounded-full border ${estadoPillClass(p?.estado)}`}>
+          {p?.estado || "—"}
+        </span>
+      </div>
 
       <div className="font-semibold text-slate-900 mb-2">
         {p.nombreProyecto || "—"}
@@ -471,12 +536,23 @@ function ProposalCard({ p, idx }) {
         </p>
       </div>
 
-      <div className="text-sm">
+      <div className="text-sm mb-4">
         <div className="font-semibold">Descripción</div>
         <p className="text-slate-700 leading-6">
           {p.descripcionProyecto || "—"}
         </p>
       </div>
+
+      <button
+        type="button"
+        onClick={onPublicar}
+        disabled={isPublishing || publicado}
+        className={`mt-auto px-3 py-1.5 text-sm rounded-md border disabled:opacity-60
+          ${publicado ? "bg-gray-100 text-gray-600 cursor-not-allowed"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-700"}`}
+      >
+        {publicado ? "Publicado" : (isPublishing ? "Publicando…" : "Publicar")}
+      </button>
     </div>
   );
 }

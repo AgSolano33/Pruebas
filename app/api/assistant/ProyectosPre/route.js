@@ -5,6 +5,20 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/libs/mongodb";
 import ProyectoPreAST from "@/models/proyectosPreAST";
 
+// ---------- utils ----------
+const ALLOWED_ESTADOS = [
+  "publicado",
+  "en_espera",
+  "en_proceso",
+  "completado",
+  "cancelado",
+  "aprobacion",
+];
+
+function isValidEstado(v) {
+  return ALLOWED_ESTADOS.includes(String(v || "").trim());
+}
+
 // ---------- helpers ----------
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function openaiFetch(url, options = {}) {
@@ -215,22 +229,92 @@ ${JSON.stringify(payload)}
     catch { return NextResponse.json({ error: message }, { status: 500 }); }
   }
 }
-
-// ========== GET: trae lo guardado para mostrar en el front ==========
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
+    const userId           = String(searchParams.get("userId") || "").trim();
     const prediagnosticoId = String(searchParams.get("prediagnosticoId") || "").trim();
-    const userId = String(searchParams.get("userId") || "").trim();
+    const estadoParam      = String(searchParams.get("estado") || "").trim(); // p.ej. "publicado" o "en_proceso,en_espera"
+    const limitParam       = Number(searchParams.get("limit") || 0);
 
-    if (!prediagnosticoId || !userId) {
-      return NextResponse.json({ error: "userId y prediagnosticoId son requeridos" }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ error: "userId es requerido" }, { status: 400 });
     }
 
     await connectToDatabase();
-    const items = await ProyectoPreAST.find({ userId, prediagnosticoId }).sort({ createdAt: -1 }).lean();
 
-    return NextResponse.json({ ok: true, count: items.length, proyectos: items });
+    const filter = { userId };
+    if (prediagnosticoId) filter.prediagnosticoId = prediagnosticoId;
+
+    if (estadoParam) {
+      const estados = estadoParam.split(",").map(s => s.trim()).filter(isValidEstado);
+      if (estados.length === 1) filter.estado = estados[0];
+      else if (estados.length > 1) filter.estado = { $in: estados };
+      else return NextResponse.json({ error: "valor de estado inválido" }, { status: 400 });
+    }
+
+    let q = ProyectoPreAST.find(filter).sort({ updatedAt: -1 });
+    if (limitParam > 0) q = q.limit(limitParam);
+
+    const proyectos = await q.lean();
+    return NextResponse.json({ ok: true, count: proyectos.length, proyectos });
+  } catch (e) {
+    return NextResponse.json({ error: e?.message || "Error desconocido" }, { status: 500 });
+  }
+}
+
+
+export async function PATCH(req) {
+  try {
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Body JSON inválido" }, { status: 400 });
+    }
+
+    const estado = String(body.estado || "").trim();
+    const id     = String(body.id || "").trim();
+    const ids    = Array.isArray(body.ids) ? body.ids.filter(Boolean) : [];
+
+    if (!isValidEstado(estado)) {
+      return NextResponse.json(
+        { error: `estado inválido. Permitidos: ${ALLOWED_ESTADOS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    if (!id && ids.length === 0) {
+      return NextResponse.json(
+        { error: "Debes enviar 'id' o 'ids' (array) para actualizar" },
+        { status: 400 }
+      );
+    }
+
+    await connectToDatabase();
+
+    let result;
+    if (id) {
+      const updated = await ProyectoPreAST.findByIdAndUpdate(
+        id,
+        { $set: { estado } },
+        { new: true }
+      ).lean();
+
+      if (!updated) {
+        return NextResponse.json({ error: "Proyecto no encontrado" }, { status: 404 });
+      }
+      result = { matchedCount: 1, modifiedCount: 1, proyectos: [updated] };
+    } else {
+      const r = await ProyectoPreAST.updateMany(
+        { _id: { $in: ids } },
+        { $set: { estado } }
+      );
+
+      // Traemos los documentos ya actualizados para retornar al front
+      const updatedDocs = await ProyectoPreAST.find({ _id: { $in: ids } }).lean();
+      result = { matchedCount: r.matchedCount, modifiedCount: r.modifiedCount, proyectos: updatedDocs };
+    }
+
+    return NextResponse.json({ ok: true, estado, ...result });
   } catch (e) {
     return NextResponse.json({ error: e?.message || "Error desconocido" }, { status: 500 });
   }

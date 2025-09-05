@@ -8,6 +8,12 @@ const proyectoPreASTSchema = new mongoose.Schema(
     nombreProyecto: { type: String, required: true },
     resumenProyecto: { type: String, required: true },
     descripcionProyecto: { type: String, required: true },
+    estado: {
+      type: String,
+      enum: ["publicado", "en_espera", "en_proceso", "completado", "cancelado", "aprobacion"],
+      default: "publicado",
+    },
+    
   },
   { timestamps: true }
 );
